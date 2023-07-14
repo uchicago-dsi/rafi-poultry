@@ -3,12 +3,6 @@ import numpy as np
 import glob
 
 
-
-def demo_print():
-    print("HEY TESTER")
-
-
-
 def clean_FSIS(filepath):
     """Example function with PEP 484 type annotations.
 
@@ -26,9 +20,11 @@ def clean_FSIS(filepath):
 
     df_large_chickens.to_csv("../data/clean/cleaned_fsis_processors.csv")
 
+    return
 
 
-def clean_infogroup(filepath):
+
+def clean_infogroup():
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -41,7 +37,7 @@ def clean_infogroup(filepath):
 
     all_years_df = pd.DataFrame()
     dfs = []
-    files = glob.glob(filepath)
+    files = glob.glob("data/raw/infogroup/*")
 
     for name in files:
         df = pd.read_csv(name)
@@ -57,7 +53,7 @@ def clean_infogroup(filepath):
         all_years_df[x] = all_years_df[x].fillna(0)
         all_years_df[x] = all_years_df[x].apply(np.int64)
 
-    all_years_df.to_csv("../data/clean/cleaned_infogroup_plants_all_time.csv")
+    all_years_df.to_csv("data/clean/cleaned_infogroup_plants_all_time.csv")
 
     return
 
@@ -80,6 +76,8 @@ def clean_counterglow(filepath):
 
     df.to_csv("../data/clean/cleaned_counterglow_facility_list.csv")
 
+    return
+
 
 
 def clean_cafo(filepath):
@@ -93,3 +91,12 @@ def clean_cafo(filepath):
         The return value. True for success, False otherwise.
 
     """
+
+    5
+
+    return
+
+
+if __name__ == "__main__":
+    clean_infogroup()
+    
