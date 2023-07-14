@@ -107,4 +107,6 @@ def list_of_dataframes(infogroup_dict):
 Questions: I have this in my Jupyter nottebook where I convert this list into a
 csv file. Still need to do that, but should I make that as a master function?
 
+Questions: make this a script that can be ran straight through
+
 '''
