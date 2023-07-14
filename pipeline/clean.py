@@ -10,8 +10,18 @@ import glob
 
 
 
-def clean_FSIS():
-    df = pd.read_csv("../data/raw/fsis-processors-with-location.csv")
+def clean_FSIS(filepath):
+    """Example function with PEP 484 type annotations.
+
+    Args:
+        param1: The first parameter.
+        param2: The second parameter.
+
+    Returns:
+        The return value. True for success, False otherwise.
+
+    """
+    df = pd.read_csv(filepath)
     df_chickens = df[df['Animals Processed'].str.contains('Chicken')]
     df_large_chickens = df_chickens.loc[df_chickens.Size == "Large"]
 
@@ -19,11 +29,21 @@ def clean_FSIS():
 
 
 
-def clean_infogroup():
+def clean_infogroup(filepath):
+    """Example function with PEP 484 type annotations.
+
+    Args:
+        param1: The first parameter.
+        param2: The second parameter.
+
+    Returns:
+        The return value. True for success, False otherwise.
+
+    """
 
     all_years_df = pd.DataFrame()
 
-    directory = "../data/raw/infogroups"
+    directory = filepath
 
     for filename in glob.glob(directory + "/*.csv"):
         df = pd.read_csv(filename)
@@ -34,13 +54,33 @@ def clean_infogroup():
 
 
 
-def clean_counterglow():
+def clean_counterglow(filepath):
+    """Example function with PEP 484 type annotations.
 
-    df = pd.read_csv("../data/raw/Counterglow+Facility+List+Complete.csv")
+    Args:
+        param1: The first parameter.
+        param2: The second parameter.
+
+    Returns:
+        The return value. True for success, False otherwise.
+
+    """
+
+    df = pd.read_csv(filepath)
     df["Name"] = df["Name"].astype(str, copy=False).apply(lambda x : x.upper())
 
     df.to_csv("../data/clean/cleaned_counterglow_facility_list.csv")
 
 
 
-def clean_cafo(filepath)
+def clean_cafo(filepath):
+    """Example function with PEP 484 type annotations.
+
+    Args:
+        param1: The first parameter.
+        param2: The second parameter.
+
+    Returns:
+        The return value. True for success, False otherwise.
+
+    """
