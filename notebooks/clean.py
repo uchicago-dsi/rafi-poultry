@@ -4,6 +4,11 @@ import glob
 
 
 
+def demo_print():
+    print("HEY TESTER")
+
+
+
 def clean_FSIS(filepath):
     """Example function with PEP 484 type annotations.
 
@@ -34,25 +39,27 @@ def clean_infogroup(filepath):
 
     """
 
-    print("HELLO")
     all_years_df = pd.DataFrame()
-
-    files = glob.glob(filepath, recursive=True)
-    print("HEY")
+    dfs = []
+    files = glob.glob(filepath)
 
     for name in files:
-        print("HI")
         df = pd.read_csv(name)
         df.columns = map(str.upper, df.columns)
-        alL_years_df = pd.concat([all_years_df, df], ignore_index=True)
+        dfs.append(df)
+
+    all_years_df = pd.concat(dfs, ignore_index=True)
+    all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR')
 
     cols = ['YEAR ESTABLISHED', 'YEAR 1ST APPEARED', 'COMPANY HOLDING STATUS', 'PARENT NUMBER']
     
-    for name in cols:
-        all_years_df[name] = all_years_df[name].fillna(0)
-        all_years_df[name] = all_years_df[name].apply(np.int64)
+    for x in cols:
+        all_years_df[x] = all_years_df[x].fillna(0)
+        all_years_df[x] = all_years_df[x].apply(np.int64)
 
     all_years_df.to_csv("../data/clean/cleaned_infogroup_plants_all_time.csv")
+
+    return
 
 
 
