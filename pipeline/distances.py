@@ -14,7 +14,7 @@ def haversine(lon1, lat1, lon2, lat2):
             
         Returns:
             distance (in kilometer) between the two points
-        """
+    """
     
     # convert decimal degrees to radians 
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
