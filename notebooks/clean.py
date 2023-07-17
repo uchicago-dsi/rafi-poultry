@@ -1,13 +1,9 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import requests
-import folium
-import geopandas as gpd
-import shapely
-from shapely.geometry import Polygon
 import glob
+from pathlib import Path
 
+here = Path(__file__).resolve().parent
 
 
 def clean_FSIS(filepath):
@@ -27,30 +23,41 @@ def clean_FSIS(filepath):
 
     df_large_chickens.to_csv("../data/clean/cleaned_fsis_processors.csv")
 
+    return
+
 
 
 def clean_infogroup(filepath):
-    """Example function with PEP 484 type annotations.
+    """Cleans the infogroup files, combines them into one large master df.
 
     Args:
-        param1: The first parameter.
-        param2: The second parameter.
+        filepath: absolute path to folder that contains all infogroup files 
 
     Returns:
-        The return value. True for success, False otherwise.
+        n/a, puts cleaned df into the data/clean folder
 
     """
 
     all_years_df = pd.DataFrame()
+    dfs = []
 
-    directory = filepath
-
-    for filename in glob.glob(directory + "/*.csv"):
-        df = pd.read_csv(filename)
+    for name in filepath.iterdir():
+        df = pd.read_csv(name)
         df.columns = map(str.upper, df.columns)
-        alL_years_df = pd.concat([all_years_df, df], ignore_index=True)
+        dfs.append(df)
 
-    all_years_df.to_csv("../data/clean/cleaned_infogroup_plants_all_time.csv")
+    all_years_df = pd.concat(dfs, ignore_index=True)
+    all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR').reset_index(drop=True)
+
+    cols = ['YEAR ESTABLISHED', 'YEAR 1ST APPEARED', 'COMPANY HOLDING STATUS', 'PARENT NUMBER']
+    
+    for x in cols:
+        all_years_df[x] = all_years_df[x].fillna(0)
+        all_years_df[x] = all_years_df[x].apply(np.int64)
+
+    all_years_df.to_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
+
+    return
 
 
 
@@ -69,7 +76,9 @@ def clean_counterglow(filepath):
     df = pd.read_csv(filepath)
     df["Name"] = df["Name"].astype(str, copy=False).apply(lambda x : x.upper())
 
-    df.to_csv("../data/clean/cleaned_counterglow_facility_list.csv")
+    df.to_csv(here.parent / "data/clean/cleaned_counterglow_facility_list.csv")
+
+    return
 
 
 
@@ -84,3 +93,12 @@ def clean_cafo(filepath):
         The return value. True for success, False otherwise.
 
     """
+
+    5
+
+    return
+
+
+if __name__ == "__main__":
+    clean_infogroup(here.parent / "data/raw/infogroup")
+    
