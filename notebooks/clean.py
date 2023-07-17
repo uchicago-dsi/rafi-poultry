@@ -24,7 +24,7 @@ def clean_FSIS(filepath):
 
 
 
-def clean_infogroup():
+def clean_infogroup(filepath):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -37,10 +37,10 @@ def clean_infogroup():
 
     all_years_df = pd.DataFrame()
     dfs = []
-    files = glob.glob("data/raw/infogroup/*")
+    files = filepath
 
     for name in files:
-        df = pd.read_csv(name)
+        df = pd.read_csv(filepath)
         df.columns = map(str.upper, df.columns)
         dfs.append(df)
 
@@ -98,5 +98,5 @@ def clean_cafo(filepath):
 
 
 if __name__ == "__main__":
-    clean_infogroup()
+    clean_infogroup("data/raw/infogroup/poultry_plants_2021.csv")
     
