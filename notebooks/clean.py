@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import glob
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 
 def clean_FSIS(filepath):
@@ -28,7 +31,7 @@ def clean_infogroup(filepath):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
-        filepath: path to folder that contains all infogroup files 
+        filepath: absolute path to folder that contains all infogroup files 
 
     Returns:
         n/a, puts cleaned df into the data/clean folder
@@ -37,15 +40,14 @@ def clean_infogroup(filepath):
 
     all_years_df = pd.DataFrame()
     dfs = []
-    files = filepath
 
-    for name in files:
-        df = pd.read_csv(filepath)
+    for name in filepath.iterdir():
+        df = pd.read_csv(name)
         df.columns = map(str.upper, df.columns)
         dfs.append(df)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
-    all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR')
+    all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR').reset_index(drop=True)
 
     cols = ['YEAR ESTABLISHED', 'YEAR 1ST APPEARED', 'COMPANY HOLDING STATUS', 'PARENT NUMBER']
     
@@ -53,7 +55,7 @@ def clean_infogroup(filepath):
         all_years_df[x] = all_years_df[x].fillna(0)
         all_years_df[x] = all_years_df[x].apply(np.int64)
 
-    all_years_df.to_csv("data/clean/cleaned_infogroup_plants_all_time.csv")
+    all_years_df.to_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
 
     return
 
@@ -74,7 +76,7 @@ def clean_counterglow(filepath):
     df = pd.read_csv(filepath)
     df["Name"] = df["Name"].astype(str, copy=False).apply(lambda x : x.upper())
 
-    df.to_csv("../data/clean/cleaned_counterglow_facility_list.csv")
+    df.to_csv(here.parent / "data/clean/cleaned_counterglow_facility_list.csv")
 
     return
 
@@ -98,5 +100,5 @@ def clean_cafo(filepath):
 
 
 if __name__ == "__main__":
-    clean_infogroup("data/raw/infogroup/poultry_plants_2021.csv")
+    clean_infogroup(here.parent / "data/raw/infogroup")
     
