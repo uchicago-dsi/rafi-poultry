@@ -10,6 +10,7 @@ from shapely import GeometryCollection, MultiPolygon
 from shapely.ops import unary_union
 import json
 from pathlib import Path
+from pyproj import Geod
 
 # make it easier to access files
 here = Path(__file__).resolve().parent
@@ -72,8 +73,6 @@ def make_geo_df(df):
 
 
 
-# add markers and isochrones to map, sort isochrones by parent company
-# create an empty dictionary to fill with unique parent companies 
 def add_more_isochrones(df, dict, chrones, m):
     """Example function with PEP 484 type annotations.
 
@@ -215,11 +214,136 @@ def save_map(single, two, three, dict):
 
 
 
+def state_level_geojson(df, map, everything, single, two, three):
+    us_states = gpd.read_file(here.parent / "data/gz_2010_us_040_00_500k.json").set_crs(WGS84)
+    abb2state = {
+        'AL': "Alabama", 
+        'AR': "Arkansas", 
+        'CA': "California", 
+        'DE': "Delaware", 
+        'FL': "Florida", 
+        'GA': "Georgia", 
+        'KY': "Kentucky", 
+        'LA': "Louisiana", 
+        'MD': "Maryland", 
+        'MN': "Minnesota", 
+        'MO': "Missouri",
+        'MS': "Mississippi", 
+        'NC': "North Carolina", 
+        'NE': "Nebraska", 
+        'OK': "Oklahoma", 
+        'PA': "Pennsylvania", 
+        'SC': "South Carolina", 
+        'TN': "Tennessee", 
+        'TX': "Texas", 
+        'VA': "Virginia", 
+        'WA': "Washington", 
+        'WV': "West Virginia",
+        'IA': "Iowa"
+    }
+    
+    df_states = gpd.GeoDataFrame()
+
+    corp_dfs = []
+    for corp in df['Parent Corporation'].unique():
+        new_df = df[df['Parent Corporation'] == corp]
+        corp_dfs.append(new_df)
+
+    states = df.State.unique()
+
+    corps_joined = []
+    for corp_df in corp_dfs:
+        corp_geomtery = corp_df['Isochrone Cleaned'].unary_union
+        corp_data = {
+            "parent_corporation": corp_df.iloc[0]["Parent Corporation"],
+            "geometry": corp_geomtery,
+        }
+        corps_joined.append(corp_data)
+
+    df_corps_joined = gpd.GeoDataFrame(corps_joined)
+
+    corp_state_geojsons = []
+    single_plant_combined = shapely.unary_union(single)
+    two_plants_combined = shapely.unary_union(two)
+    three_plants_combined = shapely.difference(everything, single_plant_combined)
+    three_plants_combined = shapely.difference(three_plants_combined.buffer(0), two_plants_combined.buffer(0))
+
+    for i, corp in df_corps_joined.iterrows():
+        for state in states:
+            state_name = abb2state[state]
+            state_layer = folium.map.FeatureGroup(name=state_name, show=False)
+            state_geometry = us_states[us_states["NAME"] == state_name]['geometry'].to_crs(WGS84)
+            state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(WGS84)
+
+            one_plant = shapely.intersection(single_plant_combined,state_geometry).set_crs(WGS84).iloc[0]
+            one_plant_one_corp_one_state = shapely.intersection(one_plant,corp.geometry)
+
+            if one_plant_one_corp_one_state:
+
+                geod = Geod(ellps="WGS84")
+                area = abs(geod.geometry_area_perimeter(one_plant_one_corp_one_state)[0]) * (0.000621371**2)
+
+                one_plant_one_state_data = {
+                    "state": state_name,
+                    "geometry": one_plant_one_corp_one_state,
+                    "parent_corporation": corp.parent_corporation,
+                    "area": area,
+                    "corporate_access": 1
+                }
+
+                corp_state_geojsons.append(one_plant_one_state_data)
+
+    for state in states:
+        state_name = abb2state[state]
+        state_layer = folium.map.FeatureGroup(name=state_name, show=False)
+        state_geometry = us_states[us_states["NAME"] == state_name]['geometry'].to_crs(WGS84)
+        state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(WGS84)
+
+        two_plants = shapely.intersection(two_plants_combined,state_geometry).set_crs(WGS84).iloc[0]
+        three_plants = shapely.intersection(three_plants_combined,state_geometry).set_crs(WGS84).iloc[0]
+            
+        if two_plants:
+            geod = Geod(ellps="WGS84")
+            two_area = abs(geod.geometry_area_perimeter(two_plants)[0]) * (0.000621371**2)
+
+            two_plants_one_state_data = {
+                "state": state_name,
+                "geometry": two_plants,
+                "parent_corporation": np.nan,
+                "area": two_area,
+                "corporate_access": 2
+            }
+
+            corp_state_geojsons.append(two_plants_one_state_data)
+
+        if three_plants:
+            geod = Geod(ellps="WGS84")
+            three_area = abs(geod.geometry_area_perimeter(three_plants)[0]) * (0.000621371**2)
+
+            three_plants_one_state_data = {
+                "state": state_name,
+                "geometry": three_plants,
+                "parent_corporation": np.nan,
+                "area": three_area,
+                "corporate_access": 3
+            }
+
+            corp_state_geojsons.append(three_plants_one_state_data)
+
+    df_corp_state = gpd.GeoDataFrame(corp_state_geojsons)
+    df_corp_state = df_corp_state.sort_values(by='state')
+    df_corp_state.to_file(here.parent / "data/clean/all_states_with_parent_corp_by_corp.geojson", driver="GeoJSON")
+
+    return
+
+
+
 if __name__ == "__main__":
     m = folium.Map(location=[USA_LAT, USA_LNG],zoom_start=4)
 
     dict = {}
     chrones = []
+    everything = shapely.unary_union(chrones)
 
     single_shapely = []
     two_shapely = []
@@ -231,6 +355,9 @@ if __name__ == "__main__":
 
     save_map(single_shapely, two_shapely, three_shapely, dict)
 
-    # state_level
+    mm = folium.Map(location=[USA_LAT, USA_LNG],zoom_start=4)
+
+    state_level_geojson(fsis_df, mm, everything, single_shapely, two_shapely, three_shapely)
+
 
 
