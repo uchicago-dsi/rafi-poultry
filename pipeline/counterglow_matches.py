@@ -16,9 +16,9 @@ and actually exist in the Infogroup data, but with slightly different longitude 
 
 def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print=True ):
     
-    # ruduce dataframe to only consist rows with specified two_letter_state
-    infogroup_state_df      = infogroup_df[infogroup_df["STATE"] == two_letter_state]
-    counterglow_state_df    = counterglow_df[counterglow_df["State"] == two_letter_state]
+    # ruduce dataframe to only consist rows with specified two lettered state
+    infogroup_state_df      = infogroup_df[infogroup_df["STATE"] == states]
+    counterglow_state_df    = counterglow_df[counterglow_df["State"] == states]
     
     # create two new empty dataframe that we will be adding to when match is found
     infogroup_trim     = pd.DataFrame(columns=infogroup_state_df.columns)
@@ -53,7 +53,7 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print=Tru
     
     # print to terminal to let user know there were matches found, 
     if( (counter !=0) & (print == True) ):
-        print(two_letter_state + ":", "Total number of matches:", counter)
+        print(states + ":", "Total number of matches:", counter)
                 
     return infogroup_trim, counterglow_trim   
 
