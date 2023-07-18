@@ -14,7 +14,7 @@ speculating that it is possible for a spotted farm in counterglow to not have th
 and actually exist in the Infogroup data, but with slightly different longitude and latitude
 """
 
-def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print=True ):
+def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_bool=True ):
     
     # ruduce dataframe to only consist rows with specified two lettered state
     infogroup_state_df      = infogroup_df[infogroup_df["STATE"] == states]
@@ -52,7 +52,7 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print=Tru
                                                            'Lat.1': 'LONGITUDE 2'})
     
     # print to terminal to let user know there were matches found, 
-    if( (counter !=0) & (print == True) ):
+    if( (counter !=0) & (print_bool == True) ):
         print(states + ":", "Total number of matches:", counter)
                 
     return infogroup_trim, counterglow_trim   
