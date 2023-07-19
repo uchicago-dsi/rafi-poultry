@@ -1,8 +1,10 @@
 from distances import haversine
 import pandas as pd
 
+
 # list of states that you want to search within
 states = ['IA', 'OK', 'MO', 'OK', 'AL', 'LA', 'MS', 'IL', 'IN', 'OH', 'KY', 'TN', 'AR', 'NC', 'SC', 'GA']
+
 
 def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_bool=True ):
     
@@ -11,8 +13,8 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_boo
         in the counterglow dataset
         
         Args:
-            infogroup_df   (dataframe): 
-            counterglow_df (dataframe): 
+            infogroup_df   (dataframe): dataframe of infogroup data
+            counterglow_df (dataframe): dataframe of counterglow data
             states (list): list of states that  you want to specifically look at
             max_dist_km (float): maximum radius distance you want to check within
             print_bool (bool): default true, prints results to terminal
@@ -66,60 +68,56 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_boo
     return infogroup_trim, counterglow_trim   
 
 
-#################################################################################################################
-
-"""
-function take a dataframe and a list of states. This function calls the function 'potential_farms'
-if the two dataframes returned from 'potential_farms' are NOT empty, they are added to the dictionaries
-the keys for the dictionaries are the STATE in the current iteration (in the for loop) and the values
-are the dataframes associated with the state. This function will return two dictionaries
-
-This function POTENTIAL_FARMS function
-"""
-
-def infogroup_counterglow_dict(sic_df, counterglow_df, list_of_states, radium_km):
+def infogroup_counterglow_dict(sic_df, counterglow_df, states, radium_km):
     
     """
-        finds potential farms in the infogroup dataset based on the speculative farms
-        in the counterglow dataset
+        This function calls the function 'potential_farms'. If the two dataframes returned from 'potential_farms' 
+        are NOT empty, they are added to the dictionaries. the keys for the dictionaries are the STATE in the 
+        current iteration (in the for loop) and the values are the dataframes associated with the state. 
+        
         
         Args:
-            infogroup_df   (dataframe): 
-            counterglow_df (dataframe): 
+            sic_df (dataframe): infogroup data trimmed to only contain only certain SIC Code
+            counterglow_df (dataframe): counterglow data
             states (list): list of states that  you want to specifically look at
-            max_dist_km (float): maximum radius distance you want to check within
-            print_bool (bool): default true, prints results to terminal
+            radius_km (float): maximum radius distance you want to check within
             
         Returns:
-            two dataframes: infogroup_trim & counterglow_trim. They are both the same length.
-            Each time a match is found, the infogroup match & the counterglow match will append
-            to a new, trimmed dataframe
+            two dictionaries: igroup_sic_dict, ctrglow_dict
     """
-    
     
     # empty dictionaries
     igroup_sic_dict = {}
     ctrglow_dict = {}
 
     # loop through states list and use those as keys to match with the dataframe that was output 
-    for state in range(len(list_of_states)):
-        infogroup_matches, counterglow_matches = potential_farms(sic_df, counterglow_df, list_of_states[state], radium_km)
+    for state in range(len(states)):
+        infogroup_matches, counterglow_matches = potential_farms(sic_df, counterglow_df, states[state], radium_km)
         
         # set up key value pairing for both dictionaries
         # only adding to dictionaries if there are matches
         if( (len(infogroup_matches)!=0) & (len(counterglow_matches)!=0) ):
-            igroup_sic_dict[list_of_states[state]]    = infogroup_matches
-            ctrglow_dict[list_of_states[state]]       = counterglow_matches
+            igroup_sic_dict[states[state]]    = infogroup_matches
+            ctrglow_dict[states[state]]       = counterglow_matches
             
     return igroup_sic_dict, ctrglow_dict
 
 
-
-# function that take a dictionary, the keys are STATES (2 letter) and the VALUES are a dataframe
-# containing the locations that are close to a counterglow location, returns a list of all the 
-# dataframe that are in the dictionary
-
 def list_of_dataframes(infogroup_dict):
+    
+    """
+        function will convert all of the lists within the infogroup_dict (the values) and convert
+        them into a single list. This is helpful when converting a lot of dataframe into a single
+        csv file
+        
+        Args:
+            infogroup_dict (dict): the keys are the state and the valus is a dataframe associated with
+                                   the state
+            
+        Returns:
+            a list of dataframe (all of the dataframe within the input dictionary).
+            the entire list can be converted into a single csv file if wanted
+    """
     
     all_df_list = []
     # loop through each key in the dictinary (each state in this case)
@@ -128,12 +126,3 @@ def list_of_dataframes(infogroup_dict):
         all_df_list.append(infogroup_dict[key].drop_duplicates())
         
     return all_df_list
-
-
-'''
-Questions: I have this in my Jupyter nottebook where I convert this list into a
-csv file. Still need to do that, but should I make that as a master function?
-
-Questions: make this a script that can be ran straight through
-
-'''
