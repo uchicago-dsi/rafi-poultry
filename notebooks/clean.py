@@ -81,7 +81,7 @@ def clean_counterglow(filepath):
 
 
 
-def clean_cafo2(data_dir: Path, config_fpath: Path):
+def clean_cafo(data_dir: Path, config_fpath: Path):
     """Merges state level CAFO permit data (taken from gov't websites) into one CSV 
     with columns for name, address, longitude/latitude, and state. Column names
     in each dataset are mapped to standardized format in accompanying farm_source.json file.
