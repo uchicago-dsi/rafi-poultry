@@ -4,17 +4,24 @@ import pandas as pd
 # list of states that you want to search within
 states = ['IA', 'OK', 'MO', 'OK', 'AL', 'LA', 'MS', 'IL', 'IN', 'OH', 'KY', 'TN', 'AR', 'NC', 'SC', 'GA']
 
-"""
-funtion will take 4 inputs. infogroup_df & counterglow_df2 are the dataframes being analyzed.
-the third input is the specific state that we are choosing to analyze
-the fourth input is the threshold distance. this distance is the max allowable distance between 2
-datapoints. the output is a dataframe that in each row, we have a datapoint that represents a
-datapoint from infogroup and (x distance away) a farm spotted in the counterglow data. we are
-speculating that it is possible for a spotted farm in counterglow to not have the most precise address
-and actually exist in the Infogroup data, but with slightly different longitude and latitude
-"""
-
 def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_bool=True ):
+    
+    """
+        finds potential farms in the infogroup dataset based on the speculative farms
+        in the counterglow dataset
+        
+        Args:
+            infogroup_df   (dataframe): 
+            counterglow_df (dataframe): 
+            states (list): list of states that  you want to specifically look at
+            max_dist_km (float): maximum radius distance you want to check within
+            print_bool (bool): default true, prints results to terminal
+            
+        Returns:
+            two dataframes: infogroup_trim & counterglow_trim. They are both the same length.
+            Each time a match is found, the infogroup match & the counterglow match will append
+            to a new, trimmed dataframe
+    """
     
     # ruduce dataframe to only consist rows with specified two lettered state
     infogroup_state_df      = infogroup_df[infogroup_df["STATE"] == states]
@@ -40,7 +47,8 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_boo
             
             if(dist_km <= max_dist_km): # if the distance is <= the max distance set in function
                 counter += 1
-            
+
+                # appending the potential match to the new dataframes
                 infogroup_trim.loc[len(infogroup_trim.index)]      = infogroup_state_df.iloc[i]
                 counterglow_trim.loc[len(counterglow_trim.index)]  = counterglow_state_df.iloc[j]
         
@@ -70,6 +78,25 @@ This function POTENTIAL_FARMS function
 """
 
 def infogroup_counterglow_dict(sic_df, counterglow_df, list_of_states, radium_km):
+    
+    """
+        finds potential farms in the infogroup dataset based on the speculative farms
+        in the counterglow dataset
+        
+        Args:
+            infogroup_df   (dataframe): 
+            counterglow_df (dataframe): 
+            states (list): list of states that  you want to specifically look at
+            max_dist_km (float): maximum radius distance you want to check within
+            print_bool (bool): default true, prints results to terminal
+            
+        Returns:
+            two dataframes: infogroup_trim & counterglow_trim. They are both the same length.
+            Each time a match is found, the infogroup match & the counterglow match will append
+            to a new, trimmed dataframe
+    """
+    
+    
     # empty dictionaries
     igroup_sic_dict = {}
     ctrglow_dict = {}
