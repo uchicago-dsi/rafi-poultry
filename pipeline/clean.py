@@ -21,7 +21,7 @@ def clean_FSIS(filepath):
     df_chickens = df[df['Animals Processed'].str.contains('Chicken')]
     df_large_chickens = df_chickens.loc[df_chickens.Size == "Large"]
 
-    df_large_chickens.to_csv("../data/clean/cleaned_fsis_processors.csv")
+    df_large_chickens.to_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
 
     return
 
@@ -101,4 +101,4 @@ def clean_cafo(filepath):
 
 if __name__ == "__main__":
     clean_infogroup(here.parent / "data/raw/infogroup")
-    
+    clean_FSIS(here.parent / "data/raw/fsis-processors-with-location.csv")
