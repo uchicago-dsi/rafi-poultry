@@ -10,6 +10,7 @@ This is the pipeline for this project and a description of the files within it.
 - counterglow_matches.py
 - distances.py
 - match_plants.py
+- sic_matcher.py
 
 # File Descriptions
 
@@ -18,3 +19,4 @@ This is the pipeline for this project and a description of the files within it.
 - **counterglow_matches.py** file contained the functionality neccessary to match Infogroup data against Counterglow data. The goal is to see if any business listed in the Infogroup dataset matches will a suspects farm in the Counterglow dataset.
 - **distances.py** contains calculations used in various parts of the research
 - **match_plants.py** Reads in clean Infogroup datasets from 1997 through the present, matches plants across years using the ABI, match plants in FSIS with plants in Infogroup by location and address, to add sales volume data to plant records, writes the combined output DataFrame as a CSV file, matched_plants.csv, in the data/clean folder.
+- **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
