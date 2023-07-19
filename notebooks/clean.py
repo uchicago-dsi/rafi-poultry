@@ -1,20 +1,20 @@
 import pandas as pd
 import numpy as np
 import glob
+import json
 from pathlib import Path
 
 here = Path(__file__).resolve().parent
 
 
 def clean_FSIS(filepath):
-    """Example function with PEP 484 type annotations.
+    """Filters the FSIS dataset for large poultry processing plants. 
 
     Args:
-        param1: The first parameter.
-        param2: The second parameter.
+        filepath: relative path to the raw data folder with the FSIS dataset.
 
     Returns:
-        The return value. True for success, False otherwise.
+        N/A, writes cleaned dataset into the clean data folder.
 
     """
     df = pd.read_csv(filepath)
@@ -62,19 +62,18 @@ def clean_infogroup(filepath):
 
 
 def clean_counterglow(filepath):
-    """Example function with PEP 484 type annotations.
+    """Cleans the Counterglow dataset by standardizing CAFO name and column formatting.
 
     Args:
-        param1: The first parameter.
-        param2: The second parameter.
+        filepath: relative path to the raw data folder with the Counterglow dataset.
 
     Returns:
-        The return value. True for success, False otherwise.
+        N/A, writes cleaned Counterglow dataset to the clean data folder.
 
     """
-
     df = pd.read_csv(filepath)
     df["Name"] = df["Name"].astype(str, copy=False).apply(lambda x : x.upper())
+    df = df.rename(columns={"Lat": "Latitude", "Lat.1": "Longitude"})
 
     df.to_csv(here.parent / "data/clean/cleaned_counterglow_facility_list.csv")
 
@@ -82,21 +81,51 @@ def clean_counterglow(filepath):
 
 
 
-def clean_cafo(filepath):
-    """Example function with PEP 484 type annotations.
+def clean_cafo2(data_dir: Path, config_fpath: Path):
+    """Merges state level CAFO permit data (taken from gov't websites) into one CSV 
+    with columns for name, address, longitude/latitude, and state. Column names
+    in each dataset are mapped to standardized format in accompanying farm_source.json file.
+    Rows in complete dataset are left blank if no information is available, 
+    and raw CSVs may need to be standardized/filtered by hand first. 
 
     Args:
-        param1: The first parameter.
-        param2: The second parameter.
+        data_dir: filepath to raw data subfolder "cafo" that contains the state permit data.
+        config_fpath: filepath to farm_source.json file. 
 
     Returns:
-        The return value. True for success, False otherwise.
+        N/A, writes cleaned CAFO dataset to the clean data folder.
 
     """
+    # Open configuration file
+    with open(config_fpath) as f:
+        config = json.load(f)
 
-    5
+    # Iterate through each configured data source
+    final_df = None
+    for source in config:
 
-    return
+        # Create file path to data source
+        fpath = data_dir.joinpath(source['file_name'])
+
+        # Load data source as DataFrame
+        df = pd.read_csv(fpath)
+
+        # Subset to relevant columns
+        present_cols = list(filter(None, list(source["column_mapping"].values())))
+        df = df[present_cols]
+
+        # Rename columns to match standard model
+        inv_dict = {v: k for k, v in source["column_mapping"].items()}
+        df = df.rename(columns=inv_dict)
+
+        # Add remaining columns
+        df["state"] = source["state"]
+        df["source"] = source["name"]
+        
+        # Update final DataFrame
+        final_df = df if final_df is None else pd.concat([df, final_df], ignore_index=True)
+
+    final_df.to_csv(here.parent / "data/clean/cleaned_matched_farms.csv")
 
 
 if __name__ == "__main__":
