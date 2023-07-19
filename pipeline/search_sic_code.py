@@ -11,8 +11,13 @@ def to_dataframe(filepath):
         Returns:
             dataframe in Dask format
     """
+    
+    # create a dask dataframe
     df = dd.read_csv(filepath, dtype=str, encoding='unicode_escape')
-    df.columns = df.columns.str.upper() # force all columns to be uppercase
+    
+    # force all columns to be uppercase
+    df.columns = df.columns.str.upper() 
+    
     return df
 
 
@@ -41,6 +46,6 @@ def sic_matches_df(mst_df, sic_code: str):
                           mst_df['PRIMARY SIC CODE'].str.contains(sic_code, na=False)
                          ]
     
-    result = filtered_df.compute()
+    result = filtered_df.compute() # dask compute the df
             
     return result
