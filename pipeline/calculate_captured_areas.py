@@ -176,7 +176,7 @@ def single_plant_cap(chrones, single_shapely, dict, m):
 
 
 
-def two_and_three_plant_cap(chrones, single_shapely, two_shapely, m):
+def two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_shapely, m):
     """Adds 2 layers to country-wide visualization 
         - One containing areas that have access to two plants
         - One containing areas that have access to three+ plants
@@ -185,6 +185,7 @@ def two_and_three_plant_cap(chrones, single_shapely, two_shapely, m):
         chrones: list of isochrones, one for each parent corporation.
         single_shapely: isochrones of areas that have access to only one plant.
         two_shapely: empty list, gets filled with isochrones of areas that have access to two plants.
+        three_shapely: empty list, gets filled with one isochrone of all areas that have access to three+ plants.
         m: base-map to add single-capture areas to.
 
     Returns:
@@ -231,14 +232,16 @@ def two_and_three_plant_cap(chrones, single_shapely, two_shapely, m):
     folium.GeoJson(two_plants_combined,style_function=two_plant_color).add_to(two_plant_layer)
     two_plant_layer.add_to(m)
 
-    three_plants_combined = shapely.difference(everything, single_plant_combined)
-    three_plants_combined = shapely.difference(three_plants_combined.buffer(0), two_plants_combined.buffer(0))
 
     three_plant_layer = folium.map.FeatureGroup(name="Access to 3+ Parent Corporations")
-    folium.GeoJson(three_plants_combined,style_function=three_plant_color).add_to(three_plant_layer)
+    three_shapely = shapely.difference(everything, single_plant_combined)
+    three_shapely = shapely.difference(three_shapely.buffer(0), two_plants_combined.buffer(0))
+    three_combined.append(three_shapely)
+
+    folium.GeoJson(three_shapely, style_function=three_plant_color).add_to(three_plant_layer)
     three_plant_layer.add_to(m)
 
-    return three_plants_combined
+    return
 
 
 
@@ -274,7 +277,7 @@ def save_map(single, two, three, dict):
 
 
 
-def state_level_geojson(df, map, single, two, three_plants_combined):
+def state_level_geojson(df, map, single, two, three):
     """Assembles state-specific map of plant access, exports to data/clean as a geojson
 
     Args:
@@ -372,7 +375,7 @@ def state_level_geojson(df, map, single, two, three_plants_combined):
         state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(WGS84)
 
         two_plants = shapely.intersection(two_plants_combined,state_geometry).set_crs(WGS84).iloc[0]
-        three_plants = shapely.intersection(three_plants_combined,state_geometry).set_crs(WGS84).iloc[0]
+        three_plants = shapely.intersection(three,state_geometry).set_crs(WGS84).iloc[0]
             
         if two_plants:
             geod = Geod(ellps="WGS84")
@@ -409,6 +412,14 @@ def state_level_geojson(df, map, single, two, three_plants_combined):
     return
 
 
+def print_usa_map():
+    m
+    return
+
+def print_state_map():
+    mm
+    return
+
 
 if __name__ == "__main__":
     # make base map for country-wide visualization
@@ -421,20 +432,24 @@ if __name__ == "__main__":
     # shapes for 1, 2, and 3+ plant access
     single_shapely = []
     two_shapely = []
+    three_combined = []
 
-    df_map = make_geo_df(fsis_df)
+    df_map = make_geo_df(fsis_df, 60)
     add_plants(df_map, dict, chrones, m)
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
     single_plant_cap(chrones, single_shapely, dict, m)
-    three_plants_combined = two_and_three_plant_cap(chrones, single_shapely, two_shapely, m)
-    save_map(single_shapely, two_shapely, three_plants_combined, dict)
+    two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
+    save_map(single_shapely, two_shapely, three_combined, dict)
+    m.save(here.parent / "html/poultry-map-smoothed.html")
+
 
     # make base map for state-specific visualization
     mm = folium.Map(location=[USA_LAT, USA_LNG],zoom_start=4)
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
-    state_level_geojson(df_map, mm, single_shapely, two_shapely, three_plants_combined)
+    state_level_geojson(df_map, mm, single_shapely, two_shapely, three_combined)
+    mm.save(here.parent / "html/state-poultry-map-smoothed.html")
 
 
 
