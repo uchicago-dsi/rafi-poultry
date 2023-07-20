@@ -6,6 +6,18 @@ from distances import haversine
 
 
 def address_match(infogroup_2022_path, fsis_path):
+    """Filters FSIS dataset for poultry processing plants, 
+    then match 2022 Infogroup plants to FSIS plants based on address
+    to add sales volume data to each poultry plant from FSIS.
+
+    Args:
+        infogroup_2022_path: relative path to the raw data folder with the 2022 Infogroup dataset.
+        fsis_path: relative path to the raw data folder with the FSIS dataset.
+
+    Returns:
+        DataFrame with sales volume data filled in for address matches.
+
+    """
     df_filtered = pd.read_csv(infogroup_2022_path)
     df_filtered["Full Address"] = df_filtered["ADDRESS LINE 1"] + ", " + df_filtered["CITY"] + ", " + df_filtered["STATE"] + " " + df_filtered["ZIPCODE"].astype(int).astype(str)
     df_filtered["Full Address"] = df_filtered["Full Address"].astype(str)
@@ -16,7 +28,6 @@ def address_match(infogroup_2022_path, fsis_path):
     df_match = pd.DataFrame()
     df_match["Sales Volume (Location)"] = np.NaN
 
-    plants_to_update = {}
     for i, fsis in df_poultry.iterrows():
         fsis_address = fsis["Full Address"].lower()
         for k, infogroup in df_filtered.iterrows():
@@ -31,6 +42,21 @@ def address_match(infogroup_2022_path, fsis_path):
     return df_poultry
 
 def loc_match(no_match, pp_2022, pp_sales, threshold):
+    """Match 2022 Infogroup plants to the remaining unmatched FSIS plants after running 
+    address_match based on longitude/latitude to add sales volume data 
+    to each poultry plant from FSIS. Requires user input when a match is found.
+
+    Args:
+        no_match: Filtered DataFrame that contains the unmatched poultry plants after running address_match. 
+        pp_2022: 2022 Infogroup dataset loaded as a DataFrame.
+        pp_sales: DataFrame returned by address_match, which contains FSIS poultry plants matched with sales volume.
+        threshold: threshold for maximum distance possible to be considered a match.
+
+    Returns:
+        2022 Infogroup DataFrame (pp_2022) and
+        DataFrame with sales volume data filled in for location matches (pp_sales).
+
+    """
     no_match_nulls = no_match[no_match["Sales Volume (Location)"].isna()]
     for index, row in no_match_nulls.iterrows():
         target_point = (row["latitude"], row["longitude"])
@@ -49,6 +75,17 @@ def loc_match(no_match, pp_2022, pp_sales, threshold):
     return pp_2022, pp_sales
 
 def fill_remaining_nulls(pp_sales):
+    """Fills in sales volume for all remaining unmatched plants after running loc_match function
+    with the median of the sales volume of all matched plants so far for each plant, 
+    based on its respective parent corporation.
+
+    Args:
+        pp_sales: DataFrame returned by loc_match, which contains FSIS poultry plants matched with sales volume.
+
+    Returns:
+        DataFrame with all sales volume data filled in. 
+
+    """
     median = pp_sales.groupby(['Parent Corporation'])['Sales Volume (Location)'].median().reset_index()
     median_sales = pp_sales["Sales Volume (Location)"].median()
     
@@ -67,6 +104,17 @@ def fill_remaining_nulls(pp_sales):
     return pp_sales_updated
 
 def save_all_matches(infogroup_2022_path, fsis_path, threshold):
+    """Executes all three matching helper functions and saves final fully updated sales volume DataFrame
+    as a CSV.
+
+    Args:
+        infogroup_2022_path: relative path to the raw data folder with the 2022 Infogroup dataset.
+        fsis_path: relative path to the raw data folder with the FSIS dataset.
+        threshold: threshold for maximum distance possible to be considered a match.
+
+    Returns:
+        N/A, saves updated CSV to the cleaned data folder.
+    """
     address_matches = address_match(infogroup_2022_path, fsis_path)
     no_match = address_matches[address_matches["Sales Volume (Location)"].isna()]
 
