@@ -5,6 +5,16 @@ from distances import haversine
 
 
 def name_match(counterglow: pd.DataFrame,  cafomaps: pd.DataFrame):
+    """Matches plants in Counterglow dataset with permit data from various state websites by name. 
+
+    Args:
+        counterglow: DataFrame containing Counterglow CAFO data.
+        cafomaps: DataFrame containing CAFO permit data. 
+
+    Returns:
+        A new DataFrame, match_df, that duplicates the cafomaps DataFrame but adds columns that note whether a name match
+        (either exact or fuzzy) was found.
+    """
     name, perfect_match, fuzzy_name, no_match = ([] for i in range(4))
     match_df = cafomaps.copy()
     for i, srow in match_df.iterrows():
@@ -41,6 +51,16 @@ def name_match(counterglow: pd.DataFrame,  cafomaps: pd.DataFrame):
 
 
 def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh = 0.3048):
+    """Matches plants in Counterglow dataset with permit data from various state websites by name and location.
+
+    Args:
+        counterglow: DataFrame containing Counterglow CAFO data.
+        cafomaps: DataFrame containing CAFO permit data. 
+
+    Returns:
+        A new DataFrame, match_df, that duplicates the cafomaps DataFrame but adds columns that indicate whether a name and/or 
+        location match was found. The relevant column is filled in with the name of the matching farm in the Counterglow dataset.
+    """
     name, latitude, longitude, name_location, fuzzyname_location, name_match, fuzzyname_match, \
         location_match, no_match = ([] for i in range(9))
     match_df = cafomaps.copy()
@@ -110,6 +130,17 @@ def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh = 0
 
 
 def match_all_farms(counterglow_path, cafomaps_path, animal_exp):
+    """Executes the helper matching functions and saves the results for matched farms and unmatched farms
+    to the cleaned data folder.
+
+    Args:
+        counterglow: DataFrame containing Counterglow CAFO data.
+        cafomaps: DataFrame containing CAFO permit data. 
+        animal_exp: String with substrings to filter permit types for (ie. "Poultry|Chicken|Broiler")
+
+    Returns:
+        N/A, saves two CSVs to the cleaned data folder. 
+    """
     counterglow = pd.read_csv(counterglow_path)
     cafomaps = pd.read_csv(cafomaps_path).drop(columns='Unnamed: 0')
     cafomaps['name'] = cafomaps['name'].str.upper()
