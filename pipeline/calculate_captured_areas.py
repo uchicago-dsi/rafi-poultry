@@ -412,14 +412,6 @@ def state_level_geojson(df, map, single, two, three):
     return
 
 
-def print_usa_map():
-    m
-    return
-
-def print_state_map():
-    mm
-    return
-
 
 if __name__ == "__main__":
     # make base map for country-wide visualization
@@ -443,13 +435,11 @@ if __name__ == "__main__":
     save_map(single_shapely, two_shapely, three_combined, dict)
     m.save(here.parent / "html/poultry-map-smoothed.html")
 
-
     # make base map for state-specific visualization
     mm = folium.Map(location=[USA_LAT, USA_LNG],zoom_start=4)
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
     state_level_geojson(df_map, mm, single_shapely, two_shapely, three_combined)
     mm.save(here.parent / "html/state-poultry-map-smoothed.html")
-
 
 
