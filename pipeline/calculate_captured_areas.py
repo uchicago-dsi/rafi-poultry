@@ -29,6 +29,10 @@ WGS84 = "EPSG:4326"
 USA_LAT = 37.0902
 USA_LNG = -95.7129
 
+single_shapely = []
+two_shapely = []
+three_combined = []
+
 empty_color = lambda x: {
     "fillColor": "00" # empty
 }
@@ -43,7 +47,7 @@ three_plant_color = lambda x: {
 }
 
 
-def isochrones(df, x):
+def isochrones(df, x, token):
     """Adds plant isochrones to fsis dataframe; captures area that is within an x mile raidus of the plant.
 
     Args:
@@ -55,7 +59,7 @@ def isochrones(df, x):
 
     """
     
-    MAPBOX_TOKEN = os.environ['MAPBOX_API_KEY']
+    MAPBOX_TOKEN = token
     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
     DRIVING_DISTANCE = str(int(x * 1609.34)) # 60 miles in meters: 90 percent of all birds were produced on farms within 60 miles of the plant, according to 2011 ARMS data
 
@@ -77,7 +81,7 @@ def isochrones(df, x):
 
 
 
-def make_geo_df(df, dist):
+def make_geo_df(df, dist, token):
     """Adds slightly simpligied isochrones to fsis dataframe.
 
     Args:
@@ -89,7 +93,7 @@ def make_geo_df(df, dist):
 
     """
 
-    geo_df = isochrones(df, dist)
+    geo_df = isochrones(df, dist, token)
     geo_df = gpd.GeoDataFrame(geo_df).set_geometry("Isochrone").set_crs(WGS84, inplace = True)
     geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(.01)
 
@@ -413,7 +417,7 @@ def state_level_geojson(df, map, single, two, three):
 
 
 
-if __name__ == "__main__":
+def full_script(token):
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG],zoom_start=4)
 
@@ -421,12 +425,7 @@ if __name__ == "__main__":
     dict = {}
     chrones = []
 
-    # shapes for 1, 2, and 3+ plant access
-    single_shapely = []
-    two_shapely = []
-    three_combined = []
-
-    df_map = make_geo_df(fsis_df, 60)
+    df_map = make_geo_df(fsis_df, 60, token)
     add_plants(df_map, dict, chrones, m)
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
@@ -441,5 +440,7 @@ if __name__ == "__main__":
     # assemble state-specific capture map, save as GEOJSON to data/clean
     state_level_geojson(df_map, mm, single_shapely, two_shapely, three_combined)
     mm.save(here.parent / "html/state-poultry-map-smoothed.html")
+
+    return m
 
 
