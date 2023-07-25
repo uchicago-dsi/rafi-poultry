@@ -67,8 +67,8 @@ def clean_infogroup(filepath):
     all_years_df['PARENT NAME'] = all_years_df['PARENT NAME'].fillna('Small Biz')
 
     master = all_years_df[['COMPANY', 'ADDRESS LINE 1', 'CITY', 'STATE', 'ZIPCODE', 'PRIMARY SIC CODE', 
-                    'ARCHIVE VERSION YEAR', 'YEAR ESTABLISHED', 'ABI', 'COMPANY HOLDING STATUS', 'PARENT NUMBER', 
-                    'PARENT NAME', 'LATITUDE', 'LONGITUDE', 'YEAR 1ST APPEARED']]
+                    'ARCHIVE VERSION YEAR', 'YEAR ESTABLISHED', 'ABI', 'SALES VOLUME (9) - LOCATION', 'COMPANY HOLDING STATUS', 
+                    'PARENT NUMBER', 'PARENT NAME', 'LATITUDE', 'LONGITUDE', 'YEAR 1ST APPEARED']]
 
 
     master = master.dropna(subset = ['COMPANY', 'LATITUDE', 'LONGITUDE'])
