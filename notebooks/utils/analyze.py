@@ -145,6 +145,6 @@ def farm_count():
     # join all the dataframes
     concat_df = pd.concat([infogroup_df, counterglow_df, cafos_df], join='outer')
     
-    
+    concat_df.to_csv(here.parent / "data/raw/combined_farm_data.csv")
     
     pass
