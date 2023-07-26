@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 import geopandas as gpd
+import os
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 """Contains functions for analyzing market consolidation: 
 - HHI: calculates HHI for all parent corporations in given dataframe
@@ -72,7 +76,75 @@ def calculateCapturedArea(path): # pass in geojson path
     return areas
 
 
-## In Process: farm_count. this will take in the farm data then figure out what percentage only have 
-# access to one integrator, two integrators, etc. based upon the selected area
 def farm_count():
+    """
+    Function In Progress: For now, takes in three files: 
+    1. infogroup-sic-code-selects.csv: infogroup data from specific SIC Codes
+    2. Counterglow+Facility+List+Complete.csv: all counterglow data
+    3. matched_farms: downloaded data from state gov't epa websties 
+    
+    Args:
+        None
+    
+    Returns:
+        does not return anything. outputs a file in folder
+    """
+    
+    # Infogroup Clean
+    # load file
+    infogroup_df = pd.read_csv(here.parent / "data/raw/infogroup-sic-code-selects.csv")
+    # list of columns to drop
+    drop_list = ['Unnamed: 0.1', 'Unnamed: 0', 'ZIP4', 'LOCATION EMPLOYEE SIZE CODE', 'LOCATION SALES VOLUME CODE',
+             'PRIMARY SIC CODE', 'SIC6_DESCRIPTIONS', 'PRIMARY NAICS CODE', 'NAICS8 DESCRIPTIONS',
+             'SIC CODE', 'SIC6_DESCRIPTIONS (SIC)', 'SIC CODE 1', 'SIC6_DESCRIPTIONS (SIC1)', 'SIC CODE 2', 
+             'SIC6_DESCRIPTIONS(SIC2)', 'SIC CODE 3', 'SIC6_DESCRIPTIONS(SIC3)', 'SIC CODE 4', 'SIC6_DESCRIPTIONS(SIC4)',
+             'MATCH CODE', 'CBSA CODE', 'CBSA LEVEL', 'CSA CODE', 'FIPS CODE', 'IDCODE', 'CENSUS BLOCK', 'CENSUS BLOCK',
+             'POPULATION CODE', 'PARENT ACTUAL SALES VOLUME', 'PARENT EMPLOYEE SIZE CODE', 'SUBSIDIARY NUMBER', 
+             'PARENT NUMBER', 'PARENT ACTUAL EMPLOYEE SIZE', 'YEAR ESTABLISHED', 'OFFICE SIZE CODE', 'COMPANY HOLDING STATUS', 
+             'ABI', 'BUSINESS STATUS CODE', 'INDUSTRY SPECIFIC FIRST BYTE', 'EMPLOYEE SIZE (5) - LOCATION', 
+             'SALES VOLUME (9) - LOCATION', 'ARCHIVE VERSION YEAR', 'YELLOW PAGE CODE', 'PARENT SALES VOLUME CODE',
+             'SITE NUMBER', 'ADDRESS TYPE INDICATOR', 'COUNTY CODE', 'AREA CODE', 'CENSUS TRACT']
+    infogroup_df.drop(drop_list, axis=1, inplace=True)
+    
+    # Counterglow data
+    # read in file
+    counterglow_df = pd.read_csv(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv")
+    # upper case all column names
+    counterglow_df.rename(columns={col: col.upper() for col in counterglow_df.columns}, inplace=True)
+    # rename some columns to match others
+    counterglow_df.rename(columns={'LAT': 'LATITUDE', 
+                               'LAT.1': 'LONGITUDE',
+                               'ADDRESS': 'ADDRESS LINE 1',
+                               'NAME': 'COMPANY'}, inplace=True)
+    counterglow_df['ZIPCODE'] = '' # create this missing column
+    
+    rop_list = ['PHONE NUMBER', 'DESCRIPTION', 'REGION', 'NUMBER OF ANIMALS', 'WEBSITE URL', 'FARM TYPE',
+             'CONTRACTED TO', 'SUBURB/CITY', 'COUNTY', 'POSTCODE'] 
+    counterglow_df.drop(drop_list, axis=1, inplace=True)
+    # reorder columns
+    counterglow_df = counterglow_df[['COMPANY', 'ADDRESS LINE 1', 'CITY', 'STATE', 'ZIPCODE', 'LATITUDE', 'LONGITUDE', 'BUSINESS/COMPANY NAME', 'POSTAL ADDRESS', 'FACILITY NAME', 'FULL ADDRESS']]
+    
+    # matched_farms cafo 
+    # load in data
+    cafos_df = pd.read_csv(here.parent / "data/matched_farms.csv")
+    # rename columns to match other dataframes
+    cafos_df.rename(columns={col: col.upper() for col in cafos_df.columns}, inplace=True)
+    cafos_df.rename(columns={'NAME': 'COMPANY',
+                         'LAT': 'LATITUDE',
+                         'LONG': 'LONGITUDE',
+                         'ADDRESS': 'ADDRESS LINE 1'}, inplace=True)
+    cafos_df['ZIPCODE'] = '' # create columns taht are currently missing
+    cafos_df['CITY'] = ''
+    # drop columns
+    drop_list = ['UNNAMED: 0', 'PERMIT', 'SOURCE', 'FUZZY NAME/EXACT LOCATION', 'LOCATION MATCH']
+    cafos_df.drop(drop_list, axis=1, inplace=True)
+    # reorder columns to match other dataframes
+    cafos_df = cafos_df[['COMPANY', 'ADDRESS LINE 1', 'CITY', 'STATE', 'ZIPCODE', 'LATITUDE', 'LONGITUDE', 'EXACT NAME MATCH', 'FUZZY NAME', 'EXACT NAME/LOCATION']]
+    
+        
+    # join all the dataframes
+    concat_df = pd.concat([infogroup_df, counterglow_df, cafos_df], join='outer')
+    
+    concat_df.to_csv(here.parent / "data/raw/combined_farm_data.csv")
+    
     pass
