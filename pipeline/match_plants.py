@@ -5,7 +5,7 @@ import time
 from distances import haversine
 
 
-def address_match(infogroup_2022_path, fsis_path):
+def address_match(infogroup_path, fsis_path):
     """Filters FSIS dataset for poultry processing plants, 
     then match 2022 Infogroup plants to FSIS plants based on address
     to add sales volume data to each poultry plant from FSIS.
@@ -18,7 +18,8 @@ def address_match(infogroup_2022_path, fsis_path):
         DataFrame with sales volume data filled in for address matches.
 
     """
-    df_filtered = pd.read_csv(infogroup_2022_path)
+    infogroup = pd.read_csv(infogroup_path)
+    df_filtered = infogroup[infogroup["ARCHIVE VERSION YEAR"]==2022]
     df_filtered["Full Address"] = df_filtered["ADDRESS LINE 1"] + ", " + df_filtered["CITY"] + ", " + df_filtered["STATE"] + " " + df_filtered["ZIPCODE"].astype(int).astype(str)
     df_filtered["Full Address"] = df_filtered["Full Address"].astype(str)
     
@@ -103,7 +104,7 @@ def fill_remaining_nulls(pp_sales):
 
     return pp_sales_updated
 
-def save_all_matches(infogroup_2022_path, fsis_path, threshold):
+def save_all_matches(infogroup_path, fsis_path, threshold):
     """Executes all three matching helper functions and saves final fully updated sales volume DataFrame
     as a CSV.
 
@@ -115,14 +116,15 @@ def save_all_matches(infogroup_2022_path, fsis_path, threshold):
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(infogroup_2022_path, fsis_path)
+    address_matches = address_match(infogroup_path, fsis_path)
     no_match = address_matches[address_matches["Sales Volume (Location)"].isna()]
 
-    pp_2022 = pd.read_csv(infogroup_2022_path)
+    infogroup = pd.read_csv(infogroup_path)
+    pp_2022 = infogroup[infogroup["ARCHIVE VERSION YEAR"]==2022]
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
 
     pp_sales_updated = fill_remaining_nulls(pp_sales)
     pp_sales_updated.to_csv("../data/clean/cleaned_matched_plants.csv")
 
 if __name__ == "__main__":
-    save_all_matches("../data/clean/poultry_plants_2022.csv", "../data/raw/fsis-processors-with-location.csv", 5)
+    save_all_matches("../data/clean/cleaned_infogroup_plants_all_time.csv", "../data/raw/fsis-processors-with-location.csv", 5)
