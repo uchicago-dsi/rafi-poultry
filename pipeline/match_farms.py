@@ -1,3 +1,7 @@
+"""Contains functions to match farm entries between state permit data and Counterglow dataset
+based on farm name and location.
+"""
+
 import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz

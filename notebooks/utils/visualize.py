@@ -1,3 +1,7 @@
+"""Contains functions for creating a map of CAFOs in a state, color coded by their source, 
+based on data from Counterglow and state permits websites.
+"""
+
 import pandas as pd
 import numpy as np
 import folium

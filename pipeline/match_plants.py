@@ -1,3 +1,7 @@
+"""Contains functions to match the sales volume data of processing plants from Infogroup 2022 data
+to the FSIS dataset, based on address and location. 
+"""
+
 import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz
