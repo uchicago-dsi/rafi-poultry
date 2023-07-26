@@ -1,4 +1,9 @@
+"""
+Script contains functionality to create a dataframe from a file. With a desired SIC Code, the other 
+function will trim out any row that does not contain that SIC Code.
+"""
 import dask.dataframe as dd
+
 
 
 def to_dataframe(filepath):
