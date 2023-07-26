@@ -1,3 +1,7 @@
+"""Contains analysis scripts to calculate HHI and parent corporation captured area for a given dataset,
+as well as join farm data from multiple sources together.
+"""
+
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -44,7 +48,7 @@ def HHI(fsis_sales):
     return hhi
 
 
-def calculateCapturedArea(path): # pass in geojson path
+def calculate_captured_area(path): # pass in geojson path
     """
     Calculates the captured areas as a percentage.
     Dict Keys: single capture, double capture, triple capture

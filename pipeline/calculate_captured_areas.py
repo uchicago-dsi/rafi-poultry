@@ -1,3 +1,6 @@
+"""Contains functions for creating a US map with markers for poultry processing plants 
+and isochrones representing area captured by the plants' parent corporations.
+"""
 
 import pandas as pd
 import numpy as np

@@ -1,3 +1,6 @@
+"""Contains functions to find matches between Infogroup and Counterglow datasets.
+"""
+
 from distances import haversine
 import pandas as pd
 

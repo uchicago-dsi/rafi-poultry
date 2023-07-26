@@ -1,3 +1,6 @@
+"""Contains all cleaning functions for the FSIS, Counterglow, Infogroup, and state CAFO permit datasets.
+"""
+
 import pandas as pd
 import numpy as np
 import glob

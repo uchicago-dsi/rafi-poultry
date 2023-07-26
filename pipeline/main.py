@@ -1,3 +1,7 @@
+"""Executes cleaning and analysis scripts given the filepath to raw data, the animal type, 
+and a distance threshold in km to find matching farms within.
+"""
+
 import clean
 import match_farms
 import match_plants
@@ -15,13 +19,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def create_parser():
-    parser = argparse.ArgumentParser(description='Executes scripts for cleaning, matching, and analyzing poultry plant and farm data.')
-    parser.add_argument('filepath', type=str, help='Relative path to raw data folder')
-    parser.add_argument('animal', type=str, help='Keywords for animals to filter for, as a regex')
-    parser.add_argument('distance', type=float, help='Maximum distance for farm matches to be made, in km')
-    return parser
+	parser = argparse.ArgumentParser(description='Executes scripts for cleaning, matching, and analyzing poultry plant and farm data.')
+	parser.add_argument('filepath', type=str, help='Relative path to raw data folder')
+	parser.add_argument('animal', type=str, help='Keywords for animals to filter for, as a regex')
+	parser.add_argument('distance', type=float, help='Maximum distance for farm matches to be made, in km')
+	return parser
 
-def main(args): 
+def main(args): # break up try excepts more after every function, try to catch more specific exceptions, add module docstring
 	try:
 		# Data Cleaning
 		print("Cleaning FSIS data...")
@@ -42,7 +46,7 @@ def main(args):
 				"../data/clean/cleaned_fsis_processors.csv", 5)
 		print("Matching CAFO permit data and Counterglow for poultry plants...")
 		match_farms.match_all_farms(args.filepath + "Counterglow+Facility+List+Complete.csv",\
-			      "../data/clean/cleaned_matched_farms.csv", args.animal)
+				  "../data/clean/cleaned_matched_farms.csv", args.animal)
 		
 		# Generate GeoJSONs and maps
 		print("Creating plant capture GeoJSON...")
