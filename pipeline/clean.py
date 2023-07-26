@@ -46,10 +46,11 @@ def clean_infogroup(filepath):
 
     """
 
+    path = Path(filepath)
     all_years_df = pd.DataFrame()
     dfs = []
 
-    for name in filepath.iterdir():
+    for name in path.iterdir():
         df = pd.read_csv(name)
         df.columns = map(str.upper, df.columns)
         dfs.append(df)
@@ -114,6 +115,8 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
         N/A, writes cleaned CAFO dataset to the clean data folder.
 
     """
+    data_dir = Path(data_dir)
+    config_fpath = Path(config_fpath)
     # Open configuration file
     with open(config_fpath) as f:
         config = json.load(f)
