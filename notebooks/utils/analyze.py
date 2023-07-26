@@ -122,7 +122,7 @@ def farm_count():
                                'NAME': 'COMPANY'}, inplace=True)
     counterglow_df['ZIPCODE'] = '' # create this missing column
     
-    rop_list = ['PHONE NUMBER', 'DESCRIPTION', 'REGION', 'NUMBER OF ANIMALS', 'WEBSITE URL', 'FARM TYPE',
+    drop_list = ['PHONE NUMBER', 'DESCRIPTION', 'REGION', 'NUMBER OF ANIMALS', 'WEBSITE URL', 'FARM TYPE',
              'CONTRACTED TO', 'SUBURB/CITY', 'COUNTY', 'POSTCODE'] 
     counterglow_df.drop(drop_list, axis=1, inplace=True)
     # reorder columns
