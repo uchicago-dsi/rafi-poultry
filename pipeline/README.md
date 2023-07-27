@@ -20,19 +20,36 @@ This is the pipeline for this project and a description of the files within it.
 - **match_plants.py** Reads in clean Infogroup datasets from 1997 through the present, matches plants across years using the ABI, match plants in FSIS with plants in Infogroup by location and address, to add sales volume data to plant records, writes the combined output DataFrame as a CSV file, matched_plants.csv, in the data/clean folder.
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
 
-# TODO: Need step-by-step instructions to actually run this
+# Running the Pipeline:
+1. **Establish directory structure** 
+    - pipeline
+    - notebooks
+    - data
+        - raw
+            - infogroup
+            - cafo
+        - clean
+    - html
+2. **Download the files**
+    - From drive/Data, into data/raw add:
+        - fsis-processors-with-location.csv
+        - fsis-processors.csv
+        - Counterglow+Facility+List+Complete.csv
+    - From drive/Data/CAFO, into data/cafo add:
+        - nc_cafo.csv
+        - ms_cafo.csv
+        - farm_source.json
+        - al_cafo.csv
+    - From drive/Data/Infogroup, into data/infogroup add:
+        - poultry_plants_x.csv
+            - where "x" is every year from 1997 to 2022
+3. **Run pipeline/requirements.txt**
+4. **Run notebooks/requirements.txt**
+5. **Run main.py**
 
 # file downloads? file download locations? virtual environment? DOCKER??????????~~?~?~??@@?@2
 
-# configuration setup?
-
-# what should my data directory look like?
-
-- need to have "raw" and "clean"
-
 # test and include instructions for filtering the raw infogroup data
-
-# include data that should be in cafo directory on the google drive
 
 # maybe: make it easy to pull out _parts_ of the pipeline (and do this via command line arguments)
 
