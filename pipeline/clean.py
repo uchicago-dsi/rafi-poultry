@@ -38,19 +38,20 @@ def clean_FSIS(filepath):
 
 
 
-def filter_infogroup(filenames: str, search_str: str, chunksize: int=10000):
+def filter_infogroup(filename: str, search_str: str, chunksize: int=10000):
     search_cols = [
-        "Primary SIC Code", 
-        'SIC Code 1', 
-        'SIC Code 2', 
-        'SIC Code 3',
-        'SIC Code 4'
+        "PRIMARY SIC CODE", 
+        'SIC CODE 1', 
+        'SIC CODE 2', 
+        'SIC CODE 3',
+        'SIC CODE 4'
     ]
 
     smoke_test = False
 
     filtered_df = pd.DataFrame([])
     for df in pd.read_csv(filename, iterator=True, chunksize=chunksize):
+        df.columns = map(str.upper, df.columns)
         rows_to_add = df[df[search_cols].apply(lambda r: r.astype(str).str.contains(search_str, case=False).any(), axis=1)]
         filtered_df = pd.concat([filtered_df, rows_to_add], axis=0)
         if smoke_test:
@@ -77,7 +78,6 @@ def clean_infogroup(filepath, SIC_CODE):
 
     for name in path.iterdir():
         df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
-        df.columns = map(str.upper, df.columns)
         dfs.append(df)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
@@ -175,4 +175,4 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
 
 if __name__ == "__main__":
-    clean_infogroup(here.parent / "data/raw/infogroup")
+    clean_infogroup(here.parent / "data/raw/infogroup", "2015")
