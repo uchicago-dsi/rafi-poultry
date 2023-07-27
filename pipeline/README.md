@@ -31,20 +31,20 @@ This is the pipeline for this project and a description of the files within it.
         - clean
     - html
 2. **Download the files**
-    - From drive/Data, into data/raw add:
+    - From team rafi google drive/Data, into data/raw add:
         - fsis-processors-with-location.csv
         - fsis-processors.csv
         - Counterglow+Facility+List+Complete.csv
-    - From drive/Data/CAFO, into data/cafo add:
+    - From team rafi google drive/Data/CAFO, into data/raw/cafo add:
         - nc_cafo.csv
         - ms_cafo.csv
         - farm_source.json
         - al_cafo.csv
-    - From drive/Data/Infogroup, into data/infogroup add:
+    - From team raif google drive/Data/Infogroup, into data/raw/infogroup add:
         - poultry_plants_x.csv
             - where "x" is every year from 1997 to 2022
-3. **Run pipeline/requirements.txt**
-4. **Run notebooks/requirements.txt**
+3. **Run pip install -r pipeline/requirements.txt**
+4. **Run pip install -r notebooks/requirements.txt**
 5. **Run main.py**
 
 # file downloads? file download locations? virtual environment? DOCKER??????????~~?~?~??@@?@2
