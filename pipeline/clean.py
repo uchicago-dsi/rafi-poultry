@@ -38,7 +38,29 @@ def clean_FSIS(filepath):
 
 
 
-def clean_infogroup(filepath):
+def filter_infogroup(filenames: str, search_str: str, chunksize: int=10000):
+    search_cols = [
+        "Primary SIC Code", 
+        'SIC Code 1', 
+        'SIC Code 2', 
+        'SIC Code 3',
+        'SIC Code 4'
+    ]
+
+    smoke_test = False
+
+    filtered_df = pd.DataFrame([])
+    for df in pd.read_csv(filename, iterator=True, chunksize=chunksize):
+        rows_to_add = df[df[search_cols].apply(lambda r: r.astype(str).str.contains(search_str, case=False).any(), axis=1)]
+        filtered_df = pd.concat([filtered_df, rows_to_add], axis=0)
+        if smoke_test:
+            break
+
+    return filtered_df
+
+
+
+def clean_infogroup(filepath, SIC_CODE):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -54,7 +76,7 @@ def clean_infogroup(filepath):
     dfs = []
 
     for name in path.iterdir():
-        df = pd.read_csv(name)
+        df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
         df.columns = map(str.upper, df.columns)
         dfs.append(df)
 
@@ -154,4 +176,3 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
 if __name__ == "__main__":
     clean_infogroup(here.parent / "data/raw/infogroup")
-    clean_FSIS(here.parent / "data/raw/fsis-processors-with-location.csv")
