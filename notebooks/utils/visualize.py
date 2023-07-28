@@ -56,5 +56,5 @@ if __name__ == "__main__":
     states = match_df["state"].unique().tolist()
 
     for state in states:
-        path = "../html/cafo_poultry_eda_" + "state" + ".html"
+        path = "../html/cafo_poultry_eda_" + state + ".html"
         map_state("../data/clean/matched_farms.csv", "../data/clean/unmatched_farms.csv", state).save(path)
