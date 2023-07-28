@@ -83,7 +83,8 @@ def clean_infogroup(filepath, SIC_CODE, filtering):
             df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
             dfs.append(df)
         else:
-            df = pd.read_csv(name)
+            df = pd.read_csv(name, encoding='unicode_escape')
+            dfs.append(df)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
     all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR').reset_index(drop=True)
