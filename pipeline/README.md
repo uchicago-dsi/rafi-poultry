@@ -30,6 +30,8 @@ This is the pipeline for this project and a description of the files within it.
             - cafo
         - clean
     - html
+2. **Set up Conda environment**
+    - conda create --name NAME python=3.9.16
 2. **Download the files**
     - From team rafi google drive/Data, into data/raw add:
         - fsis-processors-with-location.csv
@@ -46,13 +48,13 @@ This is the pipeline for this project and a description of the files within it.
 3. **Run pip install -r pipeline/requirements.txt**
 4. **Run pip install -r notebooks/requirements.txt**
 5. **Run main.py**
-
-# file downloads? file download locations? virtual environment? DOCKER??????????~~?~?~??@@?@2
+    - Structure the command line arguments as:
+        - python main.py FILEPATH ANIMAL DISTANCE
+            - FILEPATH; str; Relative path (from cwd) to raw data folder
+            - ANIMAL; str; Keywords for animals to filter for, as a regex
+            - DISTANCE; int; Maximum distance for farm matches to be made across different datasets, in km
+        - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 
 
 # test and include instructions for filtering the raw infogroup data
 
 # maybe: make it easy to pull out _parts_ of the pipeline (and do this via command line arguments)
-
-# what arguments do I need to pass
-
-# need to fix the order for getting the cleaned FSIS data - need to move this into a function maybe?
