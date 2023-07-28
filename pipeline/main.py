@@ -27,7 +27,7 @@ def create_parser():
 	parser.add_argument('animal', type=str, default="Poultry|Chicken|Broiler", nargs='?', help='Keywords for animals to filter for, as a regex')
 	parser.add_argument('distance', type=float, default=5, nargs='?', help='Maximum distance for farm matches to be made across different datasets, in km')
 	parser.add_argument('code', type=str, default="2015", nargs='?', help='SIC code to filter Infogroup entries on')
-	parser.add_argument('filtering', type=bool, default="False", nargs='?', help='Determines whether infogroup data is raw and needs filtering by SIC Code')
+	parser.add_argument('filtering', type=bool, default=False, nargs='?', help='Determines whether infogroup data is raw and needs filtering by SIC Code')
 
 
 	# Functions - will run all functions if no command line arguments are specified

@@ -5,8 +5,10 @@ to the FSIS dataset, based on address and location.
 import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz
-import time
 from distances import haversine
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 
 def address_match(infogroup_path, fsis_path):
@@ -123,7 +125,7 @@ def save_all_matches(infogroup_path, fsis_path, threshold):
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
 
     pp_sales_updated = fill_remaining_nulls(pp_sales)
-    pp_sales_updated.to_csv("../data/clean/cleaned_matched_plants.csv")
+    pp_sales_updated.to_csv(here.parent / "data/clean/cleaned_matched_plants.csv")
 
 if __name__ == "__main__":
-    save_all_matches("../data/clean/cleaned_infogroup_plants_all_time.csv", "../data/raw/fsis-processors-with-location.csv", 5)
+    save_all_matches(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv", here.parent / "data/raw/fsis-processors-with-location.csv", 5)
