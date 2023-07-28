@@ -23,11 +23,6 @@ load_dotenv()
 # make it easier to access files
 here = Path(__file__).resolve().parent
 
-# TODO: load the data in a function so it doesn't try to load non-existent files on import
-# import data
-fsis_df = pd.read_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
-info_df = pd.read_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
-
 ALBERS_EQUAL_AREA = "EPSG:9822"
 WGS84 = "EPSG:4326"
 USA_LAT = 37.0902
@@ -472,6 +467,10 @@ def state_level_geojson(df, map, single, two, three):
 
 
 def full_script(token):
+    # import cleaned data
+    fsis_df = pd.read_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
+    info_df = pd.read_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
+
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
 

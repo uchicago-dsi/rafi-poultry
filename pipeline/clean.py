@@ -38,11 +38,36 @@ def clean_FSIS(filepath):
 
 
 
-def clean_infogroup(filepath):
+def filter_infogroup(filename: str, search_str: str, chunksize: int=10000):
+    search_cols = [
+        "PRIMARY SIC CODE", 
+        'SIC CODE 1', 
+        'SIC CODE 2', 
+        'SIC CODE 3',
+        'SIC CODE 4'
+    ]
+
+    smoke_test = False
+
+    filtered_df = pd.DataFrame([])
+    for df in pd.read_csv(filename, iterator=True, chunksize=chunksize):
+        df.columns = map(str.upper, df.columns)
+        rows_to_add = df[df[search_cols].apply(lambda r: r.astype(str).str.contains(search_str, case=False).any(), axis=1)]
+        filtered_df = pd.concat([filtered_df, rows_to_add], axis=0)
+        if smoke_test:
+            break
+
+    return filtered_df
+
+
+
+def clean_infogroup(filepath, SIC_CODE, filtering):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
         filepath: absolute path to folder that contains all infogroup files 
+        SIC_CODE: SIC code to filter the dataframes on
+        filtering: boolean, true if infogroup files are in their rawest form and need to be filtered
 
     Returns:
         n/a, puts cleaned df into the data/clean folder
@@ -54,9 +79,11 @@ def clean_infogroup(filepath):
     dfs = []
 
     for name in path.iterdir():
-        df = pd.read_csv(name)
-        df.columns = map(str.upper, df.columns)
-        dfs.append(df)
+        if filtering:
+            df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
+            dfs.append(df)
+        else:
+            df = pd.read_csv(name)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
     all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR').reset_index(drop=True)
@@ -71,8 +98,8 @@ def clean_infogroup(filepath):
     all_years_df['PARENT NAME'] = all_years_df['PARENT NAME'].fillna('Small Biz')
 
     master = all_years_df[['COMPANY', 'ADDRESS LINE 1', 'CITY', 'STATE', 'ZIPCODE', 'PRIMARY SIC CODE', 
-                    'ARCHIVE VERSION YEAR', 'YEAR ESTABLISHED', 'ABI', 'COMPANY HOLDING STATUS', 'PARENT NUMBER', 
-                    'PARENT NAME', 'LATITUDE', 'LONGITUDE', 'YEAR 1ST APPEARED']]
+                    'ARCHIVE VERSION YEAR', 'YEAR ESTABLISHED', 'ABI', 'SALES VOLUME (9) - LOCATION', 'COMPANY HOLDING STATUS', 
+                    'PARENT NUMBER', 'PARENT NAME', 'LATITUDE', 'LONGITUDE', 'YEAR 1ST APPEARED']]
 
 
     master = master.dropna(subset = ['COMPANY', 'LATITUDE', 'LONGITUDE'])
@@ -153,5 +180,5 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
 
 if __name__ == "__main__":
-    clean_infogroup(here.parent / "data/raw/infogroup")
-    clean_FSIS(here.parent / "data/raw/fsis-processors-with-location.csv")
+    filtering = False
+    clean_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)
