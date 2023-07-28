@@ -27,14 +27,14 @@ def create_parser():
 	parser.add_argument('SIC code', type=str, default="2015", nargs='?', help='SIC code to filter Infogroup entries on')
 
 	# functions
-	parser.add_argument('--clean_FSIS', action='store_true', help='Run clean_FSIS')
-	parser.add_argument('--clean_counterglow', action='store_true', help='Run clean_counterglow')
-	parser.add_argument('--clean_infogroup', action='store_true', help='Run clean_infogroup')
-	parser.add_argument('--clean_cafo', action='store_true', help='Run clean_cafo')
-	parser.add_argument('--match_plants', action='store_true', help='Run match_plants')
-	parser.add_argument('--match_farms', action='store_true', help='Run match_farms')
-	parser.add_argument('--calculate_captured_areas', action='store_true', help='Run calculate_captured_areas')
-	parser.add_argument('--visualize', action='store_true', help='Run visualize')
+	parser.add_argument('--clean_FSIS', action='store_false', help='Run clean_FSIS')
+	parser.add_argument('--clean_counterglow', action='store_false', help='Run clean_counterglow')
+	parser.add_argument('--clean_infogroup', action='store_false', help='Run clean_infogroup')
+	parser.add_argument('--clean_cafo', action='store_false', help='Run clean_cafo')
+	parser.add_argument('--match_plants', action='store_false', help='Run match_plants')
+	parser.add_argument('--match_farms', action='store_false', help='Run match_farms')
+	parser.add_argument('--calculate_captured_areas', action='store_false', help='Run calculate_captured_areas')
+	parser.add_argument('--visualize', action='store_false', help='Run visualize')
 
 	return parser
 
@@ -56,7 +56,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 	
-	if args.clean_infogroup:
+	if not args.clean_infogroup:
 		try:
 			print("Cleaning Infogroup data...")
 			clean.clean_infogroup(args.filepath + "/infogroup")
@@ -85,7 +85,7 @@ def main(args):
 	if args.match_farms:
 		try:
 			print("Matching CAFO permit data and Counterglow for poultry plants...")
-			match_farms.match_all_farms(args.filepath + "Counterglow+Facility+List+Complete.csv",\
+			match_farms.match_all_farms(args.filepath + "/Counterglow+Facility+List+Complete.csv",\
 					"../data/clean/cleaned_matched_farms.csv", args.animal)
 		except Exception as e:
 			print(f"{e}")
