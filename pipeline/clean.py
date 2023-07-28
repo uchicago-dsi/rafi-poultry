@@ -61,11 +61,13 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int=10000):
 
 
 
-def clean_infogroup(filepath, SIC_CODE):
+def clean_infogroup(filepath, SIC_CODE, filtering):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
         filepath: absolute path to folder that contains all infogroup files 
+        SIC_CODE: SIC code to filter the dataframes on
+        filtering: boolean, true if infogroup files are in their rawest form and need to be filtered
 
     Returns:
         n/a, puts cleaned df into the data/clean folder
@@ -77,8 +79,11 @@ def clean_infogroup(filepath, SIC_CODE):
     dfs = []
 
     for name in path.iterdir():
-        df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
-        dfs.append(df)
+        if filtering:
+            df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
+            dfs.append(df)
+        else:
+            df = pd.read_csv(name)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
     all_years_df = all_years_df.sort_values(by='ARCHIVE VERSION YEAR').reset_index(drop=True)
@@ -175,4 +180,5 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
 
 if __name__ == "__main__":
-    clean_infogroup(here.parent / "data/raw/infogroup", "2015")
+    filtering = False
+    clean_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)
