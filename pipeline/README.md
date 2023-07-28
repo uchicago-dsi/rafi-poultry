@@ -49,12 +49,10 @@ This is the pipeline for this project and a description of the files within it.
 4. **Run pip install -r notebooks/requirements.txt**
 5. **Run main.py**
     - Structure the command line arguments as:
-        - python main.py FILEPATH ANIMAL DISTANCE
+        - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
             - FILEPATH; str; Relative path (from cwd) to raw data folder
             - ANIMAL; str; Keywords for animals to filter for, as a regex
-            - DISTANCE; int; Maximum distance for farm matches to be made across different datasets, in km
+            - DISTANCE; float; Maximum distance for farm matches to be made across different datasets, in km
+            - SIC_CODE; str; SIC code to filter the dataset on, if FILTERING is False, this variable is not used
+            - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
         - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 
-
-# test and include instructions for filtering the raw infogroup data
-
-# maybe: make it easy to pull out _parts_ of the pipeline (and do this via command line arguments)
