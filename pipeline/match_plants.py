@@ -38,9 +38,9 @@ def address_match(infogroup_path, fsis_path):
         for k, infogroup in df_filtered.iterrows():
             infogroup_address = infogroup["Full Address"].lower()
             if fuzz.token_sort_ratio(infogroup_address, fsis_address) > 75:
-                print(f"Found a match at index {k}")
-                print(infogroup_address)
-                print(fsis_address)
+                #print(f"Found a match at index {k}")
+                #print(infogroup_address)
+                #print(fsis_address)
                 df_poultry.loc[i, "Sales Volume (Location)"] = infogroup['SALES VOLUME (9) - LOCATION']
                 break
 
