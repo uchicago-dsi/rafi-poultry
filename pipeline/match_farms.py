@@ -6,6 +6,9 @@ import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz
 from distances import haversine
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 
 def name_match(counterglow: pd.DataFrame,  cafomaps: pd.DataFrame):
@@ -180,9 +183,9 @@ def match_all_farms(counterglow_path, cafomaps_path, animal_exp):
 
     unmatched_df = pd.concat([combined_df[combined_df['No Match']], cg_unmatched], ignore_index=True).drop(columns=["No Match"])
 
-    matched_df.to_csv("../data/clean/matched_farms.csv")
-    unmatched_df.to_csv("../data/clean/unmatched_farms.csv")
+    matched_df.to_csv(here.parent / "data/clean/matched_farms.csv")
+    unmatched_df.to_csv(here.parent / "data/clean/unmatched_farms.csv")
 
 
 if __name__ == "__main__":
-    match_all_farms("../data/raw/Counterglow+Facility+List+Complete.csv", "../data/clean/cleaned_matched_farms.csv", "Poultry|Chicken|Broiler")
+    match_all_farms(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv", here.parent / "data/clean/cleaned_matched_farms.csv", "Poultry|Chicken|Broiler")

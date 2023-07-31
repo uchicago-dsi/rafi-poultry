@@ -5,6 +5,9 @@ based on data from Counterglow and state permits websites.
 import pandas as pd
 import numpy as np
 import folium
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 
 def add_points(state_map, state_df, color):
@@ -52,9 +55,9 @@ def map_state(match_df_path, unmatched_df_path, state):
     return state_map
 
 if __name__ == "__main__":
-    match_df = pd.read_csv("../data/clean/matched_farms.csv")
+    match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
     states = match_df["state"].unique().tolist()
 
     for state in states:
-        path = "../html/cafo_poultry_eda_" + "state" + ".html"
-        map_state("../data/clean/matched_farms.csv", "../data/clean/unmatched_farms.csv", state).save(path)
+        path = "html/cafo_poultry_eda_" + state + ".html"
+        map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
