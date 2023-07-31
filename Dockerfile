@@ -8,10 +8,15 @@ WORKDIR /app
 COPY ../pipeline/requirements.txt .
 COPY ../notebooks/notebook_requirements.txt  .
 
+RUN apt-get update && apt-get install -y \
+  gdal-bin \
+  python3-gdal \
+  python3-pip
+
 # install dependencies
 RUN python -m pip install --upgrade pip
-RUN pip install -r -no-cache-dir requirements.txt
-RUN pip install -r -no-cache-dir notebook_requirements.txt
+RUN pip install -r requirements.txt
+RUN pip install -r notebook_requirements.txt
 
 # copies all of the files in your root of your project to /app in the Docker container
 COPY ../pipeline/ .
@@ -20,3 +25,6 @@ COPY ../data/ .
 
 # run the command to set up a jupyter notebook
 CMD ["python", "main.py"]
+
+
+
