@@ -31,7 +31,7 @@ This is the pipeline for this project and a description of the files within it.
         - clean
     - html
 2. **Set up Conda environment**
-    - conda create --name NAME python=3.9.16
+    - conda create --name <myenv> python=3.9.16
 2. **Download the files**
     - From team rafi google drive/Data, into data/raw add:
         - fsis-processors-with-location.csv
@@ -42,19 +42,18 @@ This is the pipeline for this project and a description of the files within it.
         - ms_cafo.csv
         - farm_source.json
         - al_cafo.csv
-    - From team raif google drive/Data/Infogroup, into data/raw/infogroup add:
+    - From team rafi google drive/Data/Infogroup, into data/raw/infogroup add:
         - poultry_plants_x.csv
             - where "x" is every year from 1997 to 2022
 3. **Run pip install -r pipeline/requirements.txt**
 4. **Run pip install -r notebooks/requirements.txt**
 5. **Run main.py**
     - Structure the command line arguments as:
-        - python main.py FILEPATH ANIMAL DISTANCE
+        - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
             - FILEPATH; str; Relative path (from cwd) to raw data folder
             - ANIMAL; str; Keywords for animals to filter for, as a regex
-            - DISTANCE; int; Maximum distance for farm matches to be made across different datasets, in km
-        - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 
-
-# test and include instructions for filtering the raw infogroup data
-
-# maybe: make it easy to pull out _parts_ of the pipeline (and do this via command line arguments)
+            - DISTANCE; float; Maximum distance for farm matches to be made across different datasets, in km
+            - SIC_CODE; str; SIC code to filter the dataset on, if FILTERING is False, this variable is not used
+            - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
+        - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
+    - All functions are executed by default. If you want to run specific functions only, include a command line argument for all functions that you want to be excluded/not run. 

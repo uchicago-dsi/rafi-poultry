@@ -5,8 +5,10 @@ to the FSIS dataset, based on address and location.
 import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz
-import time
 from distances import haversine
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 
 def address_match(infogroup_path, fsis_path):
@@ -38,9 +40,9 @@ def address_match(infogroup_path, fsis_path):
         for k, infogroup in df_filtered.iterrows():
             infogroup_address = infogroup["Full Address"].lower()
             if fuzz.token_sort_ratio(infogroup_address, fsis_address) > 75:
-                print(f"Found a match at index {k}")
-                print(infogroup_address)
-                print(fsis_address)
+                #print(f"Found a match at index {k}")
+                #print(infogroup_address)
+                #print(fsis_address)
                 df_poultry.loc[i, "Sales Volume (Location)"] = infogroup['SALES VOLUME (9) - LOCATION']
                 break
 
@@ -69,12 +71,7 @@ def loc_match(no_match, pp_2022, pp_sales, threshold):
             candidate_point = infogroup["LATITUDE"], infogroup["LONGITUDE"]
             distance = haversine(target_point[1], target_point[0], candidate_point[1], candidate_point[0])
             if distance <= threshold:
-                print("current point: " + str(target_point) + "; match from pp22: " + str(candidate_point))
-                print("current company: " + row["Parent Corporation"] + ", " + row["Establishment Name"] + 
-                      "; matched: parent ABI (" + str(infogroup["PARENT NUMBER"]) + ") " + infogroup["COMPANY"])
-                time.sleep(2)
-                x = input("confirm location (type yes if match): ")
-                if (x == "yes"):
+                if fuzz.token_sort_ratio(row["Establishment Name"].upper(), infogroup["COMPANY"]) > 90:
                     pp_sales.loc[index, "Sales Volume (Location)"] = infogroup["SALES VOLUME (9) - LOCATION"]
                     break
     return pp_2022, pp_sales
@@ -128,7 +125,7 @@ def save_all_matches(infogroup_path, fsis_path, threshold):
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
 
     pp_sales_updated = fill_remaining_nulls(pp_sales)
-    pp_sales_updated.to_csv("../data/clean/cleaned_matched_plants.csv")
+    pp_sales_updated.to_csv(here.parent / "data/clean/cleaned_matched_plants.csv")
 
 if __name__ == "__main__":
-    save_all_matches("../data/clean/cleaned_infogroup_plants_all_time.csv", "../data/raw/fsis-processors-with-location.csv", 5)
+    save_all_matches(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv", here.parent / "data/raw/fsis-processors-with-location.csv", 5)
