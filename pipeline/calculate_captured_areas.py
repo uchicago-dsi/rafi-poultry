@@ -39,7 +39,7 @@ three_plant_color = lambda x: {"fillColor": "#9F2B68"}  # amaranth
 
 
 def isochrones(df, x, token):
-    """Adds plant isochrones to fsis dataframe; captures area that is within an x mile raidus of the plant.
+    """Adds plant isochrones to fsis dataframe; captures area that is within an x mile radius of the plant.
 
     Args:
         df: fsis_df, cleaned.
@@ -84,7 +84,7 @@ def isochrones(df, x, token):
 
 
 def make_geo_df(df, dist, token):
-    """Adds slightly simpligied isochrones to fsis dataframe.
+    """Adds slightly simplified isochrones to fsis dataframe.
 
     Args:
         df: fsis_df, cleaned.
@@ -99,6 +99,7 @@ def make_geo_df(df, dist, token):
     geo_df = (
         gpd.GeoDataFrame(geo_df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
     )
+    # TODO: maybe have a function argument (with a default of .01) that sets the simplify number
     geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(0.01)
 
     return geo_df
@@ -467,9 +468,13 @@ def state_level_geojson(df, map, single, two, three):
 
 
 def full_script(token):
+    # TODO: add docstring
+
     # import cleaned data
     fsis_df = pd.read_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
-    info_df = pd.read_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
+    info_df = pd.read_csv(
+        here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv"
+    )
 
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
@@ -478,6 +483,9 @@ def full_script(token):
     dict = {}
     chrones = []
 
+    # TODO: I'm a bit confused about how the tokens are working here
+    # Are we loading the token in one of the other files and passing it to all of these functions?
+    # It looks like we load the token in this file too?
     df_map = make_geo_df(fsis_df, 60, token)
     add_plants(df_map, dict, chrones, m)
 
