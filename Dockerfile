@@ -1,30 +1,43 @@
-# start with a base image - this defines the operating system, python version, etc
-FROM python:3.9.16 AS builder
+#Use python 3.9 as the base image
+FROM --platform=linux/amd64 osgeo/gdal:ubuntu-full-3.6.3
 
-# set a directory for the app
+RUN apt-get -y update 
+
+RUN apt -y install python3-pip libspatialindex-dev \
+    && apt-get install -y --no-install-recommends \
+       gdal-bin \
+       libgdal-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+#Set the working directory
 WORKDIR /app
 
-# copy requirements to the container
-COPY ../pipeline/requirements.txt .
-COPY ../notebooks/notebook_requirements.txt  .
+#Install any needed packages specified in requirements.txt
+COPY pipeline/requirements.txt .
+RUN pip install --trusted-host pypi.python.org --no-cache-dir -r requirements.txt
 
-RUN apt-get update && apt-get install -y \
-  gdal-bin \
-  python3-gdal \
-  python3-pip
+COPY notebooks/notebook_requirements.txt .
+RUN pip install --trusted-host pypi.python.org --no-cache-dir -r notebook_requirements.txt
 
-# install dependencies
-RUN python -m pip install --upgrade pip
-RUN pip install -r requirements.txt
-RUN pip install -r notebook_requirements.txt
+#Copy the pipeline, notebook, and data directory into the container
+COPY notebooks/ .
+COPY pipeline/ .
+COPY data/ .
 
-# copies all of the files in your root of your project to /app in the Docker container
-COPY ../pipeline/ .
-COPY ../notebooks/ .
-COPY ../data/ . 
+#Make a results directory within the container to store the results
+RUN mkdir /app/results
 
-# run the command to set up a jupyter notebook
+#Run the main.py script when the container launches
 CMD ["python", "main.py"]
+
+
+
+
+
+
+
+
+
 
 
 
