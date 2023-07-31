@@ -79,7 +79,7 @@ def main(args):
 	if args.match_plants:
 		try:
 			# Match plants and farms
-			print("Matching FSIS and Infogroup...")
+			print("Matching FSIS plants and Infogroup for sales volume data...")
 			match_plants.save_all_matches(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv",\
 					here.parent / "data/clean/cleaned_fsis_processors.csv", args.distance)
 		except Exception as e:
@@ -88,7 +88,7 @@ def main(args):
 
 	if args.match_farms:
 		try:
-			print("Matching CAFO permit data and Counterglow for poultry plants...")
+			print("Matching CAFO permit data and Counterglow for farms...")
 			match_farms.match_all_farms(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv",\
 					here.parent / "data/clean/cleaned_matched_farms.csv", args.animal)
 		except Exception as e:
