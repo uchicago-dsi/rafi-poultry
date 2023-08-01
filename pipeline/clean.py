@@ -83,14 +83,12 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def clean_infogroup(filepath, SIC_CODE, filtering):
+def filter_infogroup(filepath, SIC_CODE, filtering=False):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
         filepath: absolute path to folder that contains all infogroup files
         SIC_CODE: SIC code to filter the dataframes on
-        # TODO: should probably have a default for filtering
-        # Maybe call this filter_infogroup instead?
         filtering: boolean, true if infogroup files are in their rawest form and need to be filtered
 
     Returns:
@@ -223,4 +221,4 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
 if __name__ == "__main__":
     filtering = False
-    clean_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)
+    filter_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)

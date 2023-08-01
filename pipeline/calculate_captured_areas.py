@@ -467,8 +467,18 @@ def state_level_geojson(df, map, single, two, three):
     return
 
 
-def full_script(token):
-    # TODO: add docstring
+def full_script(token, distance):
+    """Loads in cleaned data, adds isochrones based on passed radius, calculates areas that have
+    access to 1, 2, and 3+ plants, and plots them on a country-wide map and a state-level map
+
+    Args:
+        token: API token to access mapbox.
+        distance: radius of plant isochrones based on driving distance, in miles
+
+    Returns:
+        country-wide map, outputs two html files.
+
+    """
 
     # import cleaned data
     fsis_df = pd.read_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
@@ -483,10 +493,9 @@ def full_script(token):
     dict = {}
     chrones = []
 
-    # TODO: I'm a bit confused about how the tokens are working here
     # Are we loading the token in one of the other files and passing it to all of these functions?
     # It looks like we load the token in this file too?
-    df_map = make_geo_df(fsis_df, 60, token)
+    df_map = make_geo_df(fsis_df, distance, token)
     add_plants(df_map, dict, chrones, m)
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
