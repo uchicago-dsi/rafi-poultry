@@ -469,7 +469,7 @@ def state_level_geojson(df, map, single, two, three):
     return
 
 
-def full_script(token, distance):
+def full_script(token, distance=60):
     """Loads in cleaned data, adds isochrones based on passed radius, calculates areas that have
     access to 1, 2, and 3+ plants, and plots them on a country-wide map and a state-level map
 
