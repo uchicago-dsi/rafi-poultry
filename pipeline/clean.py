@@ -9,7 +9,6 @@ from pathlib import Path
 
 here = Path(__file__).resolve().parent
 
-# TODO: We should probably read the ABI in as a string rather than a float tbh
 ABI_dict = dict(
     {
         np.nan: "None",
@@ -83,7 +82,7 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def filter_infogroup(filepath, SIC_CODE, filtering=False):
+def clean_infogroup(filepath, SIC_CODE, filtering=False):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -121,6 +120,7 @@ def filter_infogroup(filepath, SIC_CODE, filtering=False):
 
     all_years_df["PARENT NAME"] = all_years_df["PARENT NUMBER"].map(ABI_dict)
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
+    all_years_df["ABI"] = all_years_df["PARENT NUMBER"].apply(str)
 
     master = all_years_df[
         [
@@ -221,4 +221,4 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
 if __name__ == "__main__":
     filtering = False
-    filter_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)
+    clean_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)
