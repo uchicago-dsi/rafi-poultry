@@ -29,21 +29,82 @@ def create_parser():
 	parser.add_argument('code', type=str, default="2015", nargs='?', help='SIC code to filter Infogroup entries on')
 	parser.add_argument('filtering', type=bool, default=False, nargs='?', help='Determines whether infogroup data is raw and needs filtering by SIC Code')
 
-
-	# Functions - will run all functions if no command line arguments are specified
-	parser.add_argument('--clean_FSIS', action='store_false', help='Run clean_FSIS')
-	parser.add_argument('--clean_counterglow', action='store_false', help='Run clean_counterglow')
-	parser.add_argument('--clean_infogroup', action='store_false', help='Run clean_infogroup')
-	parser.add_argument('--clean_cafo', action='store_false', help='Run clean_cafo')
-	parser.add_argument('--match_plants', action='store_false', help='Run match_plants')
-	parser.add_argument('--match_farms', action='store_false', help='Run match_farms')
-	parser.add_argument('--calculate_captured_areas', action='store_false', help='Run calculate_captured_areas')
-	parser.add_argument('--visualize', action='store_false', help='Run visualize')
+	parser.add_argument('--function', choices= ["clean_FSIS", "clean_counterglow", \
+						      "clean_infogroup", "clean_cafo", "match_plants", "match_farms", \
+							  "calculate_captured_areas", "visualize"], help="Specify the function to run.")
 
 	return parser
 
+def run_all(args): 
+	try:
+		# Data Cleaning
+		print("Cleaning FSIS data...")
+		clean.clean_FSIS(here.parent / "data/raw/fsis-processors-with-location.csv")
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		print("Cleaning Counterglow data...")
+		clean.clean_counterglow(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv")
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		print("Cleaning Infogroup data...")
+		clean.clean_infogroup(here.parent / "data/raw/infogroup", args.code, args.filtering)
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		print("Cleaning CAFO Permit data...")
+		clean.clean_cafo(here.parent / "data/raw/cafo", here.parent / "data/raw/cafo/farm_source.json")
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		# Match plants and farms
+		print("Matching FSIS plants and Infogroup for sales volume data...")
+		match_plants.save_all_matches(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv",\
+				here.parent / "data/clean/cleaned_fsis_processors.csv", args.distance)
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		print("Matching CAFO permit data and Counterglow for farms...")
+		match_farms.match_all_farms(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv",\
+				here.parent / "data/clean/cleaned_matched_farms.csv", args.animal)
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		# Generate GeoJSONs and maps
+		print("Creating plant capture GeoJSON...")
+		calculate_captured_areas.full_script("pk.eyJ1IjoidG9kZG5pZWYiLCJhIjoiY2xqc3FnN2NjMDBqczNkdDNmdjBvdnU0ciJ9.0RfS-UsqS63pbAuqrE_REw")
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		print("Mapping CAFO permits...")
+		match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
+		match_df = match_df[match_df['lat'].notna()]
+		states = match_df["state"].unique().tolist()
+		for state in states:
+			path = "html/cafo_poultry_eda_" + state + ".html"
+			visualize.map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+
 def main(args): 
-	if args.clean_FSIS:
+	if args.function == "clean_FSIS":
 		try:
 			# Data Cleaning
 			print("Cleaning FSIS data...")
@@ -52,7 +113,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 	
-	if args.clean_counterglow:
+	elif args.function == "clean_counterglow":
 		try:
 			print("Cleaning Counterglow data...")
 			clean.clean_counterglow(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv")
@@ -60,7 +121,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 	
-	if args.clean_infogroup:
+	elif args.function == "clean_infogroup":
 		try:
 			print("Cleaning Infogroup data...")
 			clean.clean_infogroup(here.parent / "data/raw/infogroup", args.code, args.filtering)
@@ -68,7 +129,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 	
-	if args.clean_cafo:
+	elif args.function == "clean_cafo":
 		try:
 			print("Cleaning CAFO Permit data...")
 			clean.clean_cafo(here.parent / "data/raw/cafo", here.parent / "data/raw/cafo/farm_source.json")
@@ -76,7 +137,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 	
-	if args.match_plants:
+	elif args.function == "match_plants":
 		try:
 			# Match plants and farms
 			print("Matching FSIS plants and Infogroup for sales volume data...")
@@ -86,7 +147,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 
-	if args.match_farms:
+	elif args.function == "match_farms":
 		try:
 			print("Matching CAFO permit data and Counterglow for farms...")
 			match_farms.match_all_farms(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv",\
@@ -95,7 +156,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 
-	if args.calculate_captured_areas:
+	elif args.function == "calculate_captured_areas":
 		try:
 			# Generate GeoJSONs and maps
 			print("Creating plant capture GeoJSON...")
@@ -104,7 +165,7 @@ def main(args):
 			print(f"{e}")
 			exit(1)
 	
-	if args.visualize:
+	elif args.function == "visualize":
 		try:
 			print("Mapping CAFO permits...")
 			match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
@@ -117,6 +178,9 @@ def main(args):
 		except Exception as e:
 			print(f"{e}")
 			exit(1)
+
+	else:
+		run_all(args)
 	
 	print("Done!")
 
