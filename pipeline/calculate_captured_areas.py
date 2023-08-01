@@ -495,3 +495,7 @@ def full_script(token):
     mm.save(here.parent / "data/html/state-poultry-map-smoothed.html")
 
     return m
+
+
+if __name__ == "__main__":
+    full_script("pk.eyJ1IjoidG9kZG5pZWYiLCJhIjoiY2xqc3FnN2NjMDBqczNkdDNmdjBvdnU0ciJ9.0RfS-UsqS63pbAuqrE_REw")
