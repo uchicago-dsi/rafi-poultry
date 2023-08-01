@@ -303,12 +303,11 @@ def save_map(single, two, three, dict):
     return
 
 
-def state_level_geojson(df, map, single, two, three):
+def state_level_geojson(df, single, two, three):
     """Assembles state-specific map of plant access, exports to data/clean as a geojson
 
     Args:
         df: geo_df containing all plant isochrones, raw and simplified.
-        map: base-map for state-specific visualization.
         single: isochrones of areas that have access to only one plant.
         two: isochrones of areas that have access to two plants.
         three_plants_combined: one isochrone of all areas that have access to three+ plants.
@@ -487,12 +486,8 @@ def full_script(token):
     save_map(single_shapely, two_shapely, three_combined, dict)
     m.save(here.parent / "data/html/poultry-map-smoothed.html")
 
-    # make base map for state-specific visualization
-    mm = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
-
     # assemble state-specific capture map, save as GEOJSON to data/clean
-    state_level_geojson(df_map, mm, single_shapely, two_shapely, three_combined)
-    mm.save(here.parent / "data/html/state-poultry-map-smoothed.html")
+    state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
     return m
 
