@@ -29,7 +29,7 @@ This is the pipeline for this project and a description of the files within it.
             - infogroup
             - cafo
         - clean
-    - html
+        - html
 2. **Set up Conda environment**
     - conda create --name NAME python=3.9.16
 2. **Download the files**

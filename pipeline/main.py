@@ -112,7 +112,7 @@ def main(args):
 			states = match_df["state"].unique().tolist()
 
 			for state in states:
-				path = "html/cafo_poultry_eda_" + state + ".html"
+				path = "data/html/cafo_poultry_eda_" + state + ".html"
 				visualize.map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
 		except Exception as e:
 			print(f"{e}")
