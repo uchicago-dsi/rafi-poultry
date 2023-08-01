@@ -22,16 +22,15 @@ This is the pipeline for this project and a description of the files within it.
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
 
 # Running the Pipeline:
-
-1. **Establish directory structure**
-   - pipeline
-   - notebooks
-   - data
-     - raw
-       - infogroup
-       - cafo
-     - clean
-   - html
+1. **Establish directory structure** 
+    - pipeline
+    - notebooks
+    - data
+        - raw
+            - infogroup
+            - cafo
+        - clean
+        - html
 2. **Set up Conda environment**
    - conda create --name <myenv> python=3.9.16
 3. **Download the files**
