@@ -58,7 +58,8 @@ This is the pipeline for this project and a description of the files within it.
        - SIC_CODE; str; SIC code to filter the dataset on, if FILTERING is False, this variable is not used
        - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
      - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
-     - All functions are executed by default. If you want to run specific functions only, include a command line argument listing all functions that you want to be excluded or not run.
+     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
+     
      <!-- # TODO: This is a little bit confusing — it may make sense to have the arguments select the functions that are run
      # Could do this by setting a flag that could include the functions you want
      # If this is empty, could set the functions to run to be everything
