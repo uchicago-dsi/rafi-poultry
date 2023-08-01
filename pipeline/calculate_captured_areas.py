@@ -485,13 +485,13 @@ def full_script(token):
     single_plant_cap(chrones, single_shapely, dict, m)
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
     save_map(single_shapely, two_shapely, three_combined, dict)
-    m.save(here.parent / "html/poultry-map-smoothed.html")
+    m.save(here.parent / "data/html/poultry-map-smoothed.html")
 
     # make base map for state-specific visualization
     mm = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
     state_level_geojson(df_map, mm, single_shapely, two_shapely, three_combined)
-    mm.save(here.parent / "html/state-poultry-map-smoothed.html")
+    mm.save(here.parent / "data/html/state-poultry-map-smoothed.html")
 
     return m
