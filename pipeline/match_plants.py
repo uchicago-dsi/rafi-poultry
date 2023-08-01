@@ -11,7 +11,7 @@ from pathlib import Path
 here = Path(__file__).resolve().parent
 
 
-def address_match(infogroup_path, fsis_path):
+def address_match(infogroup_path, fsis_path, fuzz_ratio=75):
     """Filters FSIS dataset for poultry processing plants,
     then match 2022 Infogroup plants to FSIS plants based on address
     to add sales volume data to each poultry plant from FSIS.
@@ -19,6 +19,8 @@ def address_match(infogroup_path, fsis_path):
     Args:
         infogroup_2022_path: relative path to the raw data folder with the 2022 Infogroup dataset.
         fsis_path: relative path to the raw data folder with the FSIS dataset.
+        fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept that two strings are "the same"
+                default of 75
 
     Returns:
         DataFrame with sales volume data filled in for address matches.
@@ -40,20 +42,13 @@ def address_match(infogroup_path, fsis_path):
     df_fsis = pd.read_csv(fsis_path, index_col=0)
     df_poultry = df_fsis[df_fsis["Animals Processed"].str.contains("Chicken")].copy()
     df_poultry["Sales Volume (Location)"] = np.NaN
-    # TODO: maybe this df_match is unnecessary? Is it used anywhere?
-    df_match = pd.DataFrame()
-    df_match["Sales Volume (Location)"] = np.NaN
+    df_poultry["Sales Volume (Location)"] = np.NaN
 
     for i, fsis in df_poultry.iterrows():
         fsis_address = fsis["Full Address"].lower()
         for k, infogroup in df_filtered.iterrows():
             infogroup_address = infogroup["Full Address"].lower()
-            # TODO: maybe want to pass the fuzz ratio as an argument?
-            if fuzz.token_sort_ratio(infogroup_address, fsis_address) > 75:
-                # TODO: probably want to remove commented out code or set up some sort of logging flag if we want to leave the option to log
-                # print(f"Found a match at index {k}")
-                # print(infogroup_address)
-                # print(fsis_address)
+            if fuzz.token_sort_ratio(infogroup_address, fsis_address) > fuzz_ratio:
                 df_poultry.loc[i, "Sales Volume (Location)"] = infogroup[
                     "SALES VOLUME (9) - LOCATION"
                 ]
@@ -126,15 +121,14 @@ def fill_remaining_nulls(pp_sales):
         0, median_sales
     )
 
-    # TODO: pick a more descriptive variable name here
-    dict1 = dict(zip(median["Parent Corporation"], median["Sales Volume (Location)"]))
+    parent_dict = dict(zip(median["Parent Corporation"], median["Sales Volume (Location)"]))
 
     pp_sales_updated = pp_sales.copy()
 
     for index, row in pp_sales_updated.iterrows():
         if np.isnan(row["Sales Volume (Location)"]):
             parent = row["Parent Corporation"]
-            pp_sales_updated.loc[index, "Sales Volume (Location)"] = dict1[parent]
+            pp_sales_updated.loc[index, "Sales Volume (Location)"] = parent_dict[parent]
 
     return pp_sales_updated
 
@@ -151,7 +145,7 @@ def save_all_matches(infogroup_path, fsis_path, threshold):
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(infogroup_path, fsis_path)
+    address_matches = address_match(infogroup_path, fsis_path, 75)
     no_match = address_matches[address_matches["Sales Volume (Location)"].isna()]
 
     infogroup = pd.read_csv(infogroup_path)
