@@ -26,7 +26,7 @@ states = [
 ]
 
 
-def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_bool=True):
+def potential_farms(infogroup_df, counterglow_df, states, max_dist_km=5, print_bool=True):
     """
     finds potential farms in the infogroup dataset based on the speculative farms
     in the counterglow dataset
@@ -35,8 +35,7 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_boo
         infogroup_df   (dataframe): dataframe of infogroup data
         counterglow_df (dataframe): dataframe of counterglow data
         states (list): list of states that  you want to specifically look at
-        # TODO: would be good to include a reasonable default for the max distance
-        max_dist_km (float): maximum radius distance you want to check within
+        max_dist_km (float): maximum radius distance you want to check within, default to 5
         print_bool (bool): default true, prints results to terminal
 
     Returns:
@@ -60,7 +59,6 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km, print_boo
 
         for j in range(len(counterglow_state_df)):
             counterglow_latitude = counterglow_state_df.iloc[j]["Lat"]  # get latitude
-            # TODO: is this column just named Lat.1 in the actual dataset we have? Sort of weird
             counterglow_longitude = counterglow_state_df.iloc[j][
                 "Lat.1"
             ]  # get longitude

@@ -59,12 +59,7 @@ This is the pipeline for this project and a description of the files within it.
        - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
      - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
-     
-     <!-- # TODO: This is a little bit confusing — it may make sense to have the arguments select the functions that are run
-     # Could do this by setting a flag that could include the functions you want
-     # If this is empty, could set the functions to run to be everything
-     # Otherwise, only include the ones that are passed
-     # Example: https://stackoverflow.com/questions/36706842/python-pass-multiple-strings-to-a-single-command-line-argument -->
+
 
 <!-- TODO: a general thing to do that could be useful is defining all of the filenames as constants in a config file and pulling those constants in so it's easy to run the pipeline with files with different names -->
 
