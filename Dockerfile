@@ -1,5 +1,5 @@
 #Use python 3.9 as the base image
-FROM --platform=linux/amd64 osgeo/gdal:ubuntu-full-3.6.3
+FROM --platform=linux/arm64 osgeo/gdal:ubuntu-full-3.6.3
 
 RUN apt-get -y update 
 
@@ -10,7 +10,7 @@ RUN apt -y install python3-pip libspatialindex-dev \
     && rm -rf /var/lib/apt/lists/*
 
 #Set the working directory
-WORKDIR /app/pipeline
+WORKDIR /app
 
 #Install any needed packages specified in requirements.txt
 COPY pipeline/requirements.txt .
@@ -20,10 +20,11 @@ COPY notebooks/notebook_requirements.txt .
 RUN pip install --trusted-host pypi.python.org --no-cache-dir -r notebook_requirements.txt
 
 #Copy the pipeline, notebook, and data directory into the container
-COPY / .
+COPY pipeline/ ./pipeline
+COPY notebooks ./notebooks
 
 #Run the main.py script when the container launches
-CMD ["python", "main.py"]
+CMD ["python", "pipeline/main.py"]
 
 
 
