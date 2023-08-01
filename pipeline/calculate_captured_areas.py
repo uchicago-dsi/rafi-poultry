@@ -83,12 +83,14 @@ def isochrones(df, x, token):
     return df
 
 
-def make_geo_df(df, dist, token):
+def make_geo_df(df, dist, token, simplify=0.01):
     """Adds slightly simplified isochrones to fsis dataframe.
 
     Args:
         df: fsis_df, cleaned.
         dist: radius of captured area (in driving distance) to be passed to isochrones function.
+        token: API token
+        simplify: by what degree to simplify each isochrone, default is 0.01
 
     Returns:
         geo_df with added column for isochrones and cleaned/simplified isochrones.
@@ -99,8 +101,8 @@ def make_geo_df(df, dist, token):
     geo_df = (
         gpd.GeoDataFrame(geo_df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
     )
-    # TODO: maybe have a function argument (with a default of .01) that sets the simplify number
-    geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(0.01)
+
+    geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(simplify)
 
     return geo_df
 
