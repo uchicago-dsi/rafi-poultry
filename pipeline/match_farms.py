@@ -164,14 +164,14 @@ def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh=0.3
     return match_df
 
 
-def match_all_farms(counterglow_path, cafomaps_path, animal_exp, thresh=0.3048, fuzz_ratio=90):
+def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame, animal_exp: str, thresh=0.3048, fuzz_ratio=90):
     """Executes the helper matching functions and saves the results for matched farms and unmatched farms
     to the cleaned data folder.
 
     Args:
-        counterglow: DataFrame containing Counterglow CAFO data.
-        cafomaps: DataFrame containing CAFO permit data.
-        animal_exp: String with substrings to filter permit types for (ie. "Poultry|Chicken|Broiler")
+        counterglow_path: path to dataset containing Counterglow CAFO data.
+        cafomaps_path: path to dataset containing CAFO permit data.
+        animal_exp: Regex with substrings to filter permit types for (ie. "Poultry|Chicken|Broiler")
         thresh: max distance between 2 farms that can be matched, 
                 default is 1000 ft in km, which is 0.3048 km
         fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept that two strings are "the same"
