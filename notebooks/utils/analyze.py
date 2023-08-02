@@ -15,7 +15,7 @@ here = Path(__file__).resolve().parent
 - calculateCapturedArea: calculates the captured areas as a percentage.
 """
 
-def HHI(fsis_sales):
+def HHI(fsis_sales: pd.DataFrame):
     """
     Calculcate the HHI for a selection of states/regions that are input into it 
 
@@ -48,7 +48,7 @@ def HHI(fsis_sales):
     return hhi
 
 
-def calculate_captured_area(path): # pass in geojson path
+def calculate_captured_area(path: str): # pass in geojson path
     """
     Calculates the captured areas as a percentage.
     Dict Keys: single capture, double capture, triple capture
@@ -150,5 +150,3 @@ def farm_count():
     concat_df = pd.concat([infogroup_df, counterglow_df, cafos_df], join='outer')
     
     concat_df.to_csv(here.parent / "data/raw/combined_farm_data.csv")
-    
-    pass

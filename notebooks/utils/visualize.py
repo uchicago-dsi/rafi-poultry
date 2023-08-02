@@ -5,9 +5,12 @@ based on data from Counterglow and state permits websites.
 import pandas as pd
 import numpy as np
 import folium
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
 
 
-def add_points(state_map, state_df, color):
+def add_points(state_map: folium.Map, state_df: pd.DataFrame, color: str):
     """Adds markers to a given state map based on location to represent farms.
 
     Args:
@@ -24,7 +27,7 @@ def add_points(state_map, state_df, color):
             popup=location_info["name"], icon=folium.Icon(color=color)).add_to(state_map)
 
 
-def map_state(match_df_path, unmatched_df_path, state):
+def map_state(match_df_path: str, unmatched_df_path: str, state: str):
     """Creates a map of CAFOs in a given state.
 
     Args:
@@ -51,10 +54,11 @@ def map_state(match_df_path, unmatched_df_path, state):
 
     return state_map
 
+
 if __name__ == "__main__":
-    match_df = pd.read_csv("../data/clean/matched_farms.csv")
+    match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
     states = match_df["state"].unique().tolist()
 
     for state in states:
-        path = "../html/cafo_poultry_eda_" + "state" + ".html"
-        map_state("../data/clean/matched_farms.csv", "../data/clean/unmatched_farms.csv", state).save(path)
+        path = "html/cafo_poultry_eda_" + state + ".html"
+        map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
