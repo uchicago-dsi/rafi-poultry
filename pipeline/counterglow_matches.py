@@ -26,7 +26,8 @@ states = [
 ]
 
 
-def potential_farms(infogroup_df, counterglow_df, states, max_dist_km=5, print_bool=True):
+def potential_farms(infogroup_df:pd.DataFrame, counterglow_df:pd.DataFrame, states:list, max_dist_km:float, print_bool=True ):
+    
     """
     finds potential farms in the infogroup dataset based on the speculative farms
     in the counterglow dataset
@@ -99,7 +100,8 @@ def potential_farms(infogroup_df, counterglow_df, states, max_dist_km=5, print_b
     return infogroup_trim, counterglow_trim
 
 
-def infogroup_counterglow_dict(sic_df, counterglow_df, states, radium_km):
+def infogroup_counterglow_dict(sic_df:pd.DataFrame, counterglow_df:pd.DataFrame, states:list, radium_km:float):
+    
     """
     This function calls the function 'potential_farms'. If the two dataframes returned from 'potential_farms'
     are NOT empty, they are added to the dictionaries. the keys for the dictionaries are the STATE in the
@@ -135,7 +137,8 @@ def infogroup_counterglow_dict(sic_df, counterglow_df, states, radium_km):
     return igroup_sic_dict, ctrglow_dict
 
 
-def list_of_dataframes(infogroup_dict):
+def list_of_dataframes(infogroup_dict:dict):
+    
     """
     function will convert all of the lists within the infogroup_dict (the values) and convert
     them into a single list. This is helpful when converting a lot of dataframe into a single
