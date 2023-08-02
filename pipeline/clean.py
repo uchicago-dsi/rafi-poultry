@@ -35,7 +35,7 @@ ABI_dict = dict(
 )
 
 
-def clean_FSIS(filepath):
+def clean_FSIS(filepath:str):
     """Filters the FSIS dataset for large poultry processing plants.
 
     Args:
@@ -82,7 +82,7 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def clean_infogroup(filepath, SIC_CODE, filtering=False):
+def clean_infogroup(filepath:str, SIC_CODE:str, filtering:bool = False):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -150,7 +150,7 @@ def clean_infogroup(filepath, SIC_CODE, filtering=False):
     return
 
 
-def clean_counterglow(filepath):
+def clean_counterglow(filepath:str):
     """Cleans the Counterglow dataset by standardizing CAFO name and column formatting.
 
     Args:
