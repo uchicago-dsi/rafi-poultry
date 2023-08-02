@@ -11,7 +11,7 @@ from pathlib import Path
 here = Path(__file__).resolve().parent
 
 
-def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio=90):
+def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio: float=90):
     """Matches plants in Counterglow dataset with permit data from various state websites by name.
 
     Args:
@@ -60,7 +60,7 @@ def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio=90)
     return match_df
 
 
-def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh=0.3048, fuzz_ratio=90):
+def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh: float=0.3048, fuzz_ratio: float=90):
     """Matches plants in Counterglow dataset with permit data from various state websites by name and location.
 
     Args:
@@ -164,7 +164,7 @@ def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh=0.3
     return match_df
 
 
-def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame, animal_exp: str, thresh=0.3048, fuzz_ratio=90):
+def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame, animal_exp: str, thresh: float=0.3048, fuzz_ratio: float=90):
     """Executes the helper matching functions and saves the results for matched farms and unmatched farms
     to the cleaned data folder.
 

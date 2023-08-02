@@ -11,7 +11,7 @@ from pathlib import Path
 here = Path(__file__).resolve().parent
 
 
-def address_match(infogroup_path: str, fsis_path: str, fuzz_ratio=75):
+def address_match(infogroup_path: str, fsis_path: str, fuzz_ratio: float=75):
     """Filters FSIS dataset for poultry processing plants,
     then match 2022 Infogroup plants to FSIS plants based on address
     to add sales volume data to each poultry plant from FSIS.
@@ -133,7 +133,7 @@ def fill_remaining_nulls(pp_sales: pd.DataFrame):
     return pp_sales_updated
 
 
-def save_all_matches(infogroup_path: str, fsis_path: str, threshold=5):
+def save_all_matches(infogroup_path: str, fsis_path: str, threshold: float=5):
     """Executes all three matching helper functions and saves final fully updated sales volume DataFrame
     as a CSV.
 
