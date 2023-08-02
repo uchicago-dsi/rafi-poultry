@@ -11,7 +11,7 @@ from pathlib import Path
 here = Path(__file__).resolve().parent
 
 
-def address_match(infogroup_path, fsis_path, fuzz_ratio=75):
+def address_match(infogroup_path: str, fsis_path: str, fuzz_ratio=75):
     """Filters FSIS dataset for poultry processing plants,
     then match 2022 Infogroup plants to FSIS plants based on address
     to add sales volume data to each poultry plant from FSIS.
@@ -57,7 +57,7 @@ def address_match(infogroup_path, fsis_path, fuzz_ratio=75):
     return df_poultry
 
 
-def loc_match(no_match, pp_2022, pp_sales, threshold):
+def loc_match(no_match: pd.DataFrame, pp_2022: pd.DataFrame, pp_sales: pd.DataFrame, threshold: float):
     """Match 2022 Infogroup plants to the remaining unmatched FSIS plants after running
     address_match based on longitude/latitude to add sales volume data
     to each poultry plant from FSIS. Requires user input when a match is found.
@@ -95,7 +95,7 @@ def loc_match(no_match, pp_2022, pp_sales, threshold):
     return pp_2022, pp_sales
 
 
-def fill_remaining_nulls(pp_sales):
+def fill_remaining_nulls(pp_sales: pd.DataFrame):
     """Fills in sales volume for all remaining unmatched plants after running loc_match function
     with the median of the sales volume of all matched plants so far for each plant,
     based on its respective parent corporation.
@@ -133,7 +133,7 @@ def fill_remaining_nulls(pp_sales):
     return pp_sales_updated
 
 
-def save_all_matches(infogroup_path, fsis_path, threshold):
+def save_all_matches(infogroup_path: str, fsis_path: str, threshold=5):
     """Executes all three matching helper functions and saves final fully updated sales volume DataFrame
     as a CSV.
 
