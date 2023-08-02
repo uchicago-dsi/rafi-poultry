@@ -39,7 +39,7 @@ three_plant_color = lambda x: {"fillColor": "#9F2B68"}  # amaranth
 
 
 def isochrones(df, x, token):
-    """Adds plant isochrones to fsis dataframe; captures area that is within an x mile raidus of the plant.
+    """Adds plant isochrones to fsis dataframe; captures area that is within an x mile radius of the plant.
 
     Args:
         df: fsis_df, cleaned.
@@ -83,12 +83,14 @@ def isochrones(df, x, token):
     return df
 
 
-def make_geo_df(df, dist, token):
-    """Adds slightly simpligied isochrones to fsis dataframe.
+def make_geo_df(df, dist, token, simplify=0.01):
+    """Adds slightly simplified isochrones to fsis dataframe.
 
     Args:
         df: fsis_df, cleaned.
         dist: radius of captured area (in driving distance) to be passed to isochrones function.
+        token: API token
+        simplify: by what degree to simplify each isochrone, default is 0.01
 
     Returns:
         geo_df with added column for isochrones and cleaned/simplified isochrones.
@@ -99,7 +101,8 @@ def make_geo_df(df, dist, token):
     geo_df = (
         gpd.GeoDataFrame(geo_df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
     )
-    geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(0.01)
+
+    geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(simplify)
 
     return geo_df
 
@@ -303,12 +306,11 @@ def save_map(single, two, three, dict):
     return
 
 
-def state_level_geojson(df, map, single, two, three):
+def state_level_geojson(df, single, two, three):
     """Assembles state-specific map of plant access, exports to data/clean as a geojson
 
     Args:
         df: geo_df containing all plant isochrones, raw and simplified.
-        map: base-map for state-specific visualization.
         single: isochrones of areas that have access to only one plant.
         two: isochrones of areas that have access to two plants.
         three_plants_combined: one isochrone of all areas that have access to three+ plants.
@@ -466,10 +468,24 @@ def state_level_geojson(df, map, single, two, three):
     return
 
 
-def full_script(token):
+def full_script(token, distance=60):
+    """Loads in cleaned data, adds isochrones based on passed radius, calculates areas that have
+    access to 1, 2, and 3+ plants, and plots them on a country-wide map and a state-level map
+
+    Args:
+        token: API token to access mapbox.
+        distance: radius of plant isochrones based on driving distance, in miles
+
+    Returns:
+        country-wide map, outputs two html files.
+
+    """
+
     # import cleaned data
     fsis_df = pd.read_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
-    info_df = pd.read_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
+    info_df = pd.read_csv(
+        here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv"
+    )
 
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
@@ -478,20 +494,22 @@ def full_script(token):
     dict = {}
     chrones = []
 
-    df_map = make_geo_df(fsis_df, 60, token)
+    # Are we loading the token in one of the other files and passing it to all of these functions?
+    # It looks like we load the token in this file too?
+    df_map = make_geo_df(fsis_df, distance, token)
     add_plants(df_map, dict, chrones, m)
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
     single_plant_cap(chrones, single_shapely, dict, m)
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
     save_map(single_shapely, two_shapely, three_combined, dict)
-    m.save(here.parent / "html/poultry-map-smoothed.html")
-
-    # make base map for state-specific visualization
-    mm = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
+    m.save(here.parent / "data/html/poultry-map-smoothed.html")
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
-    state_level_geojson(df_map, mm, single_shapely, two_shapely, three_combined)
-    mm.save(here.parent / "html/state-poultry-map-smoothed.html")
+    state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
     return m
+
+
+if __name__ == "__main__":
+    full_script("pk.eyJ1IjoidG9kZG5pZWYiLCJhIjoiY2xqc3FnN2NjMDBqczNkdDNmdjBvdnU0ciJ9.0RfS-UsqS63pbAuqrE_REw")
