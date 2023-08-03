@@ -1,8 +1,10 @@
-#Use python 3.9 as the base image
+#Use ubuntu base image with gdal installed for geopandas on M1/M2 architecture
 FROM --platform=linux/arm64 osgeo/gdal:ubuntu-full-3.6.3
 
+#Update apt-get package
 RUN apt-get -y update 
 
+#Install Python and gdal dependencies
 RUN apt -y install python3-pip libspatialindex-dev \
     && apt-get install -y --no-install-recommends \
        gdal-bin \
@@ -13,27 +15,11 @@ RUN apt -y install python3-pip libspatialindex-dev \
 WORKDIR /app
 
 #Install any needed packages specified in requirements.txt
-COPY pipeline/requirements.txt .
+COPY requirements.txt .
 RUN pip install --trusted-host pypi.python.org --no-cache-dir -r requirements.txt
 
-COPY notebooks/notebook_requirements.txt .
-RUN pip install --trusted-host pypi.python.org --no-cache-dir -r notebook_requirements.txt
-
 #Copy the pipeline, notebook, and data directory into the container
-COPY pipeline/ ./pipeline
-COPY notebooks ./notebooks
+COPY . ./pipeline
 
 #Run the main.py script when the container launches
 CMD ["python", "pipeline/main.py"]
-
-
-
-
-
-
-
-
-
-
-
-

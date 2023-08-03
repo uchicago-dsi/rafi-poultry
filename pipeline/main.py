@@ -9,8 +9,8 @@ import calculate_captured_areas
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'notebooks', 'utils'))
-import visualize
-import analyze
+import utils.visualize as visualize
+import utils.analyze as analyze
 
 import argparse
 from pathlib import Path
@@ -180,6 +180,9 @@ def main(args):
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
+	
+	else:
+		run_all(args)
 	
 	print("Done!")
 
