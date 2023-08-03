@@ -10,6 +10,37 @@ from pathlib import Path
 here = Path(__file__).resolve().parent
 
 
+def colored_maps(infogroup_path, year):
+    USA_LAT = 37.0902
+    USA_LNG = -95.7129
+
+    # assigning each parent corp a unique color
+    dict_place = dict({"Tyson Foods Inc": 'green', 
+                "JBS USA": 'red', 
+                "Sanderson Farms Inc": 'pink', 
+                "Hormel Foods Corp": 'cadetblue', 
+                "Koch Foods Inc": 'beige'})
+    
+    # coloring all other parent corporations gray
+    placeholder = ["None", "Pilgrim's Pride Corp", "Cargil Inc", "Mountaire Corp", "Foster Farms", "Perdue Farms Inc", "Continental Grain Co", 
+               "George's Inc", "House of Raeford Farms Inc", "Cal-main Foods Inc", "Conagra Brands Inc", "UNKNOWN", "Simmons Foods Inc",
+                "Peco Foods Inc"]
+    dict_place2 = dict.fromkeys(placeholder, "lightgray")
+
+    col_dict = {**dict_place, **dict_place2}
+
+    master = pd.read_csv(infogroup_path, index=False).reset_index(drop=True)
+    df = master.loc[master['ARCHIVE VERSION YEAR']==year]
+    map_name = folium.Map(location=[USA_LAT, USA_LNG],zoom_start=4)
+    df['COLOR'] = df['PARENT NAME'].map(col_dict)
+
+    for _, location_info in df.iterrows():
+        folium.Marker([location_info["LATITUDE"], location_info["LONGITUDE"]], popup = location_info['PARENT NAME'],
+                icon=folium.Icon(color=location_info['COLOR'])).add_to(map_name)
+        
+    return map_name
+
+
 def add_points(state_map: folium.Map, state_df: pd.DataFrame, color: str):
     """Adds markers to a given state map based on location to represent farms.
 

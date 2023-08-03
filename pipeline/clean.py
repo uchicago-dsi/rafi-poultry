@@ -6,6 +6,7 @@ import numpy as np
 import glob
 import json
 from pathlib import Path
+from shapely import Point
 
 here = Path(__file__).resolve().parent
 
@@ -33,7 +34,6 @@ ABI_dict = dict(
         1941509.0: "UNKNOWN",
     }
 )
-
 
 def clean_FSIS(filepath:str):
     """Filters the FSIS dataset for large poultry processing plants.
