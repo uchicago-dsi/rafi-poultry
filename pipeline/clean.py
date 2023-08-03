@@ -151,7 +151,7 @@ def clean_infogroup(filepath:str, SIC_CODE:str, filtering:bool = False):
 
 
 def clean_counterglow(filepath:str):
-    """Cleans the Counterglow dataset by standardizing CAFO name and column formatting.
+    """Cleans the Counterglow dataset by standardizing facility name and column formatting.
 
     Args:
         filepath: relative path to the raw data folder with the Counterglow dataset.

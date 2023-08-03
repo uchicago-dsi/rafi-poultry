@@ -6,6 +6,7 @@ import clean
 import match_farms
 import match_plants
 import calculate_captured_areas
+import geojson_creation
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'notebooks', 'utils'))
@@ -31,7 +32,7 @@ def create_parser():
 
 	parser.add_argument('--function', choices = ["clean_FSIS", "clean_counterglow", \
 						      "clean_infogroup", "clean_cafo", "match_plants", "match_farms", \
-							  "calculate_captured_areas", "visualize"], help="Specify the function to run.")
+							  "calculate_captured_areas", "visualize", "counterglow_geojson_chicken"], help="Specify the function to run.")
 
 	return parser
 
@@ -98,6 +99,14 @@ def run_all(args):
 		for state in states:
 			path = "html/cafo_poultry_eda_" + state + ".html"
 			visualize.map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
+	except Exception as e:
+		print(f"{e}")
+		exit(1)
+
+	try:
+		print("Creating Counterglow GeoJSON...")
+		geojson_creation.counterglow_geojson_chicken(here.parent / "data/clean/cleaned_counterglow_facility_list.csv",\
+			      here.parent / "data/clean/all_states_with_parent_corp_by_corp.geojson")
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
@@ -180,7 +189,16 @@ def main(args):
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
-	
+		
+		elif args.function == "counterglow_geojson_chicken":
+			try:
+				print("Creating Counterglow GeoJSON...")
+				geojson_creation.counterglow_geojson_chicken(here.parent / "data/clean/cleaned_counterglow_facility_list.csv",\
+						 here.parent / "data/clean/all_states_with_parent_corp_by_corp.geojson")
+			except Exception as e:
+				print(f"{e}")
+				exit(1)
+
 	else:
 		run_all(args)
 	
