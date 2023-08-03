@@ -61,5 +61,3 @@ This is the pipeline for this project and a description of the files within it.
 
 
 <!-- TODO: a general thing to do that could be useful is defining all of the filenames as constants in a config file and pulling those constants in so it's easy to run the pipeline with files with different names -->
-
-<!-- TODO: some of these functions have type hints which is nice :) -->
