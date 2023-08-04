@@ -3,13 +3,10 @@ based on farm name and location.
 """
 
 import pandas as pd
-import numpy as np
 from fuzzywuzzy import fuzz
 from distances import haversine
-from pathlib import Path
-
-here = Path(__file__).resolve().parent
-
+from constants import CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH,\
+    MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH
 
 def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio: float=90):
     """Matches plants in Counterglow dataset with permit data from various state websites by name.
@@ -110,7 +107,7 @@ def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh: fl
             cg_name = crow["Name"]
             if type(cg_name) == str:
                 cg_name = crow["Name"].upper()
-            cg_loc = (crow["Lat"], crow["Lat.1"])
+            cg_loc = (crow["Latitude"], crow["Longitude"])
             if cafo_name == cg_name:
                 nmatch = 1
             elif fuzz.token_sort_ratio(cafo_name, cg_name) > fuzz_ratio:
@@ -181,7 +178,7 @@ def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame,
         N/A, saves two CSVs to the cleaned data folder.
     """
     counterglow = pd.read_csv(counterglow_path)
-    cafomaps = pd.read_csv(cafomaps_path, index=False)
+    cafomaps = pd.read_csv(cafomaps_path, index_col=False)
     cafomaps["name"] = cafomaps["name"].str.upper()
 
     # Filters for specific animal (ie. poultry) and drops rows with no data
@@ -222,8 +219,8 @@ def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame,
         columns={
             "Name": "name",
             "Address": "address",
-            "Lat": "lat",
-            "Lat.1": "long",
+            "Latitude": "lat",
+            "Longitude": "long",
             "State": "state",
         }
     )
@@ -233,14 +230,14 @@ def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame,
         [combined_df[combined_df["No Match"]], cg_unmatched], ignore_index=True
     ).drop(columns=["No Match"])
 
-    matched_df.to_csv(here.parent / "data/clean/matched_farms.csv")
-    unmatched_df.to_csv(here.parent / "data/clean/unmatched_farms.csv")
+    matched_df.to_csv(MATCHED_FARMS_FPATH)
+    unmatched_df.to_csv(UNMATCHED_FARMS_FPATH)
 
 
 if __name__ == "__main__":
     match_all_farms(
-        here.parent / "data/raw/Counterglow+Facility+List+Complete.csv",
-        here.parent / "data/clean/cleaned_matched_farms.csv",
+        CLEANED_COUNTERGLOW_FPATH,
+        CLEANED_CAFO_POULTRY_FPATH,
         "Poultry|Chicken|Broiler",
         0.3048,
         90

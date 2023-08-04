@@ -3,39 +3,15 @@
 
 import pandas as pd
 import numpy as np
-import glob
 import json
 from pathlib import Path
-from shapely import Point
+from constants import CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_INFOGROUP_FPATH,\
+    RAW_INFOGROUP_FPATH, CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH
 
 here = Path(__file__).resolve().parent
 
-ABI_dict = dict(
-    {
-        np.nan: "None",
-        7537913.0: "Tyson Foods Inc",
-        0.0: "None",
-        987289857.0: "JBS USA",
-        7516065.0: "Hormel Foods Corp",
-        453614844.0: "Cargil Inc",
-        9564816.0: "Foster Farms",
-        441416815.0: "Sanderson Farms Inc",
-        517549762.0: "Koch Foods Inc",
-        835874538.0: "Mountaire Corp",
-        7529217.0: "Perdue Farms Inc",
-        433353331.0: "Continental Grain Co",
-        513523.0: "House of Raeford Farms Inc",
-        436136139.0: "Pilgrim's Pride Corp",
-        512392.0: "George's Inc",
-        431481290.0: "Cal-main Foods Inc",
-        7509045.0: "Conagra Brands Inc",
-        7534076.0: "Simmons Foods Inc",
-        531052413.0: "Peco Foods Inc",
-        1941509.0: "UNKNOWN",
-    }
-)
 
-def clean_FSIS(filepath:str):
+def clean_FSIS(filepath: Path):
     """Filters the FSIS dataset for large poultry processing plants.
 
     Args:
@@ -49,7 +25,7 @@ def clean_FSIS(filepath:str):
     df_chickens = df[df["Animals Processed"].str.contains("Chicken")]
     df_large_chickens = df_chickens.loc[df_chickens.Size == "Large"]
 
-    df_large_chickens.to_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
+    df_large_chickens.to_csv(CLEANED_FSIS_PROCESSORS_FPATH)
 
     return
 
@@ -82,7 +58,7 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def clean_infogroup(filepath:str, SIC_CODE:str, filtering:bool = False):
+def clean_infogroup(filepath: Path, SIC_CODE:str, filtering:bool = False):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -94,12 +70,10 @@ def clean_infogroup(filepath:str, SIC_CODE:str, filtering:bool = False):
         n/a, puts cleaned df into the data/clean folder
 
     """
-
-    path = Path(filepath)
     all_years_df = pd.DataFrame()
     dfs = []
 
-    for name in path.iterdir():
+    for name in filepath.iterdir():
         if filtering:
             df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
             dfs.append(df)
@@ -118,7 +92,7 @@ def clean_infogroup(filepath:str, SIC_CODE:str, filtering:bool = False):
         all_years_df[x] = all_years_df[x].fillna(0)
         all_years_df[x] = all_years_df[x].apply(np.int64)
 
-    all_years_df["PARENT NAME"] = all_years_df["PARENT NUMBER"].map(ABI_dict)
+    all_years_df["PARENT NAME"] = all_years_df["PARENT NUMBER"].replace({np.nan: None}).astype(str).map(ABI_dict)
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
     all_years_df["ABI"] = all_years_df["PARENT NUMBER"].apply(str)
 
@@ -145,12 +119,12 @@ def clean_infogroup(filepath:str, SIC_CODE:str, filtering:bool = False):
 
     master = master.dropna(subset=["COMPANY", "LATITUDE", "LONGITUDE"])
 
-    master.to_csv(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv")
+    master.to_csv(CLEANED_INFOGROUP_FPATH)
 
     return
 
 
-def clean_counterglow(filepath:str):
+def clean_counterglow(filepath: Path):
     """Cleans the Counterglow dataset by standardizing facility name and column formatting.
 
     Args:
@@ -164,7 +138,7 @@ def clean_counterglow(filepath:str):
     df["Name"] = df["Name"].astype(str, copy=False).apply(lambda x: x.upper())
     df = df.rename(columns={"Lat": "Latitude", "Lat.1": "Longitude"})
 
-    df.to_csv(here.parent / "data/clean/cleaned_counterglow_facility_list.csv")
+    df.to_csv(CLEANED_COUNTERGLOW_FPATH)
 
     return
 
@@ -184,8 +158,6 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
         N/A, writes cleaned CAFO dataset to the clean data folder.
 
     """
-    data_dir = Path(data_dir)
-    config_fpath = Path(config_fpath)
     # Open configuration file
     with open(config_fpath) as f:
         config = json.load(f)
@@ -216,9 +188,9 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
             df if final_df is None else pd.concat([df, final_df], ignore_index=True)
         )
 
-    final_df.to_csv(here.parent / "data/clean/cleaned_matched_farms.csv")
+    final_df.to_csv(CLEANED_CAFO_POULTRY_FPATH)
 
 
 if __name__ == "__main__":
     filtering = False
-    clean_infogroup(here.parent / "data/raw/infogroup", "2015", filtering)
+    clean_infogroup(RAW_INFOGROUP_FPATH, "2015", filtering)

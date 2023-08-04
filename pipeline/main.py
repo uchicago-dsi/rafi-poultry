@@ -14,12 +14,13 @@ import utils.visualize as visualize
 import utils.analyze as analyze
 
 import argparse
-from pathlib import Path
 import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
+from constants import RAW_FSIS_FPATH, RAW_COUNTERGLOW_FPATH, RAW_INFOGROUP_FPATH, RAW_CAFO_FPATH, CLEANED_INFOGROUP_FPATH,\
+	  CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, MATCHED_FARMS_FPATH,\
+	  UNMATCHED_FARMS_FPATH, ROOT_DIR, CLEAN_DIR, ALL_STATES_GEOJSON_FPATH
 
-here = Path(__file__).resolve().parent
 
 def create_parser():
 	parser = argparse.ArgumentParser(description='Executes scripts for cleaning, matching, and analyzing poultry plant and farm data.')
@@ -40,28 +41,28 @@ def run_all(args):
 	try:
 		# Data Cleaning
 		print("Cleaning FSIS data...")
-		clean.clean_FSIS(here.parent / "data/raw/fsis-processors-with-location.csv")
+		clean.clean_FSIS(RAW_FSIS_FPATH)
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
 
 	try:
 		print("Cleaning Counterglow data...")
-		clean.clean_counterglow(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv")
+		clean.clean_counterglow(RAW_COUNTERGLOW_FPATH)
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
 
 	try:
 		print("Cleaning Infogroup data...")
-		clean.clean_infogroup(here.parent / "data/raw/infogroup", args.code, args.filtering)
+		clean.clean_infogroup(RAW_INFOGROUP_FPATH, args.code, args.filtering)
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
 
 	try:
 		print("Cleaning CAFO Permit data...")
-		clean.clean_cafo(here.parent / "data/raw/cafo", here.parent / "data/raw/cafo/farm_source.json")
+		clean.clean_cafo(RAW_CAFO_FPATH, RAW_CAFO_FPATH / "farm_source.json")
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
@@ -69,16 +70,15 @@ def run_all(args):
 	try:
 		# Match plants and farms
 		print("Matching FSIS plants and Infogroup for sales volume data...")
-		match_plants.save_all_matches(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv",\
-				here.parent / "data/clean/cleaned_fsis_processors.csv", args.distance)
+		match_plants.save_all_matches(CLEANED_INFOGROUP_FPATH,\
+				CLEANED_FSIS_PROCESSORS_FPATH, args.distance)
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
 
 	try:
 		print("Matching CAFO permit data and Counterglow for farms...")
-		match_farms.match_all_farms(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv",\
-				here.parent / "data/clean/cleaned_matched_farms.csv", args.animal)
+		match_farms.match_all_farms(CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, args.animal)
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
@@ -93,20 +93,20 @@ def run_all(args):
 
 	try:
 		print("Mapping CAFO permits...")
-		match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
+		match_df = pd.read_csv(MATCHED_FARMS_FPATH)
 		match_df = match_df[match_df['lat'].notna()]
 		states = match_df["state"].unique().tolist()
 		for state in states:
 			path = "html/cafo_poultry_eda_" + state + ".html"
-			visualize.map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
+			visualize.map_state(MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state).save(ROOT_DIR / path)
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
 
 	try:
 		print("Creating Counterglow GeoJSON...")
-		geojson_creation.counterglow_geojson_chicken(here.parent / "data/clean/cleaned_counterglow_facility_list.csv",\
-			      here.parent / "data/clean/all_states_with_parent_corp_by_corp.geojson")
+		geojson_creation.counterglow_geojson_chicken(CLEANED_COUNTERGLOW_FPATH,\
+			      CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson")
 	except Exception as e:
 		print(f"{e}")
 		exit(1)
@@ -118,23 +118,23 @@ def main(args):
 			try:
 				# Data Cleaning
 				print("Cleaning FSIS data...")
-				clean.clean_FSIS(here.parent / "data/raw/fsis-processors-with-location.csv")
+				clean.clean_FSIS(RAW_FSIS_FPATH)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
-		
+
 		elif args.function == "clean_counterglow":
 			try:
 				print("Cleaning Counterglow data...")
-				clean.clean_counterglow(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv")
+				clean.clean_counterglow(RAW_COUNTERGLOW_FPATH)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
-		
+
 		elif args.function == "clean_infogroup":
 			try:
 				print("Cleaning Infogroup data...")
-				clean.clean_infogroup(here.parent / "data/raw/infogroup", args.code, args.filtering)
+				clean.clean_infogroup(RAW_INFOGROUP_FPATH, args.code, args.filtering)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
@@ -142,7 +142,7 @@ def main(args):
 		elif args.function == "clean_cafo":
 			try:
 				print("Cleaning CAFO Permit data...")
-				clean.clean_cafo(here.parent / "data/raw/cafo", here.parent / "data/raw/cafo/farm_source.json")
+				clean.clean_cafo(RAW_CAFO_FPATH, RAW_CAFO_FPATH / "farm_source.json")
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
@@ -151,8 +151,8 @@ def main(args):
 			try:
 				# Match plants and farms
 				print("Matching FSIS plants and Infogroup for sales volume data...")
-				match_plants.save_all_matches(here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv",\
-						here.parent / "data/clean/cleaned_fsis_processors.csv", args.distance)
+				match_plants.save_all_matches(CLEANED_INFOGROUP_FPATH,\
+						CLEANED_FSIS_PROCESSORS_FPATH, args.distance)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
@@ -160,8 +160,7 @@ def main(args):
 		elif args.function == "match_farms":
 			try:
 				print("Matching CAFO permit data and Counterglow for farms...")
-				match_farms.match_all_farms(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv",\
-						here.parent / "data/clean/cleaned_matched_farms.csv", args.animal)
+				match_farms.match_all_farms(CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, args.animal)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
@@ -178,14 +177,12 @@ def main(args):
 		elif args.function == "visualize":
 			try:
 				print("Mapping CAFO permits...")
-				match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
+				match_df = pd.read_csv(MATCHED_FARMS_FPATH)
 				match_df = match_df[match_df['lat'].notna()]
 				states = match_df["state"].unique().tolist()
-
 				for state in states:
-					path = "data/html/cafo_poultry_eda_" + state + ".html"
-					visualize.map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
-
+					path = "html/cafo_poultry_eda_" + state + ".html"
+					visualize.map_state(MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state).save(ROOT_DIR / path)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)
@@ -193,8 +190,8 @@ def main(args):
 		elif args.function == "counterglow_geojson_chicken":
 			try:
 				print("Creating Counterglow GeoJSON...")
-				geojson_creation.counterglow_geojson_chicken(here.parent / "data/clean/cleaned_counterglow_facility_list.csv",\
-						 here.parent / "data/clean/all_states_with_parent_corp_by_corp.geojson")
+				geojson_creation.counterglow_geojson_chicken(CLEANED_COUNTERGLOW_FPATH,\
+						ALL_STATES_GEOJSON_FPATH)
 			except Exception as e:
 				print(f"{e}")
 				exit(1)

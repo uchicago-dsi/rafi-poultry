@@ -3,7 +3,7 @@
 
 from math import radians, cos, sin, asin, sqrt
 
-def haversine(lon: float, lat1: float, lon2: float, lat2: float):
+def haversine(lon1: float, lat1: float, lon2: float, lat2: float):
     
     """
         Calculate the great circle distance in kilometers between two points 

@@ -11,17 +11,14 @@ import shapely
 from shapely.geometry import Polygon, mapping
 from shapely import GeometryCollection, MultiPolygon
 from shapely.ops import unary_union
-import json
 from pathlib import Path
 from pyproj import Geod
 from dotenv import load_dotenv
-import os
+from constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, ALL_STATES_GEOJSON_FPATH,\
+    CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_INFOGROUP_FPATH, DATA_DIR
 
 # load mapbox API
 load_dotenv()
-
-# make it easier to access files
-here = Path(__file__).resolve().parent
 
 ALBERS_EQUAL_AREA = "EPSG:9822"
 WGS84 = "EPSG:4326"
@@ -124,7 +121,7 @@ def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map):
 
     plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
 
-    for index, row in df_map.iterrows():
+    for _, row in df_map.iterrows():
         lat = str(row["latitude"])
         lng = str(row["longitude"])
 
@@ -301,7 +298,7 @@ def save_map(single: list, two: list, three: list, dict: dict):
     full_df = gpd.GeoDataFrame(pd.concat([one_df, two_df, three_df], ignore_index=True))
     full_df = full_df.set_geometry("Geometry")
     full_df.to_file(
-        here.parent / "data/clean/isochrones_with_parent_corp.geojson", driver="GeoJSON"
+        ISOCHRONES_WITH_PARENT_CORP_FPATH, driver="GeoJSON"
     )
 
     return
@@ -321,7 +318,7 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
 
     """
 
-    us_states = gpd.read_file(here.parent / "data/gz_2010_us_040_00_500k.json").set_crs(
+    us_states = gpd.read_file(US_STATES_FPATH).set_crs(
         WGS84
     )
     abb2state = {
@@ -374,7 +371,7 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
     single_plant_combined = shapely.unary_union(single)
     two_plants_combined = shapely.unary_union(two)
 
-    for i, corp in df_corps_joined.iterrows():
+    for _, corp in df_corps_joined.iterrows():
         for state in states:
             state_name = abb2state[state]
             state_layer = folium.map.FeatureGroup(name=state_name, show=False)
@@ -462,7 +459,7 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
     df_corp_state = gpd.GeoDataFrame(corp_state_geojsons)
     df_corp_state = df_corp_state.sort_values(by="state")
     df_corp_state.to_file(
-        here.parent / "data/clean/all_states_with_parent_corp_by_corp.geojson",
+        ALL_STATES_GEOJSON_FPATH,
         driver="GeoJSON",
     )
 
@@ -484,10 +481,8 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     """
 
     # import cleaned data
-    fsis_df = pd.read_csv(here.parent / "data/clean/cleaned_fsis_processors.csv")
-    info_df = pd.read_csv(
-        here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv"
-    )
+    fsis_df = pd.read_csv(CLEANED_FSIS_PROCESSORS_FPATH)
+    info_df = pd.read_csv(CLEANED_INFOGROUP_FPATH)
 
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
@@ -505,7 +500,7 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     single_plant_cap(chrones, single_shapely, dict, m)
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
     save_map(single_shapely, two_shapely, three_combined, dict)
-    m.save(here.parent / "data/html/poultry-map-smoothed.html")
+    m.save(DATA_DIR / "html/poultry-map-smoothed.html")
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)

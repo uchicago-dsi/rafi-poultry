@@ -6,11 +6,10 @@ import pandas as pd
 import numpy as np
 import folium
 from pathlib import Path
+from constants import MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, DATA_DIR
 
-here = Path(__file__).resolve().parent
 
-
-def colored_maps(infogroup_path, year):
+def colored_maps(infogroup_path: Path, year: int):
     USA_LAT = 37.0902
     USA_LNG = -95.7129
 
@@ -58,7 +57,7 @@ def add_points(state_map: folium.Map, state_df: pd.DataFrame, color: str):
             popup=location_info["name"], icon=folium.Icon(color=color)).add_to(state_map)
 
 
-def map_state(match_df_path: str, unmatched_df_path: str, state: str):
+def map_state(match_df_path: Path, unmatched_df_path: Path, state: str):
     """Creates a map of CAFOs in a given state.
 
     Args:
@@ -87,9 +86,9 @@ def map_state(match_df_path: str, unmatched_df_path: str, state: str):
 
 
 if __name__ == "__main__":
-    match_df = pd.read_csv(here.parent / "data/clean/matched_farms.csv")
+    match_df = pd.read_csv(MATCHED_FARMS_FPATH)
     states = match_df["state"].unique().tolist()
 
     for state in states:
         path = "html/cafo_poultry_eda_" + state + ".html"
-        map_state(here.parent / "data/clean/matched_farms.csv", here.parent / "data/clean/unmatched_farms.csv", state).save(here.parent / path)
+        map_state(MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state).save(DATA_DIR / path)

@@ -7,11 +7,9 @@ import numpy as np
 from fuzzywuzzy import fuzz
 from distances import haversine
 from pathlib import Path
+from constants import CLEANED_MATCHED_PLANTS_FPATH, CLEANED_INFOGROUP_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
 
-here = Path(__file__).resolve().parent
-
-
-def address_match(infogroup_path: str, fsis_path: str, fuzz_ratio: float=75):
+def address_match(infogroup_path: Path, fsis_path: Path, fuzz_ratio: float=75):
     """Filters FSIS dataset for poultry processing plants,
     then match 2022 Infogroup plants to FSIS plants based on address
     to add sales volume data to each poultry plant from FSIS.
@@ -133,7 +131,7 @@ def fill_remaining_nulls(pp_sales: pd.DataFrame):
     return pp_sales_updated
 
 
-def save_all_matches(infogroup_path: str, fsis_path: str, threshold: float=5):
+def save_all_matches(infogroup_path: Path, fsis_path: Path, threshold: float=5):
     """Executes all three matching helper functions and saves final fully updated sales volume DataFrame
     as a CSV.
 
@@ -153,12 +151,12 @@ def save_all_matches(infogroup_path: str, fsis_path: str, threshold: float=5):
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
 
     pp_sales_updated = fill_remaining_nulls(pp_sales)
-    pp_sales_updated.to_csv(here.parent / "data/clean/cleaned_matched_plants.csv")
+    pp_sales_updated.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
 
 
 if __name__ == "__main__":
     save_all_matches(
-        here.parent / "data/clean/cleaned_infogroup_plants_all_time.csv",
-        here.parent / "data/raw/fsis-processors-with-location.csv",
+        CLEANED_INFOGROUP_FPATH,
+        CLEANED_FSIS_PROCESSORS_FPATH,
         5,
     )
