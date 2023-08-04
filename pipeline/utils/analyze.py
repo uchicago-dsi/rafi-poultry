@@ -3,17 +3,10 @@ as well as join farm data from multiple sources together.
 """
 
 import pandas as pd
-import numpy as np
 import geopandas as gpd
-import os
 from pathlib import Path
 
 here = Path(__file__).resolve().parent
-
-"""Contains functions for analyzing market consolidation: 
-- HHI: calculates HHI for all parent corporations in given dataframe
-- calculateCapturedArea: calculates the captured areas as a percentage.
-"""
 
 def HHI(fsis_sales: pd.DataFrame):
     """
@@ -48,7 +41,7 @@ def HHI(fsis_sales: pd.DataFrame):
     return hhi
 
 
-def calculate_captured_area(path: str): # pass in geojson path
+def calculate_captured_area(path: Path): # pass in geojson path
     """
     Calculates the captured areas as a percentage.
     Dict Keys: single capture, double capture, triple capture
