@@ -15,17 +15,20 @@ notebooks_image_name := "rafi-notebooks"
 notebooks_container_name := "rafi-notebooks-container"
 notebooks_dir := "$(current_abs_path)/notebooks"
 
+# environment variables
+include .env
+
 # Build Docker image for pipeline
 build-pipeline:
 	docker build -t $(pipeline_image_name) $(pipeline_dir)
 
 # Run pipeline image with interactive terminal
 run-pipeline-bash:
-	docker run -it -v $(current_abs_path)data:/app/data $(pipeline_image_name) /bin/bash
+	docker run -it -e MAPBOX_API=${MAPBOX_API} -v $(current_abs_path)data:/app/data $(pipeline_image_name) /bin/bash 
 
 # Run pipeline image
 run-pipeline:
-	docker run -v $(current_abs_path)data:/app/data $(pipeline_image_name)
+	docker run -e "MAPBOX_API=${MAPBOX_API}" -v $(current_abs_path)data:/app/data $(pipeline_image_name)
 
 # Build Docker image for notebooks
 build-notebooks:
