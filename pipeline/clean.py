@@ -13,9 +13,6 @@ from constants import (
     CLEANED_CAFO_POULTRY_FPATH,
 )
 
-here = Path(__file__).resolve().parent
-
-
 def clean_FSIS(filepath: Path):
     """Filters the FSIS dataset for large poultry processing plants.
 
@@ -63,8 +60,7 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def clean_infogroup(filepath: Path, SIC_CODE: str, filtering: bool = False):
-    # TODO: update this to accept the ABI dictionary as an argument
+def clean_infogroup(filepath: Path, ABI_dict: dict, SIC_CODE: str, filtering: bool = False):
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:

@@ -17,8 +17,7 @@ import utils.analyze as analyze
 import argparse
 import pandas as pd
 import warnings
-
-# TODO: read config.json here
+import json
 
 warnings.filterwarnings("ignore")
 from constants import (
@@ -35,8 +34,14 @@ from constants import (
     ROOT_DIR,
     CLEAN_DIR,
     ALL_STATES_GEOJSON_FPATH,
+    CONFIG_FPATH
 )
+from dotenv import load_dotenv
+load_dotenv() 
 
+with open(CONFIG_FPATH, "r") as jsonfile:
+    config = json.load(jsonfile)
+    print("Config file read successful")
 
 def create_parser():
     parser = argparse.ArgumentParser(
@@ -88,7 +93,7 @@ def create_parser():
             "clean_cafo",
             "match_plants",
             "match_farms",
-            "calculate_captured_areas",
+            "calculate_captured_area",
             "visualize",
             "counterglow_geojson_chicken",
         ],
@@ -116,8 +121,8 @@ def run_all(args):
 
     try:
         print("Cleaning Infogroup data...")
-        # TODO: pass ABI dictionary here
-        clean.clean_infogroup(RAW_INFOGROUP_FPATH, args.code, args.filtering)
+        ABI_dict = config["ABI_MAP"]
+        clean.clean_infogroup(RAW_INFOGROUP_FPATH, ABI_dict, args.code, args.filtering)
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -205,7 +210,8 @@ def main(args):
         elif args.function == "clean_infogroup":
             try:
                 print("Cleaning Infogroup data...")
-                clean.clean_infogroup(RAW_INFOGROUP_FPATH, args.code, args.filtering)
+                ABI_dict = config["ABI_MAP"]
+                clean.clean_infogroup(RAW_INFOGROUP_FPATH, ABI_dict, args.code, args.filtering)
             except Exception as e:
                 print(f"{e}")
                 exit(1)
@@ -241,7 +247,7 @@ def main(args):
                 print(f"{e}")
                 exit(1)
 
-        elif args.function == "calculate_captured_areas":
+        elif args.function == "calculate_captured_area":
             try:
                 # Generate GeoJSONs and maps
                 print("Creating plant capture GeoJSON...")
@@ -255,9 +261,11 @@ def main(args):
                 # 	print("Missing environment variable")
                 # .env should look like — and .env should be in .gitignore
                 # MAPBOX_API="asdflkje.akljdnc82.dkjllkdjff"
-                calculate_captured_areas.full_script(
-                    "pk.eyJ1IjoidG9kZG5pZWYiLCJhIjoiY2xqc3FnN2NjMDBqczNkdDNmdjBvdnU0ciJ9.0RfS-UsqS63pbAuqrE_REw"
-                )
+                try:
+                    MAPBOX_KEY = os.getenv('MAPBOX_API')
+                except:
+                    print("Missing environment variable")
+                calculate_captured_areas.full_script(MAPBOX_KEY)
             except Exception as e:
                 print(f"{e}")
                 exit(1)

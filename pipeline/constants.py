@@ -29,6 +29,9 @@ ALL_STATES_GEOJSON_FPATH = CLEAN_DIR / "all_states_with_parent_corp_by_corp.geoj
 COUNTERGLOW_GEOJSON_FPATH = CLEAN_DIR / "counterglow_geojson.geojson"
 ISOCHRONES_WITH_PARENT_CORP_FPATH = CLEAN_DIR / "isochrones_with_parent_corp.geojson"
 
+# config file
+CONFIG_FPATH = ROOT_DIR / "config.json"
+
 
 # state abbreviations
 abb2state = {
