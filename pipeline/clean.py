@@ -5,8 +5,13 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
-from constants import CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_INFOGROUP_FPATH,\
-    RAW_INFOGROUP_FPATH, CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH
+from constants import (
+    CLEANED_FSIS_PROCESSORS_FPATH,
+    CLEANED_INFOGROUP_FPATH,
+    RAW_INFOGROUP_FPATH,
+    CLEANED_COUNTERGLOW_FPATH,
+    CLEANED_CAFO_POULTRY_FPATH,
+)
 
 here = Path(__file__).resolve().parent
 
@@ -58,7 +63,8 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def clean_infogroup(filepath: Path, SIC_CODE:str, filtering:bool = False):
+def clean_infogroup(filepath: Path, SIC_CODE: str, filtering: bool = False):
+    # TODO: update this to accept the ABI dictionary as an argument
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
@@ -92,7 +98,9 @@ def clean_infogroup(filepath: Path, SIC_CODE:str, filtering:bool = False):
         all_years_df[x] = all_years_df[x].fillna(0)
         all_years_df[x] = all_years_df[x].apply(np.int64)
 
-    all_years_df["PARENT NAME"] = all_years_df["PARENT NUMBER"].replace({np.nan: None}).astype(str).map(ABI_dict)
+    all_years_df["PARENT NAME"] = (
+        all_years_df["PARENT NUMBER"].replace({np.nan: None}).astype(str).map(ABI_dict)
+    )
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
     all_years_df["ABI"] = all_years_df["PARENT NUMBER"].apply(str)
 
