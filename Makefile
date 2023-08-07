@@ -24,7 +24,7 @@ build-pipeline:
 
 # Run pipeline image with interactive terminal
 run-pipeline-bash:
-	docker run -it -e MAPBOX_API=${MAPBOX_API} -v $(current_abs_path)data:/app/data $(pipeline_image_name) /bin/bash 
+	docker run -e "MAPBOX_API=${MAPBOX_API}" -it -v $(current_abs_path)data:/app/data $(pipeline_image_name) /bin/bash 
 
 # Run pipeline image
 run-pipeline:
