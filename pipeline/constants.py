@@ -32,6 +32,12 @@ ISOCHRONES_WITH_PARENT_CORP_FPATH = CLEAN_DIR / "isochrones_with_parent_corp.geo
 # config file
 CONFIG_FPATH = ROOT_DIR / "config.json"
 
+# mapping
+ALBERS_EQUAL_AREA = "EPSG:9822"
+WGS84 = "EPSG:4326"
+USA_LAT = 37.0902
+USA_LNG = -95.7129
+
 
 # state abbreviations
 abb2state = {

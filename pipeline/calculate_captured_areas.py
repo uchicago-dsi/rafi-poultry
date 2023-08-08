@@ -9,21 +9,12 @@ import folium
 import geopandas as gpd
 import shapely
 from shapely.geometry import Polygon, mapping
-from shapely import GeometryCollection, MultiPolygon
 from shapely.ops import unary_union
-from pathlib import Path
 from pyproj import Geod
-from dotenv import load_dotenv
+from typing import List, Dict, Tuple
 from constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, ALL_STATES_GEOJSON_FPATH,\
-    CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_INFOGROUP_FPATH, DATA_DIR
-
-# load mapbox API
-load_dotenv()
-
-ALBERS_EQUAL_AREA = "EPSG:9822"
-WGS84 = "EPSG:4326"
-USA_LAT = 37.0902
-USA_LNG = -95.7129
+    CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_INFOGROUP_FPATH, DATA_DIR, ALBERS_EQUAL_AREA, WGS84, USA_LAT,\
+    USA_LNG
 
 single_shapely = []
 two_shapely = []
@@ -35,50 +26,51 @@ two_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
 three_plant_color = lambda x: {"fillColor": "#9F2B68"}  # amaranth
 
 
-def isochrones(df: pd.DataFrame, x: float, token: str) -> pd.DataFrame :
+def isochrones(coords: List[Tuple[float, float]], driving_dist_miles: float, token: str) -> pd.DataFrame :
     """Adds plant isochrones to fsis dataframe; captures area that is within an x mile radius of the plant.
+            90 percent of all birds were produced on farms within 60 miles of the plant, according to 2011 ARMS data.
 
     Args:
-        df: dataframe; the cleaned fsis_df.
-        x: int; radius of captured area (in driving distance).
+        coords: list of tuples; lat and long for all processing plants.
+        driving_dist_miles: int; radius of captured area (in driving distance).
         token: str; API token to access mapbox.
 
     Returns:
-        fsis_df with added column for isochrones.
+        list of plant isochrones
 
     """
 
-    MAPBOX_TOKEN = token
     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
-    DRIVING_DISTANCE = str(
-        int(x * 1609.34)
-    )  # 60 miles in meters: 90 percent of all birds were produced on farms within 60 miles of the plant, according to 2011 ARMS data
+    DRIVING_DISTANCE_METERS = str(
+        int(driving_dist_miles * 1609.34)
+    )  # turns miles into meters
 
     isochrones = []
-    for index, row in df.iterrows():
-        lat = str(row["latitude"])
-        lng = str(row["longitude"])
+    for lat, lng in coords:
 
         # add driving radius isochrone to map
         url = (
             ENDPOINT
-            + lng
+            + str(lng)
             + ","
-            + lat
+            + str(lat)
             + "?"
             + "contours_meters="
-            + DRIVING_DISTANCE
+            + DRIVING_DISTANCE_METERS
             + "&access_token="
-            + MAPBOX_TOKEN
+            + token
         )
         response = requests.get(url)
-        isochrone = Polygon(response.json()["features"][0]["geometry"]["coordinates"])
+        if not response.ok:
+            raise Exception(f"Within the isochrone helper function, unable to access mapbox url using API token.\
+                                The response had status code {response.status_code}. The error message was \
+                                {response.text}")
+
+        isochrone = Polygon(response.json()["features"][0]["geometry"]
+                            ["coordinates"])
         isochrones.append(isochrone)
 
-    df = df.copy()
-    df["Isochrone"] = isochrones
-
-    return df
+    return isochrones
 
 
 def make_geo_df(df: pd.DataFrame, dist: float, token: str, simplify: float = 0.01) -> pd.DataFrame:
@@ -95,14 +87,16 @@ def make_geo_df(df: pd.DataFrame, dist: float, token: str, simplify: float = 0.0
 
     """
 
-    geo_df = isochrones(df, dist, token)
-    geo_df = (
-        gpd.GeoDataFrame(geo_df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
+    lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
+
+    df['Isochrone'] = isochrones(lats_and_longs, dist, token)
+    df = (
+        gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
     )
 
-    geo_df["Isochrone Cleaned"] = geo_df["Isochrone"].simplify(simplify)
+    df["Isochrone Cleaned"] = df["Isochrone"].simplify(simplify)
 
-    return geo_df
+    return df
 
 
 def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map):
@@ -506,3 +500,6 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
     return m
+
+if __name__ == "__main__":
+    full_script("pk.eyJ1IjoidG9kZG5pZWYiLCJhIjoiY2xqc3FnN2NjMDBqczNkdDNmdjBvdnU0ciJ9.0RfS-UsqS63pbAuqrE_REw")
