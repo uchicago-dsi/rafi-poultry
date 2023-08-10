@@ -61,8 +61,8 @@ def map_state(match_df_path: Path, unmatched_df_path: Path, state: str):
     """Creates a map of CAFOs in a given state.
 
     Args:
-        match_df_path: file path (string) to dataset of matched farms between Counterglow and state permit data
-        unmatched_df_path: file path (string) to dataset of unmatched farms between Counterglow and state permit data
+        match_df_path: file path to dataset of matched farms between Counterglow and state permit data
+        unmatched_df_path: file path to dataset of unmatched farms between Counterglow and state permit data
         state: state abbreviation for the state the map is for
 
     Returns:
