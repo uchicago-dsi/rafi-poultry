@@ -481,7 +481,7 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
 
-    # dictionary of parent corps
+    # dictionary of parent 
     dict = {}
     chrones = []
 
