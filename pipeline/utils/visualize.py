@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import folium
 from pathlib import Path
-from constants import MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, DATA_DIR
+from ..constants import MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, DATA_DIR
 
 
 def colored_maps(infogroup_path: Path, year: int):
