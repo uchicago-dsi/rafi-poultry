@@ -1,6 +1,6 @@
-# Rafi Poultry Pipeline README.md file
+# RAFI-USA Poultry Pipeline README.md file
 
-This is the pipeline for this project and a description of the files within it.
+This README contains information on the structure of the pipeline for the project and a description of the files and folder structure necessary to run it. 
 
 # List of Files
 
