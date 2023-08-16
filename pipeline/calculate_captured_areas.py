@@ -99,7 +99,7 @@ def make_geo_df(df: pd.DataFrame, dist: float, token: str, simplify: float = 0.0
     return df
 
 
-def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map):
+def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map) -> None:
     """Take geo_df and adds the plant isochrones to the map as well as sorts the isochrones by parent corporation.
 
     Args:
@@ -485,8 +485,6 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     dict = {}
     chrones = []
 
-    # Are we loading the token in one of the other files and passing it to all of these functions?
-    # It looks like we load the token in this file too?
     df_map = make_geo_df(fsis_df, distance, token)
     add_plants(df_map, dict, chrones, m)
 
@@ -500,6 +498,3 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
     return m
-
-if __name__ == "__main__":
-    full_script("pk.eyJ1IjoidG9kZG5pZWYiLCJhIjoiY2xqc3FnN2NjMDBqczNkdDNmdjBvdnU0ciJ9.0RfS-UsqS63pbAuqrE_REw")
