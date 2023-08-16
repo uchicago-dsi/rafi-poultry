@@ -1,10 +1,12 @@
-"""Contains analysis scripts to calculate HHI and parent corporation captured area for a given dataset,
-as well as join farm data from multiple sources together.
+"""Contains analysis scripts to calculate HHI and parent corporation 
+captured area for a given dataset, as well as join farm data 
+from multiple sources together.
 """
 
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
+from ..constants import RAW_COUNTERGLOW_FPATH
 
 here = Path(__file__).resolve().parent
 
@@ -13,7 +15,7 @@ def HHI(fsis_sales: pd.DataFrame):
     Calculcate the HHI for a selection of states/regions that are input into it 
 
     Args:
-        fsis_sales (dataframe): the data that we are interesting in to calculate the index for
+        fsis_sales (dataframe): the data that we are calculating the index for
 
     Returns:
         hhi (float): the calculated index
@@ -23,7 +25,8 @@ def HHI(fsis_sales: pd.DataFrame):
     parent_corps = list(fsis_sales["Parent Corporation"].unique())
 
     sales_dict = {}
-    industry_total = sum(fsis_sales["Sales Volume (Location)"]) # total sales volume of entire selection
+    # total sales volume of entire selection
+    industry_total = sum(fsis_sales["Sales Volume (Location)"]) 
 
     for corp in parent_corps:
         # total sales for a specific corporation
@@ -45,14 +48,15 @@ def calculate_captured_area(path: Path): # pass in geojson path
     """
     Calculates the captured areas as a percentage.
     Dict Keys: single capture, double capture, triple capture
-         Values: the percentage that coordinates with the key   
+    Values: the percentage that coordinates with the key   
 
 
     Args:
         path (filepath): file path to the geojson file
 
     Returns:
-        areas (dict): the dictionary containing the keys/values of percentage of area captures
+        areas (dict): the dictionary containing the keys/values 
+            of percentage of area captures
     """
 
     areas = {
@@ -65,7 +69,8 @@ def calculate_captured_area(path: Path): # pass in geojson path
     total_area = sum(df["area"]) # sum up all areas
 
     for key in areas.keys():
-        # sum of the area that match with the dict keys (1, 2, 3) which is single, double, or triple capture
+        # sum of the area that match with the dict keys (1, 2, 3)
+        # which is single, double, or triple capture
         integrator_area = sum(df[df["corporate_access"]==key]["area"])
         percent_captured = (integrator_area/total_area)*100 # calculate the percentage
         areas[key] = percent_captured # add to the dictionary
@@ -105,7 +110,7 @@ def farm_count():
     
     # Counterglow data
     # read in file
-    counterglow_df = pd.read_csv(here.parent / "data/raw/Counterglow+Facility+List+Complete.csv")
+    counterglow_df = pd.read_csv(RAW_COUNTERGLOW_FPATH)
     # upper case all column names
     counterglow_df.rename(columns={col: col.upper() for col in counterglow_df.columns}, inplace=True)
     # rename some columns to match others
