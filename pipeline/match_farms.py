@@ -1,24 +1,32 @@
-"""Contains functions to match farm entries between state permit data and Counterglow dataset
-based on farm name and location.
+"""Contains functions to match farm entries between state permit data 
+and Counterglow dataset based on farm name and location.
 """
 
 import pandas as pd
 from fuzzywuzzy import fuzz
 from distances import haversine
-from constants import CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH,\
-    MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH
+from constants import (
+    CLEANED_COUNTERGLOW_FPATH,
+    CLEANED_CAFO_POULTRY_FPATH,
+    MATCHED_FARMS_FPATH,
+    UNMATCHED_FARMS_FPATH
+)
 
-def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio: float=90):
-    """Matches plants in Counterglow dataset with permit data from various state websites by name.
+def name_match(counterglow: pd.DataFrame, 
+               cafomaps: pd.DataFrame, 
+               fuzz_ratio: float=90) -> pd.DataFrame:
+    """Matches plants in Counterglow dataset with permit data 
+    from various state websites by name.
 
     Args:
         counterglow: DataFrame containing Counterglow CAFO data.
         cafomaps: DataFrame containing CAFO permit data.
-        fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept that two strings are "the same"
-                default of 75
+        fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept 
+            that two strings are "the same". Default value of 75
 
     Returns:
-        A new DataFrame, match_df, that duplicates the cafomaps DataFrame but adds columns that note whether a name match
+        A new DataFrame, match_df, that duplicates the cafomaps DataFrame 
+        but adds columns that note whether a name match
         (either exact or fuzzy) was found.
     """
 
@@ -35,7 +43,7 @@ def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio: fl
         cafo_state = srow["state"]
         counterglow_subset = counterglow[counterglow["State"] == cafo_state]
 
-        for j, crow in counterglow_subset.iterrows():
+        for _, crow in counterglow_subset.iterrows():
             cg_name = crow["Name"]
             if type(cg_name) == str:
                 cg_name = crow["Name"].upper()
@@ -57,22 +65,27 @@ def name_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, fuzz_ratio: fl
     return match_df
 
 
-def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh: float=0.3048, fuzz_ratio: float=90):
-    """Matches plants in Counterglow dataset with permit data from various state websites by name and location.
+def name_loc_match(counterglow: pd.DataFrame, 
+                   cafomaps: pd.DataFrame, 
+                   thresh: float=0.3048, 
+                   fuzz_ratio: float=90) -> pd.DataFrame:
+    """Matches plants in Counterglow dataset with permit data 
+    from various state websites by name and location.
 
     Args:
         counterglow: DataFrame containing Counterglow CAFO data.
         cafomaps: DataFrame containing CAFO permit data.
         thresh: max distance between 2 farms that can be matched, 
                 default is 1000 ft in km, which is 0.3048 km
-        fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept that two strings are "the same"
-                default of 75
+        fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
+            to accept that two strings are "the same"; default value is 75
 
     Returns:
-        A new DataFrame, match_df, that duplicates the cafomaps DataFrame but adds columns that indicate whether a name and/or
-        location match was found. The relevant column is filled in with the name of the matching farm in the Counterglow dataset.
+        A new DataFrame, match_df, that duplicates the cafomaps DataFrame but 
+        adds columns that indicate whether a name and/or location match
+        was found. The relevant column is filled in with the name of the 
+        matching farm in the Counterglow dataset.
     """
-
     (
         name,
         latitude,
@@ -84,6 +97,7 @@ def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh: fl
         location_match,
         no_match,
     ) = ([] for _ in range(9))
+    
     match_df = cafomaps.copy()
     for i, srow in cafomaps.iterrows():
         cafo_loc = (srow["lat"], srow["long"])
@@ -161,18 +175,23 @@ def name_loc_match(counterglow: pd.DataFrame, cafomaps: pd.DataFrame, thresh: fl
     return match_df
 
 
-def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame, animal_exp: str, thresh: float=0.3048, fuzz_ratio: float=90):
-    """Executes the helper matching functions and saves the results for matched farms and unmatched farms
-    to the cleaned data folder.
+def match_all_farms(counterglow_path: pd.DataFrame, 
+                    cafomaps_path: pd.DataFrame, 
+                    animal_exp: str, 
+                    thresh: float=0.3048, 
+                    fuzz_ratio: float=90) -> None:
+    """Executes the helper matching functions and saves the results 
+    for matched farms and unmatched farms to the cleaned data folder.
 
     Args:
         counterglow_path: path to dataset containing Counterglow CAFO data.
         cafomaps_path: path to dataset containing CAFO permit data.
-        animal_exp: Regex with substrings to filter permit types for (ie. "Poultry|Chicken|Broiler")
+        animal_exp: Regex with substrings to filter permit types for 
+            (ie. "Poultry|Chicken|Broiler")
         thresh: max distance between 2 farms that can be matched, 
                 default is 1000 ft in km, which is 0.3048 km
-        fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept that two strings are "the same"
-                default of 75
+        fuzz_ratio: float; minimum "fuzziness" (or similarity) score to accept 
+            that two strings are "the same"; default of 75
 
     Returns:
         N/A, saves two CSVs to the cleaned data folder.
@@ -182,7 +201,8 @@ def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame,
     cafomaps["name"] = cafomaps["name"].str.upper()
 
     # Filters for specific animal (ie. poultry) and drops rows with no data
-    cafomaps = cafomaps[cafomaps["permit"].str.contains(animal_exp, regex=True)]
+    cafomaps = cafomaps[cafomaps["permit"].str.contains(animal_exp, 
+                                                        regex=True)]
     counterglow = counterglow[counterglow["Farm Type"].notna()]
     counterglow = counterglow[
         counterglow["Farm Type"].str.contains(animal_exp, regex=True)
@@ -194,10 +214,12 @@ def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame,
 
     # Calls different matching functions on each subset of cafomaps
     cm_nameonly_match = name_match(counterglow, cm_nameonly, fuzz_ratio)
-    cm_nameloc_match = name_loc_match(counterglow, cm_nameloc, thresh, fuzz_ratio)
+    cm_nameloc_match = name_loc_match(counterglow, cm_nameloc, thresh, 
+                                      fuzz_ratio)
 
     # Combining the results of the match
-    combined_df = pd.concat([cm_nameonly_match, cm_nameloc_match], ignore_index=True)
+    combined_df = pd.concat([cm_nameonly_match, cm_nameloc_match], 
+                            ignore_index=True)
 
     # Creating full matched dataframe
     matched_df = combined_df[~combined_df["No Match"]].drop(columns=["No Match"])
@@ -232,13 +254,3 @@ def match_all_farms(counterglow_path: pd.DataFrame, cafomaps_path: pd.DataFrame,
 
     matched_df.to_csv(MATCHED_FARMS_FPATH)
     unmatched_df.to_csv(UNMATCHED_FARMS_FPATH)
-
-
-if __name__ == "__main__":
-    match_all_farms(
-        CLEANED_COUNTERGLOW_FPATH,
-        CLEANED_CAFO_POULTRY_FPATH,
-        "Poultry|Chicken|Broiler",
-        0.3048,
-        90
-    )
