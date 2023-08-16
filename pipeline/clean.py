@@ -1,4 +1,5 @@
-"""Contains all cleaning functions for the FSIS, Counterglow, Infogroup, and state CAFO permit datasets.
+"""Contains all cleaning functions for the FSIS, Counterglow, Infogroup, 
+and state CAFO permit datasets.
 """
 
 import pandas as pd
@@ -8,12 +9,11 @@ from pathlib import Path
 from constants import (
     CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_INFOGROUP_FPATH,
-    RAW_INFOGROUP_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
 )
 
-def clean_FSIS(filepath: Path):
+def clean_FSIS(filepath: Path) -> None:
     """Filters the FSIS dataset for large poultry processing plants.
 
     Args:
@@ -29,10 +29,23 @@ def clean_FSIS(filepath: Path):
 
     df_large_chickens.to_csv(CLEANED_FSIS_PROCESSORS_FPATH)
 
-    return
 
+def filter_infogroup(filename: str, 
+                     search_str: str, 
+                     chunksize: int = 10000) -> pd.DataFrame:
+    """Filters the Infogroup file for a specific string (ie. "chicken"), 
+    meant as a helper function for clean_infogroup.
 
-def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
+    Args:
+        filename: path to specific file to be filtered
+        search_str: string to search columns for
+        chunksize: integer representing how many rows the function processes
+        at a time. 
+
+    Returns:
+        N/A, puts cleaned df into the data/clean folder
+
+    """
     search_cols = [
         "PRIMARY SIC CODE",
         "SIC CODE 1",
@@ -49,7 +62,8 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
         df.columns = map(str.upper, df.columns)
         rows_to_add = df[
             df[search_cols].apply(
-                lambda r: r.astype(str).str.contains(search_str, case=False).any(),
+                lambda r: r.astype(str).str.contains(search_str, 
+                                                     case=False).any(),
                 axis=1,
             )
         ]
@@ -60,16 +74,20 @@ def filter_infogroup(filename: str, search_str: str, chunksize: int = 10000):
     return filtered_df
 
 
-def clean_infogroup(filepath: Path, ABI_dict: dict, SIC_CODE: str, filtering: bool = False):
+def clean_infogroup(filepath: Path, 
+                    ABI_dict: dict, 
+                    SIC_CODE: str, 
+                    filtering: bool = False) -> None:
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
         filepath: absolute path to folder that contains all infogroup files
         SIC_CODE: SIC code to filter the dataframes on
-        filtering: boolean, true if infogroup files are in their rawest form and need to be filtered
+        filtering: boolean, true if infogroup files are in their rawest form 
+            and need to be filtered
 
     Returns:
-        n/a, puts cleaned df into the data/clean folder
+        N/A, puts cleaned df into the data/clean folder
 
     """
     all_years_df = pd.DataFrame()
@@ -125,14 +143,14 @@ def clean_infogroup(filepath: Path, ABI_dict: dict, SIC_CODE: str, filtering: bo
 
     master.to_csv(CLEANED_INFOGROUP_FPATH)
 
-    return
 
-
-def clean_counterglow(filepath: Path):
-    """Cleans the Counterglow dataset by standardizing facility name and column formatting.
+def clean_counterglow(filepath: Path) -> None:
+    """Cleans the Counterglow dataset by standardizing facility name 
+    and column formatting.
 
     Args:
-        filepath: relative path to the raw data folder with the Counterglow dataset.
+        filepath: relative path to the raw data folder 
+            with the Counterglow dataset.
 
     Returns:
         N/A, writes cleaned Counterglow dataset to the clean data folder.
@@ -144,23 +162,22 @@ def clean_counterglow(filepath: Path):
 
     df.to_csv(CLEANED_COUNTERGLOW_FPATH)
 
-    return
 
-
-def clean_cafo(data_dir: Path, config_fpath: Path):
-    """Merges state level CAFO permit data (taken from gov't websites) into one CSV
-    with columns for name, address, longitude/latitude, and state. Column names
-    in each dataset are mapped to standardized format in accompanying farm_source.json file.
-    Rows in complete dataset are left blank if no information is available,
-    and raw CSVs may need to be standardized/filtered by hand first.
+def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
+    """Merges state level CAFO permit data (taken from gov't websites)
+    into one CSV with columns for name, address, longitude/latitude, and state. 
+    Column names in each dataset are mapped to standardized format 
+    in accompanying farm_source.json file. Rows in complete dataset are 
+    left blank if no information is available, and raw CSVs may need to be 
+    standardized/filtered by hand first.
 
     Args:
-        data_dir: filepath to raw data subfolder "cafo" that contains the state permit data.
+        data_dir: filepath to raw data subfolder "cafo" 
+            that contains the state permit data.
         config_fpath: filepath to farm_source.json file.
 
     Returns:
         N/A, writes cleaned CAFO dataset to the clean data folder.
-
     """
     # Open configuration file
     with open(config_fpath) as f:
@@ -176,7 +193,8 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
         df = pd.read_csv(fpath)
 
         # Subset to relevant columns
-        present_cols = list(filter(None, list(source["column_mapping"].values())))
+        present_cols = list(filter(None, 
+                                   list(source["column_mapping"].values())))
         df = df[present_cols]
 
         # Rename columns to match standard model
@@ -189,7 +207,8 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
 
         # Update final DataFrame
         final_df = (
-            df if final_df is None else pd.concat([df, final_df], ignore_index=True)
+            df if final_df is None else pd.concat([df, final_df], 
+                                                  ignore_index=True)
         )
 
     final_df.to_csv(CLEANED_CAFO_POULTRY_FPATH)
