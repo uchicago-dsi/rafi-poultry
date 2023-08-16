@@ -193,8 +193,3 @@ def clean_cafo(data_dir: Path, config_fpath: Path):
         )
 
     final_df.to_csv(CLEANED_CAFO_POULTRY_FPATH)
-
-
-if __name__ == "__main__":
-    filtering = False
-    clean_infogroup(RAW_INFOGROUP_FPATH, "2015", filtering)
