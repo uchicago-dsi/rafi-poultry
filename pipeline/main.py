@@ -8,7 +8,7 @@ import clean
 import match_farms
 import match_plants
 import calculate_captured_areas
-import geojson_creation
+import farm_geojson_creation
 import os
 
 import utils.visualize as visualize
@@ -201,7 +201,7 @@ def run_all(args) -> None:
 
     try:
         print("Creating Counterglow GeoJSON...")
-        geojson_creation.counterglow_geojson_chicken(
+        farm_geojson_creation.counterglow_geojson_chicken(
             CLEANED_COUNTERGLOW_FPATH,
             CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson",
         )
@@ -315,7 +315,7 @@ def main(args) -> None:
         elif args.function == "counterglow_geojson_chicken":
             try:
                 print("Creating Counterglow GeoJSON...")
-                geojson_creation.counterglow_geojson_chicken(
+                farm_geojson_creation.counterglow_geojson_chicken(
                     CLEANED_COUNTERGLOW_FPATH, ALL_STATES_GEOJSON_FPATH
                 )
             except Exception as e:

@@ -20,6 +20,8 @@ This is the pipeline for this project and a description of the files within it.
 - **match_plants.py** Reads in clean Infogroup datasets from 1997 through the present, matches plants across years using the ABI, match plants in FSIS with plants in Infogroup by location and address, to add sales volume data to plant records, writes the combined output DataFrame as a CSV file, matched_plants.csv, in the data/clean folder.
 - **match_farms.py** Reads in clean state permit datasets and Counterglow dataset to match farms across the two for the specified animal type, making matches and fuzzy matches based on name and location (if available). Outputs standardized datasets of matched and unmatched farms: matched_farms.csv and unmatched_farms.csv.
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
+- **farm_geojson_creation.py** reads in cleaned data from Counterglow, filters it for poultry only, and generates a Counterglow GeoJSON file containing plant access data based on the parent corporation information in the all_states_with_parent_corporation_by_corp.geojson file (which is created by the calculate_captured_areas script).
+
 
 # Running the Pipeline:
 1. **Establish directory structure** 
@@ -58,6 +60,3 @@ This is the pipeline for this project and a description of the files within it.
        - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
      - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
-
-
-<!-- TODO: a general thing to do that could be useful is defining all of the filenames as constants in a config file and pulling those constants in so it's easy to run the pipeline with files with different names -->
