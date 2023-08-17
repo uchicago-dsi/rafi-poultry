@@ -259,7 +259,6 @@ def main(args) -> None:
                 print("Cleaning Infogroup data...")
                 ABI_dict = config["ABI_map"]
                 if args.smoke_test:
-                    print(args.smoke_test)
                     clean.clean_infogroup(SMOKE_TEST_FPATH, 
                                           ABI_dict, 
                                           args.code,
