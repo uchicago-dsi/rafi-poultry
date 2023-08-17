@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from pipeline.constants import (
     CLEANED_FSIS_PROCESSORS_FPATH,
-    CLEANED_INFOGROUP_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
     SMOKE_TEST_FPATH
@@ -88,7 +87,6 @@ def clean_infogroup(filepath: Path,
         N/A, puts cleaned df into the data/clean folder
 
     """
-    print(filepath)
     all_years_df = pd.DataFrame()
     dfs = []
 
