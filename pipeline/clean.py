@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
-from constants import (
+from pipeline.constants import (
     CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_INFOGROUP_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
@@ -82,6 +82,7 @@ def clean_infogroup(filepath: Path,
 
     Args:
         filepath: absolute path to folder that contains all infogroup files
+        ABI_dict: dictionary of all parent ABI's and their name as a str
         SIC_CODE: SIC code to filter the dataframes on
         filtering: boolean, true if infogroup files are in their rawest form 
             and need to be filtered
@@ -99,11 +100,13 @@ def clean_infogroup(filepath: Path,
             dfs.append(df)
         else:
             df = pd.read_csv(name, encoding="utf-8")
+            df.columns = map(str.upper, df.columns)
             dfs.append(df)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
-    all_years_df = all_years_df.sort_values(by="ARCHIVE VERSION YEAR").reset_index(
-        drop=True
+    all_years_df.to_csv("../testing.csv")
+    all_years_df = all_years_df.sort_values(by="ARCHIVE VERSION YEAR"
+                                            ).reset_index(drop=True
     )
 
     cols = ["YEAR ESTABLISHED", "YEAR 1ST APPEARED", "PARENT NUMBER"]
@@ -116,7 +119,6 @@ def clean_infogroup(filepath: Path,
         all_years_df["PARENT NUMBER"].replace({np.nan: None}).astype(str).map(ABI_dict)
     )
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
-    all_years_df["ABI"] = all_years_df["PARENT NUMBER"].apply(str)
 
     master = all_years_df[
         [
