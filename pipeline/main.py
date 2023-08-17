@@ -20,7 +20,7 @@ import warnings
 import json
 
 warnings.filterwarnings("ignore")
-from constants import (
+from pipeline.constants import (
     RAW_FSIS_FPATH,
     RAW_COUNTERGLOW_FPATH,
     RAW_INFOGROUP_FPATH,
@@ -34,9 +34,11 @@ from constants import (
     ROOT_DIR,
     CLEAN_DIR,
     ALL_STATES_GEOJSON_FPATH,
-    CONFIG_FPATH
+    CONFIG_FPATH, 
+    SMOKE_TEST_FPATH,
+    SMOKE_TEST_CLEAN_FPATH,
+    DATA_DIR
 )
-
 
 with open(CONFIG_FPATH, "r") as jsonfile:
     config = json.load(jsonfile)
@@ -86,7 +88,7 @@ def create_parser():
         type=bool,
         default=False,
         nargs="?",
-        help="Determines whether infogroup data is raw \
+        help="Determines whether Infogroup data is raw \
             and needs filtering by SIC Code"
     )
     parser.add_argument(
@@ -103,6 +105,12 @@ def create_parser():
             "create_counterglow_geojson",
         ],
         help="Specify the function to run.",
+    )
+    parser.add_argument(
+        "--smoke_test",
+        action='store_true',
+        help="Indicates whether smoke test on Infogroup data\
+            should be run or not"
     )
 
     return parser
@@ -136,10 +144,18 @@ def run_all(args) -> None:
     try:
         print("Cleaning Infogroup data...")
         ABI_dict = config["ABI_map"]
-        clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
-                              ABI_dict, 
-                              args.code, 
-                              args.filtering)
+        if args.smoke_test:
+            clean.clean_infogroup(SMOKE_TEST_FPATH, 
+                    ABI_dict, 
+                    args.code, 
+                    SMOKE_TEST_CLEAN_FPATH,
+                    True)
+        else:
+            clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
+                                ABI_dict, 
+                                args.code, 
+                                CLEANED_INFOGROUP_FPATH,
+                                args.filtering)
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -242,10 +258,19 @@ def main(args) -> None:
             try:
                 print("Cleaning Infogroup data...")
                 ABI_dict = config["ABI_map"]
-                clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
-                                      ABI_dict, 
-                                      args.code, 
-                                      args.filtering)
+                if args.smoke_test:
+                    print(args.smoke_test)
+                    clean.clean_infogroup(SMOKE_TEST_FPATH, 
+                                          ABI_dict, 
+                                          args.code,
+                                          SMOKE_TEST_CLEAN_FPATH,
+                                          True)
+                else:
+                    clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
+                                          ABI_dict, 
+                                          args.code, 
+                                          CLEANED_INFOGROUP_FPATH,
+                                          args.filtering)
             except Exception as e:
                 print(f"{e}")
                 exit(1)
@@ -262,7 +287,8 @@ def main(args) -> None:
         elif args.function == "match_plants":
             try:
                 # Match plants and farms
-                print("Matching FSIS plants and Infogroup for sales volume data...")
+                print("Matching FSIS plants and Infogroup for sales volume \
+                      data...")
                 match_plants.save_all_matches(
                     CLEANED_INFOGROUP_FPATH,
                     CLEANED_FSIS_PROCESSORS_FPATH,
@@ -307,7 +333,7 @@ def main(args) -> None:
                     path = "html/cafo_poultry_eda_" + state + ".html"
                     visualize.map_state(
                         MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state
-                    ).save(ROOT_DIR / path)
+                    ).save(DATA_DIR / path)
             except Exception as e:
                 print(f"{e}")
                 exit(1)

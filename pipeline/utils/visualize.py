@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import folium
 from pathlib import Path
-from pipeline.constants import MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, DATA_DIR
 
 
 def colored_maps(infogroup_path: Path, year: int):
@@ -65,14 +64,15 @@ def add_points(state_map: folium.Map, state_df: pd.DataFrame, color: str):
 
     Args:
         state_map: map to add markers to
-        state_df: DataFrame containing the farms and locations to be added to the map
+        state_df: DataFrame containing the farms and locations 
+            to be added to the map
         color: color for the markers as a string
 
     Returns:
         N/A, adds points to existing map
 
     """
-    for index, location_info in state_df.iterrows():
+    for _, location_info in state_df.iterrows():
         folium.Marker(
             [location_info["lat"], location_info["long"]],
             popup=location_info["name"],
@@ -84,12 +84,15 @@ def map_state(match_df_path: Path, unmatched_df_path: Path, state: str):
     """Creates a map of CAFOs in a given state.
 
     Args:
-        match_df_path: file path to dataset of matched farms between Counterglow and state permit data
-        unmatched_df_path: file path to dataset of unmatched farms between Counterglow and state permit data
+        match_df_path: file path to dataset of matched farms between Counterglow
+            and state permit data
+        unmatched_df_path: file path to dataset of unmatched farms between 
+            Counterglow and state permit data
         state: state abbreviation for the state the map is for
 
     Returns:
-        Map of the state with markers in different colors to represent farms in state permit data, Counterglow, or both.
+        Map of the state with markers in different colors to represent farms 
+        in state permit data, Counterglow, or both.
 
     """
     match_df = pd.read_csv(match_df_path)
@@ -103,10 +106,11 @@ def map_state(match_df_path: Path, unmatched_df_path: Path, state: str):
     match_state = match_df[match_df["state"] == state]
     unmatched_state = unmatched_df[unmatched_df["state"] == state]
 
-    add_points(state_map, match_state, "green")  # adding points that matched on both
+    add_points(state_map, match_state, "green") 
+    # adding points that matched on both
     add_points(
-        state_map, unmatched_state[unmatched_state["source"] != "Counterglow"], "blue"
-    )  # adding points unique to permit dataset
+        state_map, unmatched_state[unmatched_state["source"] != "Counterglow"], 
+        "blue")  # adding points unique to permit dataset
 
     cg_unique = unmatched_df[unmatched_df["source"] == "Counterglow"]
     add_points(
@@ -114,14 +118,3 @@ def map_state(match_df_path: Path, unmatched_df_path: Path, state: str):
     )  # adding points unique to Counterglow
 
     return state_map
-
-
-if __name__ == "__main__":
-    match_df = pd.read_csv(MATCHED_FARMS_FPATH)
-    states = match_df["state"].unique().tolist()
-
-    for state in states:
-        path = "html/cafo_poultry_eda_" + state + ".html"
-        map_state(MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state).save(
-            DATA_DIR / path
-        )

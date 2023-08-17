@@ -254,3 +254,12 @@ def match_all_farms(counterglow_path: pd.DataFrame,
 
     matched_df.to_csv(MATCHED_FARMS_FPATH)
     unmatched_df.to_csv(UNMATCHED_FARMS_FPATH)
+
+if __name__ == "__main__":	
+    match_all_farms(	
+        CLEANED_COUNTERGLOW_FPATH,	
+        CLEANED_CAFO_POULTRY_FPATH,	
+        "Poultry|Chicken|Broiler",	
+        0.3048,	
+        90	
+    )	
