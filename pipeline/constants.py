@@ -7,6 +7,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 DATA_DIR = ROOT_DIR.parent / "data"
 CLEAN_DIR = DATA_DIR / "clean"
 RAW_DIR = DATA_DIR / "raw"
+HTML_DIR = DATA_DIR / "html"
 
 # raw data
 RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"
@@ -29,6 +30,9 @@ CLEANED_MATCHED_PLANTS_FPATH = CLEAN_DIR / "cleaned_matched_plants.csv"
 ALL_STATES_GEOJSON_FPATH = CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson"
 COUNTERGLOW_GEOJSON_FPATH = CLEAN_DIR / "counterglow_geojson.geojson"
 ISOCHRONES_WITH_PARENT_CORP_FPATH = CLEAN_DIR / "isochrones_with_parent_corp.geojson"
+
+# html 
+NATION_MAP = HTML_DIR / "poultry-map-smoothed.html"
 
 # config file
 CONFIG_FPATH = ROOT_DIR / "config.json"
