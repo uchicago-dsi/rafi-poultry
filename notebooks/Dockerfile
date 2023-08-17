@@ -6,8 +6,13 @@ FROM jupyter/scipy-notebook:python-3.9
 WORKDIR /app
 
 # Install Python 3 packages
-COPY requirements.txt .
+COPY notebooks/requirements.txt .
 RUN mamba install --quiet --yes --file requirements.txt -c conda-forge
 
-# Install select directories as packages to facilitate imports
-COPY . ./notebooks
+# Installing pipeline package
+COPY setup.py .
+COPY pipeline ./pipeline
+RUN pip install -e .
+
+# Copy notebooks folder
+COPY notebooks ./notebooks

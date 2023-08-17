@@ -8,19 +8,19 @@ current_abs_path := $(subst Makefile,,$(mkfile_path))
 # pipeline constants
 pipeline_image_name := "rafi-pipeline"
 pipeline_container_name := "rafi-pipeline-container"
-pipeline_dir := "$(current_abs_path)/pipeline"
+pipeline_dir := "$(current_abs_path)pipeline"
 
 # notebook constants
 notebooks_image_name := "rafi-notebooks"
 notebooks_container_name := "rafi-notebooks-container"
-notebooks_dir := "$(current_abs_path)/notebooks"
+notebooks_dir := "$(current_abs_path)notebooks"
 
 # environment variables
 include .env
 
 # Build Docker image for pipeline
 build-pipeline:
-	docker build -t $(pipeline_image_name) $(pipeline_dir)
+	docker build -t $(pipeline_image_name) -f "${pipeline_dir}/Dockerfile" $(current_abs_path)
 
 # Run pipeline image with interactive terminal
 run-pipeline-bash:
@@ -32,9 +32,9 @@ run-pipeline:
 
 # Build Docker image for notebooks
 build-notebooks:
-	docker build -t $(notebooks_image_name) $(notebooks_dir)
+	docker build -t $(notebooks_image_name) -f "${notebooks_dir}/Dockerfile" $(current_abs_path)
 
 run-notebooks:
-	docker run -v $(current_abs_path)data:/app/data -v $(current_abs_path)notebooks/:/app/notebooks \
+	docker run -v $(current_abs_path)data:/app/data -v $(notebooks_dir)/:/app/notebooks \
 	--name $(notebooks_container_name) --rm -p 8888:8888 -t $(notebooks_image_name) jupyter lab --port=8888 --ip='*' \
-	--NotebookApp.token='' --NotebookApp.password='' --no-browser --notebook-dir=/ --allow-root
+	--NotebookApp.token='' --NotebookApp.password='' --no-browser --notebook-dir=/app/notebooks --allow-root
