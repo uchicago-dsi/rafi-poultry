@@ -11,6 +11,7 @@ RAW_DIR = DATA_DIR / "raw"
 # raw data
 RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"
 RAW_FSIS_FPATH = RAW_DIR / "fsis-processors-with-location.csv"
+INFOGROUP_2022 = RAW_DIR / "infogroupz"
 RAW_INFOGROUP_FPATH = RAW_DIR / "infogroup"
 RAW_CAFO_FPATH = RAW_DIR / "cafo"
 US_STATES_FPATH = RAW_DIR / "gz_2010_us_040_00_500k.json"
