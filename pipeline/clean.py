@@ -6,11 +6,12 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
-from constants import (
+from pipeline.constants import (
     CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_INFOGROUP_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
+    SMOKE_TEST_FPATH
 )
 
 def clean_FSIS(filepath: Path) -> None:
@@ -38,7 +39,7 @@ def filter_infogroup(filename: str,
 
     Args:
         filename: path to specific file to be filtered
-        search_str: string to search columns for
+        search_str: SIC code (as a string) to search columns for
         chunksize: integer representing how many rows the function processes
         at a time. 
 
@@ -53,9 +54,6 @@ def filter_infogroup(filename: str,
         "SIC CODE 3",
         "SIC CODE 4",
     ]
-
-    # TODO: the smoke test idea is probably useful in general - this should maybe be set as a command line argument and passed through the various functions
-    smoke_test = False
 
     filtered_df = pd.DataFrame([])
     for df in pd.read_csv(filename, iterator=True, chunksize=chunksize):
@@ -77,6 +75,7 @@ def filter_infogroup(filename: str,
 def clean_infogroup(filepath: Path, 
                     ABI_dict: dict, 
                     SIC_CODE: str, 
+                    save_path: Path,
                     filtering: bool = False) -> None:
     """Cleans the infogroup files, combines them into one large master df.
 
@@ -90,30 +89,34 @@ def clean_infogroup(filepath: Path,
         N/A, puts cleaned df into the data/clean folder
 
     """
+    print(filepath)
     all_years_df = pd.DataFrame()
     dfs = []
 
     for name in filepath.iterdir():
-        if filtering:
-            df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
-            dfs.append(df)
+        if name == Path(SMOKE_TEST_FPATH):
+            pass
         else:
-            df = pd.read_csv(name, encoding="utf-8")
-            dfs.append(df)
+            if filtering:
+                df = filter_infogroup(name, SIC_CODE, chunksize=1000000)
+                dfs.append(df)
+            else:
+                df = pd.read_csv(name, encoding="utf-8")
+                dfs.append(df)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
-    all_years_df = all_years_df.sort_values(by="ARCHIVE VERSION YEAR").reset_index(
-        drop=True
-    )
+    all_years_df = all_years_df.sort_values(by="ARCHIVE VERSION YEAR"
+                                            ).reset_index(drop=True)
 
-    cols = ["YEAR ESTABLISHED", "YEAR 1ST APPEARED", "PARENT NUMBER"]
+    cols = ["YEAR ESTABLISHED", "PARENT NUMBER"]
 
     for x in cols:
         all_years_df[x] = all_years_df[x].fillna(0)
         all_years_df[x] = all_years_df[x].apply(np.int64)
 
     all_years_df["PARENT NAME"] = (
-        all_years_df["PARENT NUMBER"].replace({np.nan: None}).astype(str).map(ABI_dict)
+        all_years_df["PARENT NUMBER"].replace({np.nan: None}
+                                              ).astype(str).map(ABI_dict)
     )
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
     all_years_df["ABI"] = all_years_df["PARENT NUMBER"].apply(str)
@@ -135,13 +138,12 @@ def clean_infogroup(filepath: Path,
             "PARENT NAME",
             "LATITUDE",
             "LONGITUDE",
-            "YEAR 1ST APPEARED",
         ]
     ]
 
     master = master.dropna(subset=["COMPANY", "LATITUDE", "LONGITUDE"])
 
-    master.to_csv(CLEANED_INFOGROUP_FPATH)
+    master.to_csv(save_path)
 
 
 def clean_counterglow(filepath: Path) -> None:
