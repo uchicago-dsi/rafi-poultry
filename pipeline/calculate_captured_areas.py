@@ -110,21 +110,21 @@ def make_geo_df(df: pd.DataFrame, dist: float, token: str,
     return df
 
 
-def add_plants(df_map: pd.DataFrame, dict: Dict[str, Polygon], 
+def add_plants(df_map: pd.DataFrame, parent_dict: Dict[str, Polygon], 
                chrones: List[Polygon], m: folium.Map) -> None:
     """Take geo_df and adds the plant isochrones to the map as well as sorts 
         the isochrones by parent corporation.
 
     Args:
         df_map: dataframe; geo_df that contains plant isochrones.
-        dict: empty dictionary; gets filled with parent company names and 
+        parent_dict: empty dictionary; gets filled with parent company names and 
             geoshapes.
         chrones: empty list; gets filled with one isochrone for each parent 
             company.
         m: folium map; base to add plants to.
 
     Returns:
-        n/a; updates dict, chrones, and m.
+        n/a; updates parent_dict, chrones, and m.
 
     """
 
@@ -150,20 +150,20 @@ def add_plants(df_map: pd.DataFrame, dict: Dict[str, Polygon],
         corp = row["Parent Corporation"]
 
         # sorting by parent corp
-        if corp in dict:
-            dict[corp].append(isochrone)
+        if corp in parent_dict:
+            parent_dict[corp].append(isochrone)
         else:
-            dict[corp] = [isochrone]
+            parent_dict[corp] = [isochrone]
 
-    for key in dict:
-        chrone = shapely.unary_union(dict[key])
+    for key in parent_dict:
+        chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
 
     plants_layer.add_to(m)
 
 
 def single_plant_cap(chrones: List[Polygon], single_shapely: List[Polygon], 
-                     dict: Dict[str, Polygon], m: folium.Map) -> None:
+                    parent_dict: Dict[str, Polygon], m: folium.Map) -> None:
     """Adds a layer containing areas that have access to one plant to 
         country-wide visualization
 
@@ -171,7 +171,7 @@ def single_plant_cap(chrones: List[Polygon], single_shapely: List[Polygon],
         chrones: list; isochrones, one for each parent corporation.
         single_shapely: empty list; gets filled with isochrones of areas that 
             have access to only one plant.
-        dict: dictionary; parent corporation names/geoshapes.
+        parent_dict: dictionary; parent corporation names/geoshapes.
         m: folium map; base to add single-capture areas to.
 
     Returns:
@@ -184,7 +184,7 @@ def single_plant_cap(chrones: List[Polygon], single_shapely: List[Polygon],
         single_plant = shapely.difference(poly, others)
         single_shapely.append(single_plant)
 
-    parent_names = list(dict.keys())
+    parent_names = list(parent_dict.keys())
 
     for index, poly in enumerate(single_shapely):
         corp = parent_names[index]
@@ -279,14 +279,14 @@ def two_and_three_plant_cap(chrones: List[Polygon], single_shapely:
 
 
 def save_map(single: List[Polygon], two: List[Polygon], three: List[Polygon], 
-             dict: Dict[str, Polygon]) -> None:
+            parent_dict: Dict[str, Polygon]) -> None:
     """Saves country-wide plant capture area map as geojson.
 
     Args:
         single: list; isochrones of areas that have access to only one plant.
         two: list; isochrones of areas that have access to two plants.
         three: list; isochrones of areas that have access to three+ plants.
-        dict: dictionary; contains parent corporations.
+        parent_dict: dictionary; contains parent corporations.
 
     Returns:
         n/a.
@@ -296,7 +296,7 @@ def save_map(single: List[Polygon], two: List[Polygon], three: List[Polygon],
     one_df = gpd.GeoDataFrame(
         {
             "Plant Access": [1] * len(single),
-            "Parent Corporation": list(dict.keys()),
+            "Parent Corporation": list(parent_dict.keys()),
             "Geometry": single,
         }
     )
@@ -512,17 +512,17 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
 
     # dictionary of parent 
-    dict = {}
+    parent_dict = {}
     chrones = []
 
     df_map = make_geo_df(fsis_df, distance, token)
-    add_plants(df_map, dict, chrones, m)
+    add_plants(df_map, parent_dict, chrones, m)
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
-    single_plant_cap(chrones, single_shapely, dict, m)
+    single_plant_cap(chrones, single_shapely, parent_dict, m)
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, 
                             three_combined, m)
-    save_map(single_shapely, two_shapely, three_combined, dict)
+    save_map(single_shapely, two_shapely, three_combined, parent_dict)
     m.save(DATA_DIR / "html/poultry-map-smoothed.html")
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
