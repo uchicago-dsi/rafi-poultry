@@ -48,6 +48,7 @@ This README contains information on the structure of the pipeline for the projec
    - From team RAFI google drive/Data/Infogroup, into data/raw/infogroup add:
      - poultry_plants_x.csv
        - where "x" is every year from 1997 to 2022
+     - For the smoke test, create a subfolder data/raw/infogroup/smoke_test and add the file infogroup_2022_small.csv
 4. **Run pip install -r pipeline/requirements.txt**
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
