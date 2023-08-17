@@ -1,5 +1,6 @@
-"""Contains functions for creating a US map with markers for poultry processing plants 
-and isochrones representing area captured by the plants' parent corporations.
+"""Contains functions for creating a US map with markers for poultry processing 
+    plants and isochrones representing area captured by the plants' parent 
+    corporations.
 """
 
 import pandas as pd
@@ -12,8 +13,9 @@ from shapely.geometry import Polygon, mapping
 from shapely.ops import unary_union
 from pyproj import Geod
 from typing import List, Dict, Tuple
-from constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, ALL_STATES_GEOJSON_FPATH,\
-    CLEANED_FSIS_PROCESSORS_FPATH, CLEANED_INFOGROUP_FPATH, DATA_DIR, ALBERS_EQUAL_AREA, WGS84, USA_LAT,\
+from constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, \
+    ALL_STATES_GEOJSON_FPATH,CLEANED_FSIS_PROCESSORS_FPATH, \
+    CLEANED_INFOGROUP_FPATH, DATA_DIR, ALBERS_EQUAL_AREA, WGS84, USA_LAT, \
     USA_LNG
 
 single_shapely = []
@@ -26,9 +28,12 @@ two_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
 three_plant_color = lambda x: {"fillColor": "#9F2B68"}  # amaranth
 
 
-def isochrones(coords: List[Tuple[float, float]], driving_dist_miles: float, token: str) -> pd.DataFrame :
-    """Adds plant isochrones to fsis dataframe; captures area that is within an x mile radius of the plant.
-            90 percent of all birds were produced on farms within 60 miles of the plant, according to 2011 ARMS data.
+def isochrones(coords: List[Tuple[float, float]], driving_dist_miles: float, 
+               token: str) -> pd.DataFrame:
+    """Adds plant isochrones to fsis dataframe; captures area that is within 
+            an x mile radius of the plant. 90 percent of all birds were 
+            produced on farms within 60 miles of the plant, according to 2011 
+            ARMS data.
 
     Args:
         coords: list of tuples; lat and long for all processing plants.
@@ -62,9 +67,10 @@ def isochrones(coords: List[Tuple[float, float]], driving_dist_miles: float, tok
         )
         response = requests.get(url)
         if not response.ok:
-            raise Exception(f"Within the isochrone helper function, unable to access mapbox url using API token.\
-                                The response had status code {response.status_code}. The error message was \
-                                {response.text}")
+            raise Exception(f"Within the isochrone helper function, unable to \
+                                access mapbox url using API token. Response \
+                                had status code {response.status_code}. \
+                                Error message was {response.text}")
 
         isochrone = Polygon(response.json()["features"][0]["geometry"]
                             ["coordinates"])
@@ -73,17 +79,21 @@ def isochrones(coords: List[Tuple[float, float]], driving_dist_miles: float, tok
     return isochrones
 
 
-def make_geo_df(df: pd.DataFrame, dist: float, token: str, simplify: float = 0.01) -> pd.DataFrame:
+def make_geo_df(df: pd.DataFrame, dist: float, token: str, 
+                simplify: float = 0.01) -> pd.DataFrame:
     """Adds slightly simplified isochrones to fsis dataframe.
 
     Args:
         df: dataframe; the cleaned fsis_df file.
-        dist: float; radius of captured area (in driving distance) to be passed to isochrones function.
+        dist: float; radius of captured area (in driving distance) to be passed 
+            to isochrones function.
         token: str; API token to access mapbox.
-        simplify: float; by what degree to simplify each isochrone, default is 0.01.
+        simplify: float; by what degree to simplify each isochrone, 
+            default is 0.01.
 
     Returns:
-        geo_df with added column for isochrones and cleaned/simplified isochrones.
+        geo_df with added column for isochrones and cleaned/simplified 
+            isochrones.
 
     """
 
@@ -91,7 +101,8 @@ def make_geo_df(df: pd.DataFrame, dist: float, token: str, simplify: float = 0.0
 
     df['Isochrone'] = isochrones(lats_and_longs, dist, token)
     df = (
-        gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
+        gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84, 
+                                                               inplace=True)
     )
 
     df["Isochrone Cleaned"] = df["Isochrone"].simplify(simplify)
@@ -99,13 +110,17 @@ def make_geo_df(df: pd.DataFrame, dist: float, token: str, simplify: float = 0.0
     return df
 
 
-def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map) -> None:
-    """Take geo_df and adds the plant isochrones to the map as well as sorts the isochrones by parent corporation.
+def add_plants(df_map: pd.DataFrame, dict: Dict[str, Polygon], 
+               chrones: List[Polygon], m: folium.Map) -> None:
+    """Take geo_df and adds the plant isochrones to the map as well as sorts 
+        the isochrones by parent corporation.
 
     Args:
         df_map: dataframe; geo_df that contains plant isochrones.
-        dict: empty dictionary; gets filled with parent company names and geoshapes.
-        chrones: empty list; gets filled with one isochrone for each parent company.
+        dict: empty dictionary; gets filled with parent company names and 
+            geoshapes.
+        chrones: empty list; gets filled with one isochrone for each parent 
+            company.
         m: folium map; base to add plants to.
 
     Returns:
@@ -128,7 +143,8 @@ def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map) -
         tooltip = folium.map.Tooltip(
             f"{name}<br>{address}<br>Parent Corporation: {corp}"
         )
-        folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(plants_layer)
+        folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(
+            plants_layer)
 
         isochrone = row["Isochrone Cleaned"]
         corp = row["Parent Corporation"]
@@ -146,12 +162,15 @@ def add_plants(df_map: pd.DataFrame, dict: dict, chrones: list, m: folium.Map) -
     plants_layer.add_to(m)
 
 
-def single_plant_cap(chrones: list, single_shapely: list, dict: dict, m: folium.Map):
-    """Adds a layer containing areas that have access to one plant to country-wide visualization
+def single_plant_cap(chrones: List[Polygon], single_shapely: List[Polygon], 
+                     dict: Dict[str, Polygon], m: folium.Map) -> None:
+    """Adds a layer containing areas that have access to one plant to 
+        country-wide visualization
 
     Args:
         chrones: list; isochrones, one for each parent corporation.
-        single_shapely: empty list; gets filled with isochrones of areas that have access to only one plant.
+        single_shapely: empty list; gets filled with isochrones of areas that 
+            have access to only one plant.
         dict: dictionary; parent corporation names/geoshapes.
         m: folium map; base to add single-capture areas to.
 
@@ -175,19 +194,23 @@ def single_plant_cap(chrones: list, single_shapely: list, dict: dict, m: folium.
         folium.GeoJson(poly, tooltip=tooltip).add_to(layer)
         layer.add_to(m)
 
-    return
 
-
-def two_and_three_plant_cap(chrones: list, single_shapely: list, two_shapely: list, three_shapely: list, m: folium.Map):
+def two_and_three_plant_cap(chrones: List[Polygon], single_shapely: 
+                            List[Polygon], two_shapely: List[Polygon], 
+                            three_shapely: List[Polygon], 
+                            m: folium.Map) -> None:
     """Adds 2 layers to country-wide visualization
         - One containing areas that have access to two plants
         - One containing areas that have access to three+ plants
 
     Args:
         chrones: list; isochrones, one for each parent corporation.
-        single_shapely: list; isochrones of areas that have access to only one plant.
-        two_shapely: empty list; gets filled with isochrones of areas that have access to two plants.
-        three_shapely: empty list; gets filled with one isochrone of all areas that have access to three+ plants.
+        single_shapely: list; isochrones of areas that have access to only one 
+            plant.
+        two_shapely: empty list; gets filled with isochrones of areas that have 
+            access to two plants.
+        three_shapely: empty list; gets filled with one isochrone of all areas 
+            that have access to three+ plants.
         m: folium map; base to add two and three capture areas to.
 
     Returns:
@@ -197,7 +220,8 @@ def two_and_three_plant_cap(chrones: list, single_shapely: list, two_shapely: li
 
     everything = shapely.unary_union(chrones)
     single_plant_combined = shapely.unary_union(single_shapely)
-    competition_single_plant = shapely.difference(everything, single_plant_combined)
+    competition_single_plant = shapely.difference(everything, 
+                                                  single_plant_combined)
 
     isochrones_shapely_two_plants = []
     for isochrone in chrones:
@@ -225,20 +249,23 @@ def two_and_three_plant_cap(chrones: list, single_shapely: list, two_shapely: li
             others_combined = shapely.unary_union(other_plants)
             captured_area = shapely.difference(
                 two_plant_area, others_combined
-            )  # returns the part of geometry a that does not intersect with geometry b
+            )  # returns part of geom a that doesn't intersect with geom b
             # remove the area that is captured by only one of the plants
-            captured_area = shapely.difference(captured_area, single_plant_combined)
+            captured_area = shapely.difference(captured_area, 
+                                               single_plant_combined)
             if captured_area:
                 two_shapely.append(captured_area)
 
-    two_plant_layer = folium.map.FeatureGroup(name="Access to 2 Parent Corporations")
+    two_plant_layer = folium.map.FeatureGroup(name="Access to 2 Parent \
+                                              Corporations")
     two_plants_combined = shapely.unary_union(two_shapely)
     folium.GeoJson(two_plants_combined, style_function=two_plant_color).add_to(
         two_plant_layer
     )
     two_plant_layer.add_to(m)
 
-    three_plant_layer = folium.map.FeatureGroup(name="Access to 3+ Parent Corporations")
+    three_plant_layer = folium.map.FeatureGroup(name="Access to 3+ Parent \
+                                                Corporations")
     three_shapely = shapely.difference(everything, single_plant_combined)
     three_shapely = shapely.difference(
         three_shapely.buffer(0), two_plants_combined.buffer(0)
@@ -250,10 +277,9 @@ def two_and_three_plant_cap(chrones: list, single_shapely: list, two_shapely: li
     )
     three_plant_layer.add_to(m)
 
-    return
 
-
-def save_map(single: list, two: list, three: list, dict: dict):
+def save_map(single: List[Polygon], two: List[Polygon], three: List[Polygon], 
+             dict: Dict[str, Polygon]) -> None:
     """Saves country-wide plant capture area map as geojson.
 
     Args:
@@ -289,23 +315,25 @@ def save_map(single: list, two: list, three: list, dict: dict):
         }
     )
 
-    full_df = gpd.GeoDataFrame(pd.concat([one_df, two_df, three_df], ignore_index=True))
+    full_df = gpd.GeoDataFrame(pd.concat([one_df, two_df, three_df], 
+                                         ignore_index=True))
     full_df = full_df.set_geometry("Geometry")
     full_df.to_file(
         ISOCHRONES_WITH_PARENT_CORP_FPATH, driver="GeoJSON"
     )
 
-    return
 
-
-def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
-    """Assembles state-specific map of plant access, exports to data/clean as a geojson
+def state_level_geojson(df: pd.DataFrame, single: List[Polygon], 
+                        two: List[Polygon], three: List[Polygon]) -> None:
+    """Assembles state-specific map of plant access, exports to data/clean as 
+        a geojson
 
     Args:
         df: dataframe; contains all plant isochrones, raw and simplified.
         single: list; isochrones of areas that have access to only one plant.
         two: list; isochrones of areas that have access to two plants.
-        three: list; one isochrone of all areas that have access to three+ plants.
+        three: list; one isochrone of all areas that have access to three+ 
+            plants.
 
     Returns:
         n/a.
@@ -372,7 +400,8 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
             state_geometry = us_states[us_states["NAME"] == state_name][
                 "geometry"
             ].to_crs(WGS84)
-            state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(
+            state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA
+                                                 ).centroid.to_crs(
                 WGS84
             )
 
@@ -388,7 +417,8 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
             if one_plant_one_corp_one_state:
                 geod = Geod(ellps="WGS84")
                 area = abs(
-                    geod.geometry_area_perimeter(one_plant_one_corp_one_state)[0]
+                    geod.geometry_area_perimeter(
+                        one_plant_one_corp_one_state)[0]
                 ) * (0.000621371**2)
 
                 one_plant_one_state_data = {
@@ -404,10 +434,12 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
     for state in states:
         state_name = abb2state[state]
         state_layer = folium.map.FeatureGroup(name=state_name, show=False)
-        state_geometry = us_states[us_states["NAME"] == state_name]["geometry"].to_crs(
+        state_geometry = us_states[us_states["NAME"] == state_name
+                                   ]["geometry"].to_crs(
             WGS84
         )
-        state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(WGS84)
+        state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA
+                                             ).centroid.to_crs(WGS84)
 
         two_plants = (
             shapely.intersection(two_plants_combined, state_geometry)
@@ -436,9 +468,8 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
 
         if three_plants:
             geod = Geod(ellps="WGS84")
-            three_area = abs(geod.geometry_area_perimeter(three_plants)[0]) * (
-                0.000621371**2
-            )
+            three_area = abs(geod.geometry_area_perimeter(three_plants)[0]
+                             ) * (0.000621371**2)
 
             three_plants_one_state_data = {
                 "state": state_name,
@@ -457,17 +488,16 @@ def state_level_geojson(df: pd.DataFrame, single:list, two: list, three: list):
         driver="GeoJSON",
     )
 
-    return
-
 
 def full_script(token: str, distance: float=60) -> folium.Map:
-    """Loads in cleaned data, adds isochrones based on passed radius, calculates areas that have
-    access to 1, 2, and 3+ plants, and plots them on a country-wide map and a state-level map
+    """Loads in cleaned data, adds isochrones based on passed radius, 
+        calculates areas that have access to 1, 2, and 3+ plants, and plots 
+        them on a country-wide map and a state-level map
 
     Args:
         token: str; API token to access mapbox.
-        distance: float; radius of plant isochrones based on driving distance, in miles.
-            default is 60 miles.
+        distance: float; radius of plant isochrones based on driving distance, 
+            in miles; default is 60 miles.
 
     Returns:
         country-wide map, outputs two html files.
@@ -490,7 +520,8 @@ def full_script(token: str, distance: float=60) -> folium.Map:
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
     single_plant_cap(chrones, single_shapely, dict, m)
-    two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
+    two_and_three_plant_cap(chrones, single_shapely, two_shapely, 
+                            three_combined, m)
     save_map(single_shapely, two_shapely, three_combined, dict)
     m.save(DATA_DIR / "html/poultry-map-smoothed.html")
 
