@@ -13,10 +13,10 @@ from shapely.geometry import Polygon, mapping
 from shapely.ops import unary_union
 from pyproj import Geod
 from typing import List, Dict, Tuple
-from constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, \
+from pipeline.constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, \
     ALL_STATES_GEOJSON_FPATH,CLEANED_FSIS_PROCESSORS_FPATH, \
     CLEANED_INFOGROUP_FPATH, DATA_DIR, ALBERS_EQUAL_AREA, WGS84, USA_LAT, \
-    USA_LNG
+    USA_LNG, HTML_DIR
 
 single_shapely = []
 two_shapely = []
@@ -523,7 +523,7 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, 
                             three_combined, m)
     save_map(single_shapely, two_shapely, three_combined, parent_dict)
-    m.save(DATA_DIR / "html/poultry-map-smoothed.html")
+    m.save(HTML_DIR / "poultry-map-smoothed.html")
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
