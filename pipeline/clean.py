@@ -66,8 +66,6 @@ def filter_infogroup(filename: str,
             )
         ]
         filtered_df = pd.concat([filtered_df, rows_to_add], axis=0)
-        if smoke_test:
-            break
 
     return filtered_df
 
@@ -81,6 +79,7 @@ def clean_infogroup(filepath: Path,
 
     Args:
         filepath: absolute path to folder that contains all infogroup files
+        ABI_dict: dictionary of all parent ABI's and their name as a str
         SIC_CODE: SIC code to filter the dataframes on
         filtering: boolean, true if infogroup files are in their rawest form 
             and need to be filtered
@@ -119,7 +118,6 @@ def clean_infogroup(filepath: Path,
                                               ).astype(str).map(ABI_dict)
     )
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
-    all_years_df["ABI"] = all_years_df["PARENT NUMBER"].apply(str)
 
     master = all_years_df[
         [
