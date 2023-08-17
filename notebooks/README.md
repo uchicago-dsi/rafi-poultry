@@ -11,7 +11,7 @@ Details regarding the notebooks within the repository
 - requirements.txt
 
 # File Descriptions
-- **cafo_poultry_eda.ipynb** Exploratory data analysis on and mapping of poultry plants in the state permits and Counterglow datasets. 
+- **cafo_poultry_eda.ipynb** Exploratory data analysis on and mapping of poultry plants in the state permits and Counterglow datasets.
 - **Dockerfile** Creates the Docker container, copies in necessary files.
 - **fsis_eda.ipynb** Analyzes poultry inspection plant records by type, location, and parent corporation; collected by Food Safety and Inspection Service (FSIS).
 - **infogroup_eda.ipynb** Loads in one of the raw Infogroup files (for year 2022), cleans the Infogroup files, and outputs a dataframe containing poultry plant records from 1997 to 2022. Briefly demonstrates how business records can be linked over time using ABI.
