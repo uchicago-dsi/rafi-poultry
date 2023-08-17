@@ -15,11 +15,13 @@ RUN apt -y install python3-pip libspatialindex-dev \
 WORKDIR /app
 
 #Install any needed packages specified in requirements.txt
-COPY requirements.txt .
+COPY pipeline/requirements.txt .
 RUN pip install --trusted-host pypi.python.org --no-cache-dir -r requirements.txt
 
 #Copy the pipeline, notebook, and data directory into the container
-COPY . ./pipeline
+COPY setup.py .
+COPY pipeline ./pipeline
+RUN pip install -e .
 
 #Run the main.py script when the container launches
 CMD ["python", "pipeline/main.py"]

@@ -100,7 +100,7 @@ def create_parser():
             "match_farms",
             "calculate_captured_areas",
             "visualize",
-            "counterglow_geojson_chicken",
+            "create_counterglow_geojson",
         ],
         help="Specify the function to run.",
     )
@@ -201,7 +201,7 @@ def run_all(args) -> None:
 
     try:
         print("Creating Counterglow GeoJSON...")
-        farm_geojson_creation.counterglow_geojson_chicken(
+        farm_geojson_creation.create_counterglow_geojson(
             CLEANED_COUNTERGLOW_FPATH,
             CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson",
         )
@@ -312,10 +312,10 @@ def main(args) -> None:
                 print(f"{e}")
                 exit(1)
 
-        elif args.function == "counterglow_geojson_chicken":
+        elif args.function == "create_counterglow_geojson":
             try:
                 print("Creating Counterglow GeoJSON...")
-                farm_geojson_creation.counterglow_geojson_chicken(
+                farm_geojson_creation.create_counterglow_geojson(
                     CLEANED_COUNTERGLOW_FPATH, ALL_STATES_GEOJSON_FPATH
                 )
             except Exception as e:
