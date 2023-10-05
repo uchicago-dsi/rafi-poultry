@@ -34,7 +34,8 @@ This README contains information on the structure of the pipeline for the projec
         - clean
         - html
 2. **Set up Conda environment**
-   - conda create --name <myenv> python=3.9.16
+   - conda create --name `<myenv>` python=3.9.16
+   
 3. **Download the files**
    - From team RAFI google drive/Data, into data/raw add:
      - fsis-processors-with-location.csv
@@ -57,10 +58,12 @@ This README contains information on the structure of the pipeline for the projec
    - Structure the command line arguments as:
      - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
        - FILEPATH; str; Relative path (from cwd) to raw data folder
+       (Don't include FILEPATH in the command line, start from ANIMAL part because the argument of path was not set yet)
        - ANIMAL; str; Keywords for animals to filter for, as a regex
        - DISTANCE; float; Maximum distance for farm matches to be made across different datasets, in km
        - SIC_CODE; str; SIC code to filter the dataset on, if FILTERING is False, this variable is not used
        - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
      - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
+     - e.g. python main.py --function clean_FSIS
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
