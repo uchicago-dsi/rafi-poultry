@@ -313,11 +313,18 @@ def main(args) -> None:
             try:
                 # Generate GeoJSONs and maps
                 print("Creating plant capture GeoJSON...")
+                
                 try:
+                    print("t1")
                     MAPBOX_KEY = os.getenv('MAPBOX_API')
+                    #MAPBOX_API
+                    #
+                    print("t2")
                 except:
                     print("Missing environment variable")
+                print("t3")
                 calculate_captured_areas.full_script(MAPBOX_KEY)
+                print("t4")
             except Exception as e:
                 print(f"{e}")
                 exit(1)
