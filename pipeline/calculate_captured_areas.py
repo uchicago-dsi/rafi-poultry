@@ -97,7 +97,7 @@ def make_geo_df(df: pd.DataFrame, dist: float, token: str,
 
     """
 
-    lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
+    lats_and_longs = list(map(tuple, df[["Latitude", "Longitude"]].to_numpy()))
 
     df['Isochrone'] = isochrones(lats_and_longs, dist, token)
     df = (
@@ -131,11 +131,11 @@ def add_plants(df_map: pd.DataFrame, parent_dict: Dict[str, Polygon],
     plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
 
     for _, row in df_map.iterrows():
-        lat = str(row["latitude"])
-        lng = str(row["longitude"])
+        lat = str(row["Latitude"])
+        lng = str(row["Longitude"])
 
         # set up plant tooltip
-        name = row["Establishment Name"]
+        name = row["Company"]#used to be Establish Name
         corp = row["Parent Corporation"]
         address = row["Full Address"]
 
