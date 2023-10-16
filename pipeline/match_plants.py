@@ -14,7 +14,7 @@ from constants import (CLEANED_MATCHED_PLANTS_FPATH,
 
 def address_match(infogroup_path: Path,
                   fsis_path: Path, 
-                  fuzz_ratio: float=75) -> pd.DataFrame:
+                  fuzz_ratio: float=50) -> pd.DataFrame:
     """Filters FSIS dataset for poultry processing plants,
     then match 2022 Infogroup plants to FSIS plants based on address
     to add sales volume data to each poultry plant from FSIS.
@@ -43,24 +43,30 @@ def address_match(infogroup_path: Path,
     )
     df_filtered["Full Address"] = df_filtered["Full Address"].astype(str)
 
-    df_fsis = pd.read_csv(fsis_path, index_col=0)
-    df_poultry = df_fsis[df_fsis["Animals Processed"].str.contains("Chicken")].copy()
+    #df_fsis = pd.read_csv(fsis_path, index_col=0)
+    
+    df_fsis = pd.read_csv(fsis_path)#new
+    
+    #df_poultry = df_fsis[df_fsis["Animals Processed"].str.contains("Chicken")].copy()
+    df_poultry = df_fsis[df_fsis["Activities"].str.contains("Poultry")].copy()# new
     df_poultry["Sales Volume (Location)"] = np.NaN
     df_poultry["Sales Volume (Location)"] = np.NaN
-
+    
+    count = 0 #tt
     for i, fsis in df_poultry.iterrows():
         fsis_address = fsis["Full Address"].lower()
         for k, infogroup in df_filtered.iterrows():
             infogroup_address = infogroup["Full Address"].lower()
+            #print(f"fsis_address: {fsis_address}, infogroup_address: {infogroup_address}")
             if fuzz.token_sort_ratio(infogroup_address, fsis_address) > fuzz_ratio:
                 df_poultry.loc[i, "Sales Volume (Location)"] = infogroup[
                     "SALES VOLUME (9) - LOCATION"
                 ]
                 break
-
+            
     return df_poultry
 
-
+#no_match, pp_2022, address_matches, threshold
 def loc_match(no_match: pd.DataFrame, 
               pp_2022: pd.DataFrame, 
               pp_sales: pd.DataFrame, 
@@ -86,9 +92,9 @@ def loc_match(no_match: pd.DataFrame,
     """
     no_match_nulls = no_match[no_match["Sales Volume (Location)"].isna()]
     for index, row in no_match_nulls.iterrows():
-        target_point = (row["latitude"], row["longitude"])
+        target_point = (row["Latitude"], row["Longitude"])
         for _, infogroup in pp_2022.iterrows():
-            candidate_point = infogroup["LATITUDE"], infogroup["LONGITUDE"]
+            candidate_point = (infogroup["LATITUDE"], infogroup["LONGITUDE"])
             distance = haversine(
                 target_point[1], 
                 target_point[0], 
@@ -98,7 +104,7 @@ def loc_match(no_match: pd.DataFrame,
             if distance <= threshold:
                 if (
                     fuzz.token_sort_ratio(
-                        row["Establishment Name"].upper(), infogroup["COMPANY"]
+                        row["Company"].upper(), infogroup["COMPANY"]
                     )
                     > 90
                 ):
@@ -165,12 +171,16 @@ def save_all_matches(infogroup_path: Path,
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(infogroup_path, fsis_path, 75)
+    address_matches = address_match(infogroup_path, fsis_path, 60)
     no_match = address_matches[address_matches["Sales Volume (Location)"].isna()]
-
     infogroup = pd.read_csv(infogroup_path)
     pp_2022 = infogroup[infogroup["ARCHIVE VERSION YEAR"] == 2022]
-    pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
 
-    pp_sales_updated = fill_remaining_nulls(pp_sales)
-    pp_sales_updated.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
+    #need parent corperation info in FSIS
+    #pp_sales_updated = fill_remaining_nulls(pp_sales) 
+    #skip the na filling
+    print('t4')
+   # pp_sales_updated.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    print('t5')
