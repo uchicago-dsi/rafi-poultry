@@ -11,8 +11,9 @@ HTML_DIR = DATA_DIR / "html"
 
 # raw data
 RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"
-RAW_FSIS_FPATH = RAW_DIR / "fsis-processors-with-location.csv"
-INFOGROUP_2022 = RAW_DIR / "infogroup/poultry_plants_2022.csv"
+RAW_FSIS_FPATH = RAW_DIR / "FSIS_filtered_wiz_location.csv"
+#RAW_NETS_FPATH = RAW_DIR / "nets_cleaned.csv" # nets
+INFOGROUP_2022 = RAW_DIR / "infogroup/poultry_plants_2022.csv" 
 RAW_INFOGROUP_FPATH = RAW_DIR / "infogroup"
 RAW_CAFO_FPATH = RAW_DIR / "cafo"
 US_STATES_FPATH = RAW_DIR / "gz_2010_us_040_00_500k.json"
@@ -22,11 +23,13 @@ SMOKE_TEST_CLEAN_FPATH = CLEAN_DIR / "infogroup_2022_small_clean.csv"
 # cleaned data
 CLEANED_COUNTERGLOW_FPATH = CLEAN_DIR / "cleaned_counterglow_facility_list.csv"
 CLEANED_INFOGROUP_FPATH = CLEAN_DIR / "cleaned_infogroup_plants_all_time.csv"
+CLEANED_NETS_FPATH = CLEAN_DIR / "nets_cleaned.csv" # nets
 CLEANED_FSIS_PROCESSORS_FPATH = CLEAN_DIR / "cleaned_fsis_processors.csv"
 CLEANED_CAFO_POULTRY_FPATH = CLEAN_DIR / "cleaned_cafo_poultry.csv"
 MATCHED_FARMS_FPATH = CLEAN_DIR / "matched_farms.csv"
 UNMATCHED_FARMS_FPATH = CLEAN_DIR / "unmatched_farms.csv"
 CLEANED_MATCHED_PLANTS_FPATH = CLEAN_DIR / "cleaned_matched_plants.csv"
+CLEANED_MATCHED_PLANTS_NETS_FPATH = CLEAN_DIR / "cleaned_matched_plants_nets.csv" # matched with nets
 
 # geojsons
 ALL_STATES_GEOJSON_FPATH = CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson"
