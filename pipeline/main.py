@@ -7,6 +7,7 @@ individually by including a function flag; the default is to run all of them.
 import clean
 import match_farms
 import match_plants
+import match_plants_nets
 import calculate_captured_areas
 import farm_geojson_creation
 import os
@@ -37,7 +38,9 @@ from pipeline.constants import (
     CONFIG_FPATH, 
     SMOKE_TEST_FPATH,
     SMOKE_TEST_CLEAN_FPATH,
-    DATA_DIR
+    DATA_DIR,
+    CLEANED_NETS_FPATH,
+    CLEANED_MATCHED_PLANTS_NETS_FPATH
 )
 
 with open(CONFIG_FPATH, "r") as jsonfile:
@@ -99,6 +102,7 @@ def create_parser():
             "clean_infogroup",
             "clean_cafo",
             "match_plants",
+            "match_plants_nets", #for nets
             "match_farms",
             "calculate_captured_areas",
             "visualize",
@@ -172,6 +176,18 @@ def run_all(args) -> None:
         print("Matching FSIS plants and Infogroup for sales volume data...")
         match_plants.save_all_matches(
             CLEANED_INFOGROUP_FPATH, 
+            CLEANED_FSIS_PROCESSORS_FPATH, 
+            args.distance
+        )
+    except Exception as e:
+        print(f"{e}")
+        exit(1)
+    
+    try:
+        # Match plants and farms with nets data
+        print("Matching FSIS plants and NETS for sales volume data...")
+        match_plants_nets.save_all_matches(
+            CLEANED_NETS_FPATH, 
             CLEANED_FSIS_PROCESSORS_FPATH, 
             args.distance
         )
@@ -290,6 +306,20 @@ def main(args) -> None:
                       data...")
                 match_plants.save_all_matches(
                     CLEANED_INFOGROUP_FPATH,
+                    CLEANED_FSIS_PROCESSORS_FPATH,
+                    args.distance,
+                )
+            except Exception as e:
+                print(f"{e}")
+                exit(1)
+
+        elif args.function == "match_plants_nets":
+            try:
+                # Match plants and farms with nets data
+                print("Matching FSIS plants and NETS for sales volume \
+                      data...")
+                match_plants_nets.save_all_matches(
+                    CLEANED_NETS_FPATH,
                     CLEANED_FSIS_PROCESSORS_FPATH,
                     args.distance,
                 )
