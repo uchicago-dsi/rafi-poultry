@@ -23,11 +23,16 @@ def clean_FSIS(filepath: Path) -> None:
         N/A, writes cleaned dataset into the clean data folder.
 
     """
+   
     df = pd.read_csv(filepath)
-    df_chickens = df[df["Animals Processed"].str.contains("Chicken")]
-    df_large_chickens = df_chickens.loc[df_chickens.Size == "Large"]
+    #df_chickens = df[df["Animals Processed"].str.contains("Chicken")]
+    #df_chickens = df[df["Chicken\nSlaughter"]=='Yes']
+    #keep the rows which contains either poultry processing or slaughter
+    #df_chickens = df[df["Activities"].str.contains("Poultry")]
+   
+    #df_large_chickens = df_chickens.loc[df_chickens.Size == "Large"]
 
-    df_large_chickens.to_csv(CLEANED_FSIS_PROCESSORS_FPATH)
+    df.to_csv(CLEANED_FSIS_PROCESSORS_FPATH)
 
 
 def filter_infogroup(filename: str, 
