@@ -12,6 +12,52 @@ from constants import (CLEANED_MATCHED_PLANTS_FPATH,
                        CLEANED_FSIS_PROCESSORS_FPATH
 )
 
+
+
+def find_best_match(fsis_path,
+                    nets_path,
+                    fuzz_ratio: float=75):
+    """Filters FSIS dataset for poultry processing plants,
+    then match 2022 Nets plant using fuzzy string matching with address
+    as the index to add in parent company and sales columns
+
+
+    Args:
+        fsis_path: relative path to the raw data folder with FSIS dataset.
+        nets_path: relative path to the raw data folder with the NETS dataset.
+        fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
+            to accept that two strings are "the same"; default of 75
+
+    Returns:
+        DataFrame with sales volume and parent company data filled in for address matches.
+
+    """
+    df_fsis = pd.read_csv(fsis_path)
+    df_nets = pd.read_csv(nets_path)
+    df_fsis["Parent Company"] = np.NaN
+    df_fsis["Sales"] = np.NaN
+    df_fsis["latitude"] = np.NaN
+    df_fsis["longitude"] = np.NaN
+    for i, fsis in df_fsis.iterrows():
+        fsis_address = fsis["Full Address"].lower()
+        for k, nets in df_nets.iterrows():
+            nets_address = nets["ADDRESS"]
+            if fuzz.token_sort_ratio(nets_address, fsis_address) > fuzz_ratio:
+                df_fsis.loc[i, "Parent Company"] = nets["PARENT COMPANY"]
+                df_fsis.loc[i, "Sales"] = nets["SALESHERE"]
+                df_fsis.loc[i, "latitude"] = nets["LATITUDE"]
+                df_fsis.loc[i, "longitude"] = nets["LONGITUDE"]
+                break
+                
+        # Progress reporting as function is slow
+        if i % 50 == 0:
+            print("{}%".format(np.round(i / df_fsis.shape[0] * 100,2)))
+        # Band-aid fix for infinite looping error
+        if i >= df_fsis.shape[0]:
+            return df_fsis
+    return df_fsis
+
+
 def address_match(infogroup_path: Path,
                   fsis_path: Path, 
                   fuzz_ratio: float=75) -> pd.DataFrame:
