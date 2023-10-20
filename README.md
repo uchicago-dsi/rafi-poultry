@@ -1,4 +1,4 @@
-# RAFI-USA Meat-Packing Consolidation
+# RAFI-USA: Concentration in the Meat-Packing Industry
 
 TODO :)
 
