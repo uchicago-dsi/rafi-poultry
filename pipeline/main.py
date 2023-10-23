@@ -37,7 +37,9 @@ from pipeline.constants import (
     CONFIG_FPATH, 
     SMOKE_TEST_FPATH,
     SMOKE_TEST_CLEAN_FPATH,
-    DATA_DIR
+    DATA_DIR,
+    CLEANED_NETS_DATA_FPATH,
+    CLEANED_FSIS_DATA_FPATH
 )
 
 with open(CONFIG_FPATH, "r") as jsonfile:
@@ -171,10 +173,11 @@ def run_all(args) -> None:
         # Match plants and farms
         print("Matching FSIS plants and Infogroup for sales volume data...")
         match_plants.save_all_matches(
-            CLEANED_INFOGROUP_FPATH, 
-            CLEANED_FSIS_PROCESSORS_FPATH, 
-            args.distance
-        )
+                    CLEANED_FSIS_DATA_FPATH,
+                    CLEANED_NETS_DATA_FPATH,
+                    CLEANED_INFOGROUP_FPATH,
+                    args.distance,
+                )
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -289,8 +292,9 @@ def main(args) -> None:
                 print("Matching FSIS plants and Infogroup for sales volume \
                       data...")
                 match_plants.save_all_matches(
+                    CLEANED_FSIS_DATA_FPATH,
+                    CLEANED_NETS_DATA_FPATH,
                     CLEANED_INFOGROUP_FPATH,
-                    CLEANED_FSIS_PROCESSORS_FPATH,
                     args.distance,
                 )
             except Exception as e:

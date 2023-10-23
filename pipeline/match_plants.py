@@ -6,60 +6,82 @@ import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz
 from distances import haversine
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm as tqdm_progress
 from pathlib import Path
-from constants import (CLEANED_MATCHED_PLANTS_FPATH, 
-                       CLEANED_INFOGROUP_FPATH, 
-                       CLEANED_FSIS_PROCESSORS_FPATH
+from constants import (CLEANED_FSIS_DATA_FPATH, 
+                       CLEANED_NETS_DATA_FPATH, 
+                       CLEANED_INFOGROUP_FPATH
 )
 
-
-
-def find_best_match(fsis_path,
-                    nets_path,
-                    fuzz_ratio: float=75):
-    """Filters FSIS dataset for poultry processing plants,
-    then match 2022 Nets plant using fuzzy string matching with address
-    as the index to add in parent company and sales columns
-
+def parent_company_match_threaded(fsis_path: Path, 
+                             nets_path: Path, 
+                             fuzz_ratio: float=75, 
+                             num_threads: int=4):
+    """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the 
+    NETS parent company and sales volume data with the base FSIS dataset
 
     Args:
-        fsis_path: relative path to the raw data folder with FSIS dataset.
-        nets_path: relative path to the raw data folder with the NETS dataset.
+        fsis_path: relative path to the clean data folder with the 
+            cleaned new fsis data.
+        nets_path: relative path to the clean data folder with the 
+            cleaned new nets data.
         fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
             to accept that two strings are "the same"; default of 75
+        num_threads: int; number of simultaneous threads to run using
+            multi-threading on the fuzzy matching
 
     Returns:
-        DataFrame with sales volume and parent company data filled in for address matches.
+        FSIS dataset including the NETS Parent Company and Sales columns.
 
     """
-    df_fsis = pd.read_csv(fsis_path)
-    df_nets = pd.read_csv(nets_path)
-    df_fsis["Parent Company"] = np.NaN
-    df_fsis["Sales"] = np.NaN
-    df_fsis["latitude"] = np.NaN
-    df_fsis["longitude"] = np.NaN
-    for i, fsis in df_fsis.iterrows():
-        fsis_address = fsis["Full Address"].lower()
-        for k, nets in df_nets.iterrows():
+
+    fsis_df = pd.read_csv(fsis_path)
+    nets_df = pd.read_csv(nets_path)
+    # Drop unused columns and filter for relevant plants by looking at plants whose activity description includes
+    # poultry processing plants
+    fsis_df["Activities"] = fsis_df["Activities"].str.lower()
+    fsis_df = fsis_df[fsis_df["Activities"].str.contains("poultry processing")].copy()
+
+    # Given that currently the cleaned FSIS dataset does not have longitude/latitude information yet, I am adding it here
+    # As I integrate with other group members, this will be replaced with the mapbox API
+    fsis_df["latitude"] = np.NaN
+    fsis_df["longitude"] = np.NaN
+    fsis_df["Parent Company"] = np.NaN
+
+    def find_match(i, fsis_df, nets_df):
+        fsis_address = fsis_df.at[i, "Full Address"].lower()
+        for k, nets in nets_df.iterrows():
             nets_address = nets["ADDRESS"]
             if fuzz.token_sort_ratio(nets_address, fsis_address) > fuzz_ratio:
-                df_fsis.loc[i, "Parent Company"] = nets["PARENT COMPANY"]
-                df_fsis.loc[i, "Sales"] = nets["SALESHERE"]
-                df_fsis.loc[i, "latitude"] = nets["LATITUDE"]
-                df_fsis.loc[i, "longitude"] = nets["LONGITUDE"]
-                break
-                
-        # Progress reporting as function is slow
-        if i % 50 == 0:
-            print("{}%".format(np.round(i / df_fsis.shape[0] * 100,2)))
-        # Band-aid fix for infinite looping error
-        if i >= df_fsis.shape[0]:
-            return df_fsis
-    return df_fsis
+                return i, {
+                    "Parent Company": nets["PARENT COMPANY"],
+                    "latitude": nets["LATITUDE"],
+                    "longitude": nets["LONGITUDE"]
+                }
+        return i, {}
+
+    # Create a ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        results = list(tqdm_progress(executor.map(find_match, fsis_df.index,
+                                                   [fsis_df]*len(fsis_df),
+                                                     [nets_df]*len(fsis_df),
+                                                       chunksize=1),
+                                                         total=len(fsis_df)))
+
+    # Update the DataFrame with the results
+    for i, result in results:
+        if result:
+            fsis_df.at[i, "Parent Company"] = result["Parent Company"]
+            fsis_df.at[i, "Sales"] = result["Sales"]
+            fsis_df.at[i, "latitude"] = result["latitude"]
+            fsis_df.at[i, "longitude"] = result["longitude"]
+
+    return fsis_df
 
 
 def address_match(infogroup_path: Path,
-                  fsis_path: Path, 
+                  fsis_df, 
                   fuzz_ratio: float=75) -> pd.DataFrame:
     """Filters FSIS dataset for poultry processing plants,
     then match 2022 Infogroup plants to FSIS plants based on address
@@ -68,7 +90,7 @@ def address_match(infogroup_path: Path,
     Args:
         infogroup_2022_path: relative path to the raw data folder with the 
             2022 Infogroup dataset.
-        fsis_path: relative path to the raw data folder with the FSIS dataset.
+        fsis_df: FSIS dataframe returned by the parent_company_match_threaded function.
         fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
             to accept that two strings are "the same"; default of 75
 
@@ -89,8 +111,7 @@ def address_match(infogroup_path: Path,
     )
     df_filtered["Full Address"] = df_filtered["Full Address"].astype(str)
 
-    df_fsis = pd.read_csv(fsis_path, index_col=0)
-    df_poultry = df_fsis[df_fsis["Animals Processed"].str.contains("Chicken")].copy()
+    df_poultry = fsis_df
     df_poultry["Sales Volume (Location)"] = np.NaN
     df_poultry["Sales Volume (Location)"] = np.NaN
 
@@ -195,8 +216,9 @@ def fill_remaining_nulls(pp_sales: pd.DataFrame) -> pd.DataFrame:
     return pp_sales_updated
 
 
-def save_all_matches(infogroup_path: Path, 
-                     fsis_path: Path, 
+def save_all_matches(fsis_path: Path, 
+                     nets_path: Path,
+                     infogroup_path: Path, 
                      threshold: float=5) -> None:
     """Executes all three matching helper functions and saves final fully 
     updated sales volume DataFrame as a CSV.
@@ -211,7 +233,9 @@ def save_all_matches(infogroup_path: Path,
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(infogroup_path, fsis_path, 75)
+    parent_company_matches = parent_company_match_threaded(fsis_path, nets_path)
+
+    address_matches = address_match(infogroup_path, parent_company_matches, 75)
     no_match = address_matches[address_matches["Sales Volume (Location)"].isna()]
 
     infogroup = pd.read_csv(infogroup_path)

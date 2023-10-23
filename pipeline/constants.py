@@ -18,8 +18,6 @@ RAW_CAFO_FPATH = RAW_DIR / "cafo"
 US_STATES_FPATH = RAW_DIR / "gz_2010_us_040_00_500k.json"
 SMOKE_TEST_FPATH = RAW_INFOGROUP_FPATH / "smoke_test"
 SMOKE_TEST_CLEAN_FPATH = CLEAN_DIR / "infogroup_2022_small_clean.csv"
-CLEANED_FSIS_DATA_vWeek3 = CLEAN_DIR / "nets_cleaned_vWeek3.csv"
-CLEANED_NETS_DATA_vWeek3 = CLEAN_DIR / "fsis_cleaned_vWeek3.csv"
 
 
 # cleaned data
@@ -30,7 +28,9 @@ CLEANED_CAFO_POULTRY_FPATH = CLEAN_DIR / "cleaned_cafo_poultry.csv"
 MATCHED_FARMS_FPATH = CLEAN_DIR / "matched_farms.csv"
 UNMATCHED_FARMS_FPATH = CLEAN_DIR / "unmatched_farms.csv"
 CLEANED_MATCHED_PLANTS_FPATH = CLEAN_DIR / "cleaned_matched_plants.csv"
-CLEANED_MATCHED_PLANTS_vWeek3 = CLEAN_DIR / "cleaned_matched_plants_vWeek3.csv"
+CLEANED_NETS_DATA_FPATH = CLEAN_DIR / "nets_cleaned_vWeek3.csv"
+CLEANED_FSIS_DATA_FPATH = CLEAN_DIR / "fsis_cleaned_vWeek3.csv"
+
 
 # geojsons
 ALL_STATES_GEOJSON_FPATH = CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson"
