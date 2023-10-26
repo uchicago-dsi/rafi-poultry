@@ -40,7 +40,10 @@ from pipeline.constants import (
     SMOKE_TEST_CLEAN_FPATH,
     DATA_DIR,
     CLEANED_NETS_FPATH,
-    CLEANED_MATCHED_PLANTS_NETS_FPATH
+    CLEANED_MATCHED_PLANTS_NETS_FPATH,
+    RAW_FSIS_1_FPATH,
+    RAW_FSIS_2_FPATH
+    
 )
 
 with open(CONFIG_FPATH, "r") as jsonfile:
@@ -133,7 +136,9 @@ def run_all(args) -> None:
     try:
         # Data Cleaning
         print("Cleaning FSIS data...")
-        clean.clean_FSIS(RAW_FSIS_FPATH)
+        clean.clean_FSIS(RAW_FSIS_1_FPATH,
+                        RAW_FSIS_2_FPATH,
+                        CLEANED_FSIS_PROCESSORS_FPATH)
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -257,7 +262,9 @@ def main(args) -> None:
             try:
                 # Data Cleaning
                 print("Cleaning FSIS data...")
-                clean.clean_FSIS(RAW_FSIS_FPATH)
+                clean.clean_FSIS(RAW_FSIS_1_FPATH,
+                        RAW_FSIS_2_FPATH,
+                        CLEANED_FSIS_PROCESSORS_FPATH)
             except Exception as e:
                 print(f"{e}")
                 exit(1)

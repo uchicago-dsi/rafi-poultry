@@ -10,6 +10,8 @@ RAW_DIR = DATA_DIR / "raw"
 HTML_DIR = DATA_DIR / "html"
 
 # raw data
+RAW_FSIS_2_FPATH = RAW_DIR / "Dataset_Establishment_Demographic_Data.xlsx" # new fsis 1
+RAW_FSIS_1_FPATH = RAW_DIR / "MPI_Directory_by_Establishment_Number.xlsx" # new fsis 2
 RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"
 RAW_FSIS_FPATH = RAW_DIR / "FSIS_filtered_wiz_location.csv"
 #RAW_NETS_FPATH = RAW_DIR / "nets_cleaned.csv" # nets
@@ -24,7 +26,7 @@ SMOKE_TEST_CLEAN_FPATH = CLEAN_DIR / "infogroup_2022_small_clean.csv"
 CLEANED_COUNTERGLOW_FPATH = CLEAN_DIR / "cleaned_counterglow_facility_list.csv"
 CLEANED_INFOGROUP_FPATH = CLEAN_DIR / "cleaned_infogroup_plants_all_time.csv"
 CLEANED_NETS_FPATH = CLEAN_DIR / "nets_cleaned.csv" # nets
-CLEANED_FSIS_PROCESSORS_FPATH = CLEAN_DIR / "cleaned_fsis_processors.csv"
+CLEANED_FSIS_PROCESSORS_FPATH = CLEAN_DIR / "cleaned_fsis_processors.csv" #now used
 CLEANED_CAFO_POULTRY_FPATH = CLEAN_DIR / "cleaned_cafo_poultry.csv"
 MATCHED_FARMS_FPATH = CLEAN_DIR / "matched_farms.csv"
 UNMATCHED_FARMS_FPATH = CLEAN_DIR / "unmatched_farms.csv"
