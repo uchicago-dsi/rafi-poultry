@@ -1,4 +1,4 @@
-"""Contains all cleaning functions for the FSIS, Counterglow, Infogroup, 
+"""Contains all cleaning functions for the FSIS, Counterglow, Infogroup,
 and state CAFO permit datasets.
 """
 
@@ -10,7 +10,8 @@ from pipeline.constants import (
     CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
-    SMOKE_TEST_FPATH
+    SMOKE_TEST_FPATH,
+    CLEANED_NETS_FPATH
 )
 
 def clean_FSIS(filepath: Path) -> None:
@@ -30,17 +31,17 @@ def clean_FSIS(filepath: Path) -> None:
     df_large_chickens.to_csv(CLEANED_FSIS_PROCESSORS_FPATH)
 
 
-def filter_infogroup(filename: str, 
-                     search_str: str, 
+def filter_infogroup(filename: str,
+                     search_str: str,
                      chunksize: int = 10000) -> pd.DataFrame:
-    """Filters the Infogroup file for a specific string (ie. "chicken"), 
+    """Filters the Infogroup file for a specific string (ie. "chicken"),
     meant as a helper function for clean_infogroup.
 
     Args:
         filename: path to specific file to be filtered
         search_str: SIC code (as a string) to search columns for
         chunksize: integer representing how many rows the function processes
-        at a time. 
+        at a time.
 
     Returns:
         N/A, puts cleaned df into the data/clean folder
@@ -59,7 +60,7 @@ def filter_infogroup(filename: str,
         df.columns = map(str.upper, df.columns)
         rows_to_add = df[
             df[search_cols].apply(
-                lambda r: r.astype(str).str.contains(search_str, 
+                lambda r: r.astype(str).str.contains(search_str,
                                                      case=False).any(),
                 axis=1,
             )
@@ -69,9 +70,9 @@ def filter_infogroup(filename: str,
     return filtered_df
 
 
-def clean_infogroup(filepath: Path, 
-                    ABI_dict: dict, 
-                    SIC_CODE: str, 
+def clean_infogroup(filepath: Path,
+                    ABI_dict: dict,
+                    SIC_CODE: str,
                     save_path: Path,
                     filtering: bool = False) -> None:
     """Cleans the infogroup files, combines them into one large master df.
@@ -80,7 +81,7 @@ def clean_infogroup(filepath: Path,
         filepath: absolute path to folder that contains all infogroup files
         ABI_dict: dictionary of all parent ABI's and their name as a str
         SIC_CODE: SIC code to filter the dataframes on
-        filtering: boolean, true if infogroup files are in their rawest form 
+        filtering: boolean, true if infogroup files are in their rawest form
             and need to be filtered
 
     Returns:
@@ -141,13 +142,106 @@ def clean_infogroup(filepath: Path,
 
     master.to_csv(save_path)
 
+def clean_nets(filepath: Path,
+                search_str: str,
+                chunksize: int = 10000,
+                save_path: Path = CLEANED_NETS_FPATH,
+                filtering: bool = False) -> pd.DataFrame:
+    """Filters the NETS file for a specific string (ie. "chicken"),
+    meant as a helper function for clean_nets.
+
+    Args:
+        filename: path to specific file to be filtered
+        search_str: SIC code (as a string) to search columns for
+        chunksize: integer representing how many rows the function processes
+        at a time.
+
+    Returns:
+        a Pandas dataframe, to be used in clean_nets
+
+    """
+
+    # Read in nets data for 2022
+    nets_df = pd.read_csv(filepath, iterator=True, chunksize=chunksize)
+    nets_df = nets_df.dropna(subset=['SIC22'])
+
+    # Read in data to combine data frames
+    naics = pd.read_csv('/data/raw/nets/NAICS2022_RAFI.csv')
+    naics_lookup = pd.read_csv('/data/raw/nets/2022-NAICS-Codes-6-digit.csv')
+    sic_lookup = pd.read_csv('/data/raw/nets/sic_8_digit_codes.csv')
+
+    # Filtering naics
+    naics = naics[['DunsNumber', 'NAICS22']]
+
+    # Filtering naics lookup
+    naics_lookup = naics_lookup[['NAICS22 Code', 'NAICS22 Text']]
+
+    # Filtering sic lookup
+    sic_lookup = sic_lookup[['SIC 8-digit Code', 'SIC 8-Digit Text']]
+
+    # Merging naics and nets
+    nets_df = nets_df.merge(naics, how='left', on='DunsNumber')
+    nets_df = nets_df.merge(naics_lookup, how='left',
+                            left_on='NAICS22',
+                            right_on='NAICS22 Code')
+    nets_df = nets_df.drop(columns=['NAICS22 Code'])
+
+    # Merging sic and nets
+    nets_df = nets_df.merge(sic_lookup, how='left',
+                            left_on='SIC22',
+                            right_on='SIC 8-digit Code')
+    nets_df = nets_df.drop(columns=['SIC 8-digit Code'])
+
+    search_cols = [
+        "SIC 8-Digit Code",
+        "NAICS22"
+    ]
+
+    master = nets_df[
+        [
+            'DunsNumber',
+            'Company',
+            'Address',
+            'City',
+            'State',
+            'ZipCode',
+            'SIC22',
+            'SIC 8-Digit Text',
+            'HQDuns22',
+            'HQCompany',
+            'Sales22',
+            'SalesC22',
+            'Latitude',
+            'Longitude',
+            'NAICS22',
+            'NAICS22 Text'
+        ]
+    ]
+
+    if filtering:
+        filtered_df = pd.DataFrame([])
+        for df in master:
+            df.columns = map(str.upper, df.columns)
+            rows_to_add = df[
+                df[search_cols].apply(
+                    lambda r: r.astype(str).str.contains(search_str,
+                                                        case=False).any(),
+                    axis=1,
+                )
+            ]
+            filtered_df = pd.concat([filtered_df, rows_to_add], axis=0)
+
+        filtered_df.to_csv(save_path)
+
+    master.to_csv(save_path)
+
 
 def clean_counterglow(filepath: Path) -> None:
-    """Cleans the Counterglow dataset by standardizing facility name 
+    """Cleans the Counterglow dataset by standardizing facility name
     and column formatting.
 
     Args:
-        filepath: relative path to the raw data folder 
+        filepath: relative path to the raw data folder
             with the Counterglow dataset.
 
     Returns:
@@ -163,14 +257,14 @@ def clean_counterglow(filepath: Path) -> None:
 
 def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
     """Merges state level CAFO permit data (taken from gov't websites)
-    into one CSV with columns for name, address, longitude/latitude, and state. 
-    Column names in each dataset are mapped to standardized format 
-    in accompanying farm_source.json file. Rows in complete dataset are 
-    left blank if no information is available, and raw CSVs may need to be 
+    into one CSV with columns for name, address, longitude/latitude, and state.
+    Column names in each dataset are mapped to standardized format
+    in accompanying farm_source.json file. Rows in complete dataset are
+    left blank if no information is available, and raw CSVs may need to be
     standardized/filtered by hand first.
 
     Args:
-        data_dir: filepath to raw data subfolder "cafo" 
+        data_dir: filepath to raw data subfolder "cafo"
             that contains the state permit data.
         config_fpath: filepath to farm_source.json file.
 
@@ -191,7 +285,7 @@ def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
         df = pd.read_csv(fpath)
 
         # Subset to relevant columns
-        present_cols = list(filter(None, 
+        present_cols = list(filter(None,
                                    list(source["column_mapping"].values())))
         df = df[present_cols]
 
@@ -205,7 +299,7 @@ def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
 
         # Update final DataFrame
         final_df = (
-            df if final_df is None else pd.concat([df, final_df], 
+            df if final_df is None else pd.concat([df, final_df],
                                                   ignore_index=True)
         )
 

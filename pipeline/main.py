@@ -1,6 +1,6 @@
 """Executes cleaning and analysis scripts given the the animal type
 and a distance threshold in km to find matching farms within, and whether
-filtering needs to be done on Infogroup or not. Functions can be run 
+filtering needs to be done on Infogroup or not. Functions can be run
 individually by including a function flag; the default is to run all of them.
 """
 
@@ -24,17 +24,19 @@ from pipeline.constants import (
     RAW_FSIS_FPATH,
     RAW_COUNTERGLOW_FPATH,
     RAW_INFOGROUP_FPATH,
+    RAW_NETS_FPATH,
     RAW_CAFO_FPATH,
     CLEANED_INFOGROUP_FPATH,
     CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
+    CLEANED_NETS_FPATH,
     MATCHED_FARMS_FPATH,
     UNMATCHED_FARMS_FPATH,
     ROOT_DIR,
     CLEAN_DIR,
     ALL_STATES_GEOJSON_FPATH,
-    CONFIG_FPATH, 
+    CONFIG_FPATH,
     SMOKE_TEST_FPATH,
     SMOKE_TEST_CLEAN_FPATH,
     DATA_DIR
@@ -47,11 +49,12 @@ with open(CONFIG_FPATH, "r") as jsonfile:
 def create_parser():
     """Argparser that contains all the command line arguments for executing
     the main script, which includes the type of animal, distance threshold for
-    matching entries, filtering, and what functions to run.
+    matching entries, filtering, what data to use (infogroup or nets), and what
+    functions to run.
 
     Args:
         None
-    
+
     Returns:
         None
 
@@ -92,11 +95,21 @@ def create_parser():
             and needs filtering by SIC Code"
     )
     parser.add_argument(
+        "--data",
+        choices=[
+            "infogroup",
+            "nets",
+        ],
+        help="Specify what dataset to use\
+            (infogroup or nets)"
+    )
+    parser.add_argument(
         "--function",
         choices=[
             "clean_FSIS",
             "clean_counterglow",
             "clean_infogroup",
+            "clean_nets"
             "clean_cafo",
             "match_plants",
             "match_farms",
@@ -117,10 +130,10 @@ def create_parser():
 
 
 def run_all(args) -> None:
-    """In the case that no specific functions are specified in the command line, 
+    """In the case that no specific functions are specified in the command line,
     executes all functions in the script.
-    
-    Args:  
+
+    Args:
         None
 
     Returns:
@@ -145,17 +158,26 @@ def run_all(args) -> None:
         print("Cleaning Infogroup data...")
         ABI_dict = config["ABI_map"]
         if args.smoke_test:
-            clean.clean_infogroup(SMOKE_TEST_FPATH, 
-                    ABI_dict, 
-                    args.code, 
+            clean.clean_infogroup(SMOKE_TEST_FPATH,
+                    ABI_dict,
+                    args.code,
                     SMOKE_TEST_CLEAN_FPATH,
                     True)
         else:
-            clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
-                                ABI_dict, 
-                                args.code, 
+            clean.clean_infogroup(RAW_INFOGROUP_FPATH,
+                                ABI_dict,
+                                args.code,
                                 CLEANED_INFOGROUP_FPATH,
                                 args.filtering)
+    except Exception as e:
+        print(f"{e}")
+        exit(1)
+
+    try:
+        print("Cleaning NETS data...")
+        clean.clean_nets(RAW_NETS_FPATH,
+                        args.code,
+                        True)
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -171,8 +193,8 @@ def run_all(args) -> None:
         # Match plants and farms
         print("Matching FSIS plants and Infogroup for sales volume data...")
         match_plants.save_all_matches(
-            CLEANED_INFOGROUP_FPATH, 
-            CLEANED_FSIS_PROCESSORS_FPATH, 
+            CLEANED_INFOGROUP_FPATH,
+            CLEANED_FSIS_PROCESSORS_FPATH,
             args.distance
         )
     except Exception as e:
@@ -207,7 +229,7 @@ def run_all(args) -> None:
         states = match_df["state"].unique().tolist()
         for state in states:
             path = "html/cafo_poultry_eda_" + state + ".html"
-            visualize.map_state(MATCHED_FARMS_FPATH, 
+            visualize.map_state(MATCHED_FARMS_FPATH,
                                 UNMATCHED_FARMS_FPATH, state).save(
                 ROOT_DIR / path
             )
@@ -227,12 +249,12 @@ def run_all(args) -> None:
 
 
 def main(args) -> None:
-    """Executes functions based on what was specified in command line. 
+    """Executes functions based on what was specified in command line.
     If no function names were specified, runs all functions in the script.
 
     Args:
         None
-    
+
     Returns:
         None
     """
@@ -259,17 +281,27 @@ def main(args) -> None:
                 print("Cleaning Infogroup data...")
                 ABI_dict = config["ABI_map"]
                 if args.smoke_test:
-                    clean.clean_infogroup(SMOKE_TEST_FPATH, 
-                                          ABI_dict, 
+                    clean.clean_infogroup(SMOKE_TEST_FPATH,
+                                          ABI_dict,
                                           args.code,
                                           SMOKE_TEST_CLEAN_FPATH,
                                           True)
                 else:
-                    clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
-                                          ABI_dict, 
-                                          args.code, 
+                    clean.clean_infogroup(RAW_INFOGROUP_FPATH,
+                                          ABI_dict,
+                                          args.code,
                                           CLEANED_INFOGROUP_FPATH,
                                           args.filtering)
+            except Exception as e:
+                print(f"{e}")
+                exit(1)
+
+        elif args.function == "clean_nets":
+            try:
+                print("Cleaning Infogroup data...")
+                clean.clean_infogroup(RAW_NETS_FPATH,
+                                      CLEANED_NETS_FPATH,
+                                      args.filtering)
             except Exception as e:
                 print(f"{e}")
                 exit(1)
@@ -277,7 +309,7 @@ def main(args) -> None:
         elif args.function == "clean_cafo":
             try:
                 print("Cleaning CAFO Permit data...")
-                clean.clean_cafo(RAW_CAFO_FPATH, 
+                clean.clean_cafo(RAW_CAFO_FPATH,
                                  RAW_CAFO_FPATH / "farm_source.json")
             except Exception as e:
                 print(f"{e}")
@@ -301,8 +333,8 @@ def main(args) -> None:
             try:
                 print("Matching CAFO permit data and Counterglow for farms...")
                 match_farms.match_all_farms(
-                    CLEANED_COUNTERGLOW_FPATH, 
-                    CLEANED_CAFO_POULTRY_FPATH, 
+                    CLEANED_COUNTERGLOW_FPATH,
+                    CLEANED_CAFO_POULTRY_FPATH,
                     args.animal
                 )
             except Exception as e:
@@ -355,7 +387,7 @@ def main(args) -> None:
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
-    load_dotenv() 
+    load_dotenv()
     parser = create_parser()
     args = parser.parse_args()
     main(args)

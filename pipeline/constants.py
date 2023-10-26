@@ -14,6 +14,7 @@ RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"
 RAW_FSIS_FPATH = RAW_DIR / "fsis-processors-with-location.csv"
 INFOGROUP_2022 = RAW_DIR / "infogroup/poultry_plants_2022.csv"
 RAW_INFOGROUP_FPATH = RAW_DIR / "infogroup"
+RAW_NETS_FPATH = RAW_DIR / "nets"
 RAW_CAFO_FPATH = RAW_DIR / "cafo"
 US_STATES_FPATH = RAW_DIR / "gz_2010_us_040_00_500k.json"
 SMOKE_TEST_FPATH = RAW_INFOGROUP_FPATH / "smoke_test"
@@ -22,6 +23,7 @@ SMOKE_TEST_CLEAN_FPATH = CLEAN_DIR / "infogroup_2022_small_clean.csv"
 # cleaned data
 CLEANED_COUNTERGLOW_FPATH = CLEAN_DIR / "cleaned_counterglow_facility_list.csv"
 CLEANED_INFOGROUP_FPATH = CLEAN_DIR / "cleaned_infogroup_plants_all_time.csv"
+CLEANED_NETS_FPATH = CLEAN_DIR / "cleaned_nets_22.csv"
 CLEANED_FSIS_PROCESSORS_FPATH = CLEAN_DIR / "cleaned_fsis_processors.csv"
 CLEANED_CAFO_POULTRY_FPATH = CLEAN_DIR / "cleaned_cafo_poultry.csv"
 MATCHED_FARMS_FPATH = CLEAN_DIR / "matched_farms.csv"
@@ -33,7 +35,7 @@ ALL_STATES_GEOJSON_FPATH = CLEAN_DIR / "all_states_with_parent_corp_by_corp.geoj
 COUNTERGLOW_GEOJSON_FPATH = CLEAN_DIR / "counterglow_geojson.geojson"
 ISOCHRONES_WITH_PARENT_CORP_FPATH = CLEAN_DIR / "isochrones_with_parent_corp.geojson"
 
-# html 
+# html
 NATION_MAP = HTML_DIR / "poultry-map-smoothed.html"
 
 # config file
