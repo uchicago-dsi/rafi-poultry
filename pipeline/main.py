@@ -5,6 +5,7 @@ individually by including a function flag; the default is to run all of them.
 """
 
 import clean
+import clean_nets
 import match_farms
 import match_plants
 import calculate_captured_areas
@@ -21,12 +22,17 @@ import json
 
 warnings.filterwarnings("ignore")
 from pipeline.constants import (
-    RAW_FSIS_FPATH,
+    RAW_FSIS_1_FPATH,
+    RAW_FSIS_2_FPATH,
     RAW_COUNTERGLOW_FPATH,
     RAW_INFOGROUP_FPATH,
     RAW_CAFO_FPATH,
+    RAW_NETS,
+    RAW_NAICS,
+    RAW_NAICS_LOOKUP,
     CLEANED_INFOGROUP_FPATH,
     CLEANED_FSIS_PROCESSORS_FPATH,
+    CLEANED_NETS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
     MATCHED_FARMS_FPATH,
@@ -38,8 +44,7 @@ from pipeline.constants import (
     SMOKE_TEST_FPATH,
     SMOKE_TEST_CLEAN_FPATH,
     DATA_DIR,
-    CLEANED_NETS_DATA_FPATH,
-    CLEANED_FSIS_DATA_FPATH
+    COLUMNS_TO_KEEP
 )
 
 with open(CONFIG_FPATH, "r") as jsonfile:
@@ -99,8 +104,10 @@ def create_parser():
             "clean_FSIS",
             "clean_counterglow",
             "clean_infogroup",
+            "clean_NETS",
             "clean_cafo",
             "match_plants",
+            "match_plants_nets",
             "match_farms",
             "calculate_captured_areas",
             "visualize",
@@ -113,6 +120,10 @@ def create_parser():
         action='store_true',
         help="Indicates whether smoke test on Infogroup data\
             should be run or not"
+    )
+    parser.add_argument(
+        "--nets",
+        help="Specify using NETS dataset to match"
     )
 
     return parser
@@ -131,7 +142,9 @@ def run_all(args) -> None:
     try:
         # Data Cleaning
         print("Cleaning FSIS data...")
-        clean.clean_FSIS(RAW_FSIS_FPATH)
+        clean.clean_FSIS(RAW_FSIS_1_FPATH,
+                        RAW_FSIS_2_FPATH,
+                        CLEANED_FSIS_PROCESSORS_FPATH)
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -161,6 +174,19 @@ def run_all(args) -> None:
     except Exception as e:
         print(f"{e}")
         exit(1)
+    
+    try:
+        print("Cleaning NETS data...")
+        clean_nets.clean_NETS(RAW_NETS,
+                                RAW_NAICS,
+                                RAW_NAICS_LOOKUP,
+                                args.code, 
+                                CLEANED_NETS_FPATH,
+                                COLUMNS_TO_KEEP,
+                                True)
+    except Exception as e:
+        print(f"{e}")
+        exit(1)
 
     try:
         print("Cleaning CAFO Permit data...")
@@ -170,14 +196,26 @@ def run_all(args) -> None:
         exit(1)
 
     try:
-        # Match plants and farms
-        print("Matching FSIS plants and Infogroup for sales volume data...")
-        match_plants.save_all_matches(
-                    CLEANED_FSIS_DATA_FPATH,
-                    CLEANED_NETS_DATA_FPATH,
-                    CLEANED_INFOGROUP_FPATH,
-                    args.distance,
-                )
+        if args.nets: # use NETS to match sale
+            matcher_type = 'nets'
+            print("Matching FSIS plants and NETS for sales volume data...")
+            match_plants.save_all_matches(
+                CLEANED_INFOGROUP_FPATH, 
+                CLEANED_NETS_FPATH,
+                CLEANED_FSIS_PROCESSORS_FPATH, 
+                matcher_type,
+                args.distance
+            
+            )
+        else: # using default matcher_type = info group
+            print("Matching FSIS plants and Infogroup for sales volume data...")
+            match_plants.save_all_matches(
+                CLEANED_INFOGROUP_FPATH, 
+                CLEANED_NETS_FPATH,
+                CLEANED_FSIS_PROCESSORS_FPATH, 
+                threshold = args.distance
+            )
+            
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -244,7 +282,9 @@ def main(args) -> None:
             try:
                 # Data Cleaning
                 print("Cleaning FSIS data...")
-                clean.clean_FSIS(RAW_FSIS_FPATH)
+                clean.clean_FSIS(RAW_FSIS_1_FPATH,
+                        RAW_FSIS_2_FPATH,
+                        CLEANED_FSIS_PROCESSORS_FPATH)
             except Exception as e:
                 print(f"{e}")
                 exit(1)
@@ -276,6 +316,20 @@ def main(args) -> None:
             except Exception as e:
                 print(f"{e}")
                 exit(1)
+        elif args.function == "clean_NETS":
+            try:
+                print("Cleaning NETS data...")
+                clean_nets.clean_NETS(RAW_NETS,
+                                        RAW_NAICS,
+                                        RAW_NAICS_LOOKUP,
+                                        args.code, 
+                                        CLEANED_NETS_FPATH,
+                                        COLUMNS_TO_KEEP,
+                                        True)
+
+            except Exception as e:
+                print(f"{e}")
+                exit(1)
 
         elif args.function == "clean_cafo":
             try:
@@ -292,10 +346,23 @@ def main(args) -> None:
                 print("Matching FSIS plants and Infogroup for sales volume \
                       data...")
                 match_plants.save_all_matches(
-                    CLEANED_FSIS_DATA_FPATH,
-                    CLEANED_NETS_DATA_FPATH,
                     CLEANED_INFOGROUP_FPATH,
-                    args.distance,
+                    CLEANED_FSIS_PROCESSORS_FPATH,
+                    args.distance
+                )
+            except Exception as e:
+                print(f"{e}")
+                exit(1)
+
+        elif args.function == "match_plants_nets":
+            try:
+                # Match plants and farms
+                print("Matching FSIS plants and NETS for parent company and sales \
+                      data...")
+                match_plants.save_all_matches(
+                    CLEANED_NETS_FPATH,
+                    CLEANED_FSIS_PROCESSORS_FPATH,
+                    args.distance
                 )
             except Exception as e:
                 print(f"{e}")
