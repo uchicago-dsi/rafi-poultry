@@ -11,11 +11,11 @@ from distances import haversine
 from pathlib import Path
 from constants import (CLEANED_MATCHED_PLANTS_FPATH, 
                        CLEANED_NETS_FPATH, 
-                       CLEANED_FSIS_PROCESSORS_FPATH,
+                       CLEANED_FSIS_PROCESSORS_FPATH, 
 )
 
-def address_match(fsis_path: Path, 
-                        nets_path: Path, 
+def address_match(nets_path: Path, 
+                        fsis_path: Path, 
                         fuzz_ratio: float=75, 
                         num_threads: int=4):
     """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the 
@@ -38,9 +38,6 @@ def address_match(fsis_path: Path,
 
     fsis_df = pd.read_csv(fsis_path)
     nets_df = pd.read_csv(nets_path)
-    # Filter for relevant plants by looking at plants whose activity description includes poultry processing plants
-    fsis_df["Activities"] = fsis_df["Activities"].str.lower()
-    fsis_df = fsis_df[fsis_df["Activities"].str.contains("poultry processing")].copy()
 
     fsis_df["Parent Company"] = np.NaN
     fsis_df["Sales Volume (Location)"] = np.NaN
@@ -68,9 +65,58 @@ def address_match(fsis_path: Path,
     for i, result in results:
         if result:
             fsis_df.at[i, "Parent Company"] = result["Parent Company"]
-            fsis_df.at[i, "Sales"] = result["Sales"]
+            fsis_df.at[i, "Sales Volume (Location)"] = result["Sales"]
 
     return fsis_df
+
+
+def loc_match(no_match: pd.DataFrame, 
+              pp_2022: pd.DataFrame, 
+              pp_sales: pd.DataFrame, 
+              threshold: float) -> (pd.DataFrame, pd.DataFrame):
+    """Match NETS plants to the remaining unmatched FSIS plants 
+    after running address_match based on longitude/latitude 
+    to add parent company and sales volume data to each poultry plant from FSIS. 
+    Requires user input when a match is found.
+
+    Args:
+        no_match: Filtered DataFrame that contains the unmatched poultry plants 
+            after running address_match.
+        pp_2022: 2022 Infogroup dataset loaded as a DataFrame.
+        pp_sales: DataFrame returned by address_match, which contains 
+            FSIS poultry plants matched with sales volume.
+        threshold: threshold for maximum distance possible 
+            to be considered a match.
+
+    Returns:
+        2022 Infogroup DataFrame (pp_2022) and DataFrame with sales volume data 
+        filled in for location matches (pp_sales).
+
+    """
+    no_match_nulls = no_match[no_match["Sales Volume (Location)"].isna()]
+    for index, row in no_match_nulls.iterrows():
+        target_point = (row["latitude"], row["longitude"])
+        for _, infogroup in pp_2022.iterrows():
+            candidate_point = infogroup["LATITUDE"], infogroup["LONGITUDE"]
+            distance = haversine(
+                target_point[1], 
+                target_point[0], 
+                candidate_point[1], 
+                candidate_point[0]
+            )
+            if distance <= threshold:
+                if (
+                    fuzz.token_sort_ratio(
+                        row["Establishment Name"].upper(), infogroup["COMPANY"]
+                    )
+                    > 90
+                ):
+                    pp_sales.loc[index, "Sales Volume (Location)"] = infogroup[
+                        "SALES VOLUME (9) - LOCATION"
+                    ]
+                    break
+    return pp_2022, pp_sales
+
 
 def save_all_matches(nets_path: Path, 
                      fsis_path: Path, 
@@ -79,7 +125,7 @@ def save_all_matches(nets_path: Path,
 
     Args:
         nets_path: relative path to the raw data folder 
-            with the 2022 Infogroup dataset.
+            with the NETS dataset.
         fsis_path: relative path to the raw data folder with the FSIS dataset.
         threshold: threshold for maximum distance possible 
             to be considered a match.
