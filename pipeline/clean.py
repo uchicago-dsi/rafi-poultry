@@ -62,18 +62,20 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
 
     # Initialize the MapBox geocoder with your access token
     geolocator = MapBox(api_key=access_token)
-    df_large_chickens['Latitude'] = None
-    df_large_chickens['Longitude'] = None
+    df_large_chickens['latitude'] = None
+    df_large_chickens['longitude'] = None
 
 
     for index, row in df_large_chickens.iterrows():
         location = geolocator.geocode(row['Full Address'])
         if location:
-            df_large_chickens.at[index, 'Latitude'] = location.latitude
-            df_large_chickens.at[index, 'Longitude'] = location.longitude
+            df_large_chickens.at[index, 'latitude'] = location.latitude
+            df_large_chickens.at[index, 'longitude'] = location.longitude
 
 
-    #save df_FSIS to raw folder
+    # Renaming of certain columns to fix compatability
+    df_large_chickens = df_large_chickens.rename(columns={"Company": "Establishment Name"})
+    # Save df_FSIS to raw folder
     df_large_chickens.to_csv(save_path)
 
 

@@ -8,6 +8,7 @@ import clean
 import clean_nets
 import match_farms
 import match_plants
+import match_plants_nets
 import calculate_captured_areas
 import farm_geojson_creation
 import os
@@ -197,21 +198,17 @@ def run_all(args) -> None:
 
     try:
         if args.nets: # use NETS to match sale
-            matcher_type = 'nets'
-            print("Matching FSIS plants and NETS for sales volume data...")
-            match_plants.save_all_matches(
-                CLEANED_INFOGROUP_FPATH, 
-                CLEANED_NETS_FPATH,
+            print("Matching FSIS plants and NETS for parent company and sales volume data...")
+            match_plants_nets.save_all_matches(
+                CLEANED_NETS_FPATH, 
                 CLEANED_FSIS_PROCESSORS_FPATH, 
-                matcher_type,
                 args.distance
-            
             )
-        else: # using default matcher_type = info group
+
+        else: # using Infogroup to match sale
             print("Matching FSIS plants and Infogroup for sales volume data...")
             match_plants.save_all_matches(
-                CLEANED_INFOGROUP_FPATH, 
-                CLEANED_NETS_FPATH,
+                CLEANED_INFOGROUP_FPATH,
                 CLEANED_FSIS_PROCESSORS_FPATH, 
                 threshold = args.distance
             )
@@ -359,7 +356,7 @@ def main(args) -> None:
                 # Match plants and farms
                 print("Matching FSIS plants and NETS for parent company and sales \
                       data...")
-                match_plants.save_all_matches(
+                match_plants_nets.save_all_matches(
                     CLEANED_NETS_FPATH,
                     CLEANED_FSIS_PROCESSORS_FPATH,
                     args.distance

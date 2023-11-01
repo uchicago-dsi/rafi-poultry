@@ -4,6 +4,7 @@ from Infogroup 2022 data to the FSIS dataset, based on address and location.
 
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 from fuzzywuzzy import fuzz
 from distances import haversine
 from pathlib import Path
@@ -15,8 +16,8 @@ from constants import (CLEANED_MATCHED_PLANTS_FPATH,
 def address_match(infogroup_path: Path, 
                   fsis_path: Path, 
                   fuzz_ratio: float=75) -> pd.DataFrame:
-    """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the 
-    NETS parent company and sales volume data with the base FSIS dataset
+    """Takes a cleaned FSIS and Infogroup dataset. Outputs a new dataset that combines the 
+    Infogroup and sales volume data with the base FSIS dataset
 
     Args:
         infogroup_2022_path: relative path to the raw data folder with the 
@@ -41,13 +42,12 @@ def address_match(infogroup_path: Path,
         + df_filtered["ZIPCODE"].astype(int).astype(str)
     )
     df_filtered["Full Address"] = df_filtered["Full Address"].astype(str)
-
-    df_fsis = pd.read_csv(fsis_path, index_col=0)
-    df_poultry = df_fsis[df_fsis["Animals Processed"].str.contains("Chicken")].copy()
+    
+    df_poultry = pd.read_csv(fsis_path, index_col=0)
     df_poultry["Sales Volume (Location)"] = np.NaN
     df_poultry["Sales Volume (Location)"] = np.NaN
 
-    for i, fsis in df_poultry.iterrows():
+    for i, fsis in tqdm(df_poultry.iterrows(), total=len(df_poultry)):
         fsis_address = fsis["Full Address"].lower()
         for k, infogroup in df_filtered.iterrows():
             infogroup_address = infogroup["Full Address"].lower()
@@ -166,10 +166,13 @@ def save_all_matches(infogroup_path: Path,
     """
     address_matches = address_match(infogroup_path, fsis_path, 75)
     no_match = address_matches[address_matches["Sales Volume (Location)"].isna()]
-
+    
     infogroup = pd.read_csv(infogroup_path)
     pp_2022 = infogroup[infogroup["ARCHIVE VERSION YEAR"] == 2022]
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
-
-    pp_sales_updated = fill_remaining_nulls(pp_sales)
-    pp_sales_updated.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    
+    # We do not have the Parent Corporation in this FSIS dataset as we used NETS to automate the process
+    # Therefore this is no longer possible
+    #pp_sales_updated = fill_remaining_nulls(pp_sales)
+    #pp_sales_updated.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
