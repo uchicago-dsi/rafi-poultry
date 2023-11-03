@@ -47,7 +47,7 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
     + " " + df_FSIS["Zip"].astype(str)
 
     #drop unnecessary columns
-    df_FSIS = df_FSIS.drop(columns=['Street','City','State','Zip'])
+    df_FSIS = df_FSIS.drop(columns=['Street','City','Zip'])
 
     # preprocessing: only keep large chicken slaughter
     # chicken_slaughter = Yes; Activities include Poultry
@@ -64,7 +64,6 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
     geolocator = MapBox(api_key=access_token)
     df_large_chickens['latitude'] = None
     df_large_chickens['longitude'] = None
-
 
     for index, row in df_large_chickens.iterrows():
         location = geolocator.geocode(row['Full Address'])

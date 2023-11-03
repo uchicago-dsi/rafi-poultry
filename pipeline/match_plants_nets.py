@@ -16,10 +16,10 @@ from constants import (CLEANED_MATCHED_PLANTS_FPATH,
 
 def address_match(nets_path: Path, 
                         fsis_path: Path, 
-                        fuzz_ratio: float=75, 
+                        fuzz_ratio: float=60, 
                         num_threads: int=4):
     """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the 
-    NETS parent company and sales volume data with the base FSIS dataset
+    NETS parent corporation and sales volume data with the base FSIS dataset
 
     Args:
         fsis_path: relative path to the clean data folder with the 
@@ -27,7 +27,7 @@ def address_match(nets_path: Path,
         nets_path: relative path to the clean data folder with the 
             cleaned new nets data.
         fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
-            to accept that two strings are "the same"; default of 75
+            to accept that two strings are "the same"; default of 60
         num_threads: int; number of simultaneous threads to run using
             multi-threading on the fuzzy matching
 
@@ -39,7 +39,7 @@ def address_match(nets_path: Path,
     fsis_df = pd.read_csv(fsis_path)
     nets_df = pd.read_csv(nets_path)
 
-    fsis_df["Parent Company"] = np.NaN
+    fsis_df["Parent Corporation"] = np.NaN
     fsis_df["Sales Volume (Location)"] = np.NaN
 
     def find_match(i, fsis_df, nets_df):
@@ -48,7 +48,7 @@ def address_match(nets_path: Path,
             nets_address = nets["ADDRESS"]
             if fuzz.token_sort_ratio(nets_address, fsis_address) > fuzz_ratio:
                 return i, {
-                    "Parent Company": nets["PARENT COMPANY"],
+                    "Parent Corporation": nets["PARENT COMPANY"],
                     "Sales Volume (Location)": nets["SALESHERE"]
                 }
         return i, {}
@@ -64,14 +64,14 @@ def address_match(nets_path: Path,
     # Update the DataFrame with the results
     for i, result in results:
         if result:
-            fsis_df.at[i, "Parent Company"] = result["Parent Company"]
-            fsis_df.at[i, "Sales Volume (Location)"] = result["Sales"]
+            fsis_df.at[i, "Parent Corporation"] = result["Parent Corporation"]
+            fsis_df.at[i, "Sales Volume (Location)"] = result["Sales Volume (Location)"]
 
     return fsis_df
 
 
 def loc_match(no_match: pd.DataFrame, 
-              pp_2022: pd.DataFrame, 
+              pp_nets: pd.DataFrame, 
               pp_sales: pd.DataFrame, 
               threshold: float) -> (pd.DataFrame, pd.DataFrame):
     """Match NETS plants to the remaining unmatched FSIS plants 
@@ -82,22 +82,22 @@ def loc_match(no_match: pd.DataFrame,
     Args:
         no_match: Filtered DataFrame that contains the unmatched poultry plants 
             after running address_match.
-        pp_2022: 2022 Infogroup dataset loaded as a DataFrame.
+        pp_nets: NETS dataset loaded as a DataFrame.
         pp_sales: DataFrame returned by address_match, which contains 
             FSIS poultry plants matched with sales volume.
         threshold: threshold for maximum distance possible 
             to be considered a match.
 
     Returns:
-        2022 Infogroup DataFrame (pp_2022) and DataFrame with sales volume data 
+        NETS DataFrame (pp_nets) and DataFrame with sales volume data 
         filled in for location matches (pp_sales).
 
     """
-    no_match_nulls = no_match[no_match["Sales Volume (Location)"].isna()]
+    no_match_nulls = no_match[no_match["Parent Corporation"].isna()]
     for index, row in no_match_nulls.iterrows():
         target_point = (row["latitude"], row["longitude"])
-        for _, infogroup in pp_2022.iterrows():
-            candidate_point = infogroup["LATITUDE"], infogroup["LONGITUDE"]
+        for _, nets in pp_nets.iterrows():
+            candidate_point = nets["LATITUDE"], nets["LONGITUDE"]
             distance = haversine(
                 target_point[1], 
                 target_point[0], 
@@ -107,15 +107,19 @@ def loc_match(no_match: pd.DataFrame,
             if distance <= threshold:
                 if (
                     fuzz.token_sort_ratio(
-                        row["Establishment Name"].upper(), infogroup["COMPANY"]
+                        row["Establishment Name"].upper(), nets["COMPANY"]
                     )
                     > 90
                 ):
-                    pp_sales.loc[index, "Sales Volume (Location)"] = infogroup[
-                        "SALES VOLUME (9) - LOCATION"
+                    pp_sales.loc[index, "Sales Volume (Location)"] = nets[
+                        "SALESHERE"
+                    ]
+                    pp_sales.loc[index, "Parent Corporation"] = nets[
+                        "PARENT COMPANY"
                     ]
                     break
-    return pp_2022, pp_sales
+
+    return pp_nets, pp_sales
 
 
 def save_all_matches(nets_path: Path, 
@@ -133,5 +137,10 @@ def save_all_matches(nets_path: Path,
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(nets_path, fsis_path, 75)
-    address_matches.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    address_matches = address_match(nets_path, fsis_path)
+    no_match = address_matches[address_matches["Parent Corporation"].isna()]
+    
+    nets = pd.read_csv(nets_path)
+    nets, pp_sales = loc_match(no_match, nets, address_matches, threshold)
+    pp_sales = pp_sales.dropna(subset=["Parent Corporation"])
+    pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
