@@ -14,7 +14,7 @@ from shapely.ops import unary_union
 from pyproj import Geod
 from typing import List, Dict, Tuple
 from pipeline.constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, \
-    ALL_STATES_GEOJSON_FPATH,CLEANED_FSIS_PROCESSORS_FPATH, \
+    ALL_STATES_GEOJSON_FPATH,CLEANED_MATCHED_PLANTS_FPATH, \
     CLEANED_INFOGROUP_FPATH, DATA_DIR, ALBERS_EQUAL_AREA, WGS84, USA_LAT, \
     USA_LNG, HTML_DIR
 
@@ -344,29 +344,56 @@ def state_level_geojson(df: pd.DataFrame, single: List[Polygon],
         WGS84
     )
     abb2state = {
-        "AL": "Alabama",
-        "AR": "Arkansas",
-        "CA": "California",
-        "DE": "Delaware",
-        "FL": "Florida",
-        "GA": "Georgia",
-        "KY": "Kentucky",
-        "LA": "Louisiana",
-        "MD": "Maryland",
-        "MN": "Minnesota",
-        "MO": "Missouri",
-        "MS": "Mississippi",
-        "NC": "North Carolina",
-        "NE": "Nebraska",
-        "OK": "Oklahoma",
-        "PA": "Pennsylvania",
-        "SC": "South Carolina",
-        "TN": "Tennessee",
-        "TX": "Texas",
-        "VA": "Virginia",
-        "WA": "Washington",
-        "WV": "West Virginia",
-        "IA": "Iowa",
+        "AL":"Alabama",
+    "AK":"Alaska",
+    "AZ":"Arizona",
+    "AR":"Arkansas",
+    "CA":"California",
+    "CO":"Colorado",
+    "CT":"Connecticut",
+    "DE":"Delaware",
+    "FL":"Florida",
+    "GA":"Georgia",
+    "HI":"Hawaii",
+    "ID":"Idaho",
+    "IL":"Illinois",
+    "IN":"Indiana",
+    "IA":"Iowa",
+    "KS":"Kansas",
+    "KY":"Kentucky",
+    "LA":"Louisiana",
+    "ME":"Maine",
+    "MD":"Maryland",
+    "MA":"Massachusetts",
+    "MI":"Michigan",
+    "MN":"Minnesota",
+    "MS":"Mississippi",
+    "MO":"Missouri",
+    "MT":"Montana",
+    "NE":"Nebraska",
+    "NV":"Nevada",
+    "NH":"New Hampshire",
+    "NJ":"New Jersey",
+    "NM":"New Mexico",
+    "NY":"New York",
+    "NC":"North Carolina",
+    "ND":"North Dakota",
+    "OH":"Ohio",
+    "OK":"Oklahoma",
+    "OR":"Oregon",
+    "PA":"Pennsylvania",
+    "RI":"Rhode Island",
+    "SC":"South Carolina",
+    "SD":"South Dakota",
+    "TN":"Tennessee",
+    "TX":"Texas",
+    "UT":"Utah",
+    "VT":"Vermont",
+    "VA":"Virginia",
+    "WA":"Washington",
+    "WV":"West Virginia",
+    "WI":"Wisconsin",
+    "WY":"Wyoming"
     }
 
     df_states = gpd.GeoDataFrame()
@@ -505,7 +532,7 @@ def full_script(token: str, distance: float=60) -> folium.Map:
     """
 
     # import cleaned data
-    fsis_df = pd.read_csv(CLEANED_FSIS_PROCESSORS_FPATH)
+    fsis_df = pd.read_csv(CLEANED_MATCHED_PLANTS_FPATH)
     info_df = pd.read_csv(CLEANED_INFOGROUP_FPATH)
 
     # make base map for country-wide visualization

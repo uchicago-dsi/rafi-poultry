@@ -34,7 +34,6 @@ CLEANED_CAFO_POULTRY_FPATH = CLEAN_DIR / "cleaned_cafo_poultry.csv"
 MATCHED_FARMS_FPATH = CLEAN_DIR / "matched_farms.csv"
 UNMATCHED_FARMS_FPATH = CLEAN_DIR / "unmatched_farms.csv"
 CLEANED_MATCHED_PLANTS_FPATH = CLEAN_DIR / "cleaned_matched_plants.csv"
-CLEANED_MATCHED_PLANTS_NETS_FPATH = CLEAN_DIR / "cleaned_matched_plants_nets.csv" # matched with nets
 
 
 # geojsons
