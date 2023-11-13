@@ -42,6 +42,26 @@ def address_match(nets_path: Path,
     fsis_df["Parent Corporation"] = np.NaN
     fsis_df["Sales Volume (Location)"] = np.NaN
 
+    def standardize_address(address):
+        replacements = {
+            "circle": "cir",
+            "drive": "dr",
+            "avenue": "ave",
+            "parkway": "pkwy",
+            "road": "rd",
+            "street": "st",
+        }
+        address = address.lower()
+        for old, new in replacements.items():
+            address = address.replace(old, new)
+        return address
+    
+    # Extract the part of the address before the first comma: only want street address to match NETS
+    fsis_df["Short Address"] = fsis_df["Full Address"].apply(lambda x: x.split(',')[0])
+
+    # Apply standardization to FSIS short addresses
+    fsis_df["Short Address"] = fsis_df["Short Address"].apply(standardize_address)
+
     def find_match(i, fsis_df, nets_df):
         fsis_address = fsis_df.at[i, "Full Address"].lower()
         for k, nets in nets_df.iterrows():
