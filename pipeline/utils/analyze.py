@@ -6,7 +6,7 @@ from multiple sources together.
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
-from pipeline.constants import RAW_COUNTERGLOW_FPATH
+from constants import RAW_COUNTERGLOW_FPATH
 
 here = Path(__file__).resolve().parent
 

@@ -22,7 +22,7 @@ import warnings
 import json
 
 warnings.filterwarnings("ignore")
-from pipeline.constants import (
+from constants import (
     RAW_FSIS_1_FPATH,
     RAW_FSIS_2_FPATH,
     RAW_COUNTERGLOW_FPATH,

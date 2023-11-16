@@ -13,7 +13,7 @@ from shapely.geometry import Polygon, mapping
 from shapely.ops import unary_union
 from pyproj import Geod
 from typing import List, Dict, Tuple
-from pipeline.constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, \
+from constants import ISOCHRONES_WITH_PARENT_CORP_FPATH, US_STATES_FPATH, \
     ALL_STATES_GEOJSON_FPATH,CLEANED_MATCHED_PLANTS_FPATH, \
     CLEANED_INFOGROUP_FPATH, DATA_DIR, ALBERS_EQUAL_AREA, WGS84, USA_LAT, \
     USA_LNG, HTML_DIR

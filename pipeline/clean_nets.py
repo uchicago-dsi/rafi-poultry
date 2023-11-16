@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
-from pipeline.constants import (
+from constants import (
     RAW_NETS,
     RAW_NAICS,
     RAW_NAICS_LOOKUP,
