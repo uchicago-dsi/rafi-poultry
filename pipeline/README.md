@@ -37,9 +37,29 @@ This README contains information on the structure of the pipeline for the projec
 2. **Set up Conda environment**
    - conda create --name <myenv> python=3.9.16
 3. **Download the files**
-   - From team RAFI google drive/Data, download the data files into the data folder from the previous directory structure
-      - Download Data/raw
-   - From team RAFI google drive, download the .env file and place it under the rafi-poultry directory
+   - From team RAFI google drive/Data, into data/raw add:
+     - fsis-processors-with-location.csv
+     - fsis-processors.csv
+     - Counterglow+Facility+List+Complete.csv
+     - Dataset_Establishment_Demographic_Data.xlsx
+     - gz_2010_us_040_00_500k.json
+     - MPI_Directory_by_Establishment_Number.xlsx
+   - From team RAFI google drive/Data/CAFO, into data/raw/cafo add:
+     - nc_cafo.csv
+     - ms_cafo.csv
+     - farm_source.json
+     - al_cafo.csv
+   - From team RAFI google drive/Data/Infogroup, into data/raw/infogroup add:
+     - poultry_plants_x.csv
+       - where "x" is every year from 1997 to 2022
+     - For the smoke test, create a subfolder data/raw/infogroup/smoke_test and add the file infogroup_2022_small.csv
+   - From team RAFI google drive/Data/nets, into data/raw/infogroup add:
+      - 2022-NAICS-CODES-6-digit.csv
+      - MoveYear2022_RAFI(WithAddresses).txt
+      - NAICS2022_RAFI.csv
+      - NAICS2022_RAFI.txt
+      - NETSDataa2022_RAFI(WithAddresses).txt
+   - From team RAFI google drive, download .env file and place under rafi-poultry directory
 4. **Run pip install -r pipeline/requirements.txt**
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
