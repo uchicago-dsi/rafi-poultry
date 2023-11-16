@@ -13,19 +13,30 @@ from constants import (CLEANED_MATCHED_PLANTS_FPATH,
                        CLEANED_FSIS_PROCESSORS_FPATH, 
 )
 
-def address_match(nets_df, fsis_df, fuzz_ratio: float=75):
+def address_match(nets_path: Path, 
+                        fsis_path: Path, 
+                        fuzz_ratio: float=75, 
+                        num_threads: int=4):
     """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the 
     NETS parent corporation and sales volume data with the base FSIS dataset
 
     Args:
-        nets_df: DataFrame containing NETS data.
-        fsis_df: DataFrame containing FSIS data.
+        fsis_path: relative path to the clean data folder with the 
+            cleaned new fsis data.
+        nets_path: relative path to the clean data folder with the 
+            cleaned new nets data.
         fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
-            to accept that two strings are "the same"; default of 75
+            to accept that two strings are "the same"; default of 60
+        num_threads: int; number of simultaneous threads to run using
+            multi-threading on the fuzzy matching
 
     Returns:
         FSIS dataset including the NETS Parent Company and Sales columns.
+
     """
+
+    fsis_df = pd.read_csv(fsis_path)
+    nets_df = pd.read_csv(nets_path)
 
     fsis_df["Parent Corporation"] = np.NaN
     fsis_df["Sales Volume (Location)"] = np.NaN
@@ -123,8 +134,11 @@ def loc_match(no_match: pd.DataFrame,
     return pp_sales
 
 
-def save_all_matches(fsis_df, nets_df, threshold=5):
+def save_all_matches(nets_path: Path, 
+                     fsis_path: Path, 
+                     threshold: float=5) -> None:
     """Executes match function.
+
 
     Args:
         nets_path: relative path to the raw data folder 
@@ -136,9 +150,10 @@ def save_all_matches(fsis_df, nets_df, threshold=5):
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(nets_df, fsis_df)
+    address_matches = address_match(nets_path, fsis_path)
     no_match = address_matches[address_matches["Parent Corporation"].isna()]
     
-    pp_sales = loc_match(no_match, nets_df, address_matches, threshold)
+    nets = pd.read_csv(nets_path)
+    pp_sales = loc_match(no_match, nets, address_matches, threshold)
     pp_sales = pp_sales.dropna(subset=["Parent Corporation"])
-    return pp_sales
+    pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
