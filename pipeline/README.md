@@ -26,12 +26,19 @@ This README contains information on the structure of the pipeline for the projec
 # Running the Pipeline:
 1. **Establish directory structure** 
     - pipeline
-    - notebooks
-    - data
+   - notebooks
+   - data
+      - raw
+         - infogroup
+         - cafo
+         - nets
+      - clean
+      - html
 2. **Set up Conda environment**
    - conda create --name <myenv> python=3.9.16
 3. **Download the files**
    - From team RAFI google drive/Data, download the data files into the data folder from the previous directory structure
+      - Download Data/raw
    - From team RAFI google drive, download the .env file and place it under the rafi-poultry directory
 4. **Run pip install -r pipeline/requirements.txt**
 5. **Run pip install -r notebooks/requirements.txt**
