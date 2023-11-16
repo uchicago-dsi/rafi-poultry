@@ -11,7 +11,7 @@ from geopandas.tools import geocode
 from geopy.geocoders import MapBox
 import os
 from dotenv import load_dotenv
-from pipeline.constants import (
+from constants import (
     CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,

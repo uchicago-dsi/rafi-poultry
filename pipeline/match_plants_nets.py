@@ -2,7 +2,6 @@
 from Infogroup 2022 data to the FSIS dataset, based on address and location. 
 """
 
-from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm as tqdm_progress
 import pandas as pd
 import numpy as np
@@ -14,30 +13,19 @@ from constants import (CLEANED_MATCHED_PLANTS_FPATH,
                        CLEANED_FSIS_PROCESSORS_FPATH, 
 )
 
-def address_match(nets_path: Path, 
-                        fsis_path: Path, 
-                        fuzz_ratio: float=60, 
-                        num_threads: int=4):
+def address_match(nets_df, fsis_df, fuzz_ratio: float=75):
     """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the 
     NETS parent corporation and sales volume data with the base FSIS dataset
 
     Args:
-        fsis_path: relative path to the clean data folder with the 
-            cleaned new fsis data.
-        nets_path: relative path to the clean data folder with the 
-            cleaned new nets data.
+        nets_df: DataFrame containing NETS data.
+        fsis_df: DataFrame containing FSIS data.
         fuzz_ratio: float; minimum "fuzziness" (or similarity) score 
-            to accept that two strings are "the same"; default of 60
-        num_threads: int; number of simultaneous threads to run using
-            multi-threading on the fuzzy matching
+            to accept that two strings are "the same"; default of 75
 
     Returns:
         FSIS dataset including the NETS Parent Company and Sales columns.
-
     """
-
-    fsis_df = pd.read_csv(fsis_path)
-    nets_df = pd.read_csv(nets_path)
 
     fsis_df["Parent Corporation"] = np.NaN
     fsis_df["Sales Volume (Location)"] = np.NaN
@@ -55,7 +43,7 @@ def address_match(nets_path: Path,
         for old, new in replacements.items():
             address = address.replace(old, new)
         return address
-    
+
     # Extract the part of the address before the first comma: only want street address to match NETS
     fsis_df["Short Address"] = fsis_df["Full Address"].apply(lambda x: x.split(',')[0])
 
@@ -63,7 +51,7 @@ def address_match(nets_path: Path,
     fsis_df["Short Address"] = fsis_df["Short Address"].apply(standardize_address)
 
     def find_match(i, fsis_df, nets_df):
-        fsis_address = fsis_df.at[i, "Full Address"].lower()
+        fsis_address = fsis_df.at[i, "Short Address"].lower()
         for k, nets in nets_df.iterrows():
             nets_address = nets["ADDRESS"]
             if fuzz.token_sort_ratio(nets_address, fsis_address) > fuzz_ratio:
@@ -73,16 +61,9 @@ def address_match(nets_path: Path,
                 }
         return i, {}
 
-    # Create a ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        results = list(tqdm_progress(executor.map(find_match, fsis_df.index,
-                                                   [fsis_df]*len(fsis_df),
-                                                     [nets_df]*len(fsis_df),
-                                                       chunksize=1),
-                                                         total=len(fsis_df)))
-
-    # Update the DataFrame with the results
-    for i, result in results:
+    # Iterating over each row in fsis_df and finding matches
+    for i in tqdm_progress(fsis_df.index, desc="Matching Addresses"):
+        _, result = find_match(i, fsis_df, nets_df)
         if result:
             fsis_df.at[i, "Parent Corporation"] = result["Parent Corporation"]
             fsis_df.at[i, "Sales Volume (Location)"] = result["Sales Volume (Location)"]
@@ -139,12 +120,10 @@ def loc_match(no_match: pd.DataFrame,
                     ]
                     break
 
-    return pp_nets, pp_sales
+    return pp_sales
 
 
-def save_all_matches(nets_path: Path, 
-                     fsis_path: Path, 
-                     threshold: float=5) -> None:
+def save_all_matches(fsis_df, nets_df, threshold=5):
     """Executes match function.
 
     Args:
@@ -157,10 +136,9 @@ def save_all_matches(nets_path: Path,
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(nets_path, fsis_path)
+    address_matches = address_match(nets_df, fsis_df)
     no_match = address_matches[address_matches["Parent Corporation"].isna()]
     
-    nets = pd.read_csv(nets_path)
-    nets, pp_sales = loc_match(no_match, nets, address_matches, threshold)
+    pp_sales = loc_match(no_match, nets_df, address_matches, threshold)
     pp_sales = pp_sales.dropna(subset=["Parent Corporation"])
-    pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    return pp_sales
