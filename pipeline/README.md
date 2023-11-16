@@ -28,32 +28,17 @@ This README contains information on the structure of the pipeline for the projec
     - pipeline
     - notebooks
     - data
-        - raw
-            - infogroup
-            - cafo
-        - clean
-        - html
 2. **Set up Conda environment**
    - conda create --name <myenv> python=3.9.16
 3. **Download the files**
-   - From team RAFI google drive/Data, into data/raw add:
-     - fsis-processors-with-location.csv
-     - fsis-processors.csv
-     - Counterglow+Facility+List+Complete.csv
-   - From team RAFI google drive/Data/CAFO, into data/raw/cafo add:
-     - nc_cafo.csv
-     - ms_cafo.csv
-     - farm_source.json
-     - al_cafo.csv
-   - From team RAFI google drive/Data/Infogroup, into data/raw/infogroup add:
-     - poultry_plants_x.csv
-       - where "x" is every year from 1997 to 2022
-     - For the smoke test, create a subfolder data/raw/infogroup/smoke_test and add the file infogroup_2022_small.csv
+   - From team RAFI google drive/Data, download the data files into the data folder from the previous directory structure
+   - From team RAFI google drive, download the .env file and place it under the rafi-poultry directory
 4. **Run pip install -r pipeline/requirements.txt**
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
-7. **Run main.py**
+7. **Run pip install geopy**
+8. **Run main.py**
    - Structure the command line arguments as:
      - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
        - FILEPATH; str; Relative path (from cwd) to raw data folder
@@ -64,3 +49,4 @@ This README contains information on the structure of the pipeline for the projec
      - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
+     - To run the NETS dataset version of the pipeline, add the flag --nets True to the command line argument
