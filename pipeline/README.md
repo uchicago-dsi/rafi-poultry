@@ -1,6 +1,6 @@
 # RAFI-USA Poultry Pipeline README.md file
 
-This README contains information on the structure of the pipeline for the project and a description of the files and folder structure necessary to run it. 
+This README contains information on the structure of the pipeline for the project and a description of the files and folder structure necessary to run it.
 
 # List of Files
 
@@ -22,18 +22,18 @@ This README contains information on the structure of the pipeline for the projec
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
 - **farm_geojson_creation.py** reads in cleaned data from Counterglow, filters it for poultry only, and generates a Counterglow GeoJSON file containing plant access data based on the parent corporation information in the all_states_with_parent_corporation_by_corp.geojson file (which is created by the calculate_captured_areas script).
 
-
 # Running the Pipeline:
-1. **Establish directory structure** 
-    - pipeline
+
+1. **Establish directory structure**
+   - pipeline
    - notebooks
    - data
-      - raw
-         - infogroup
-         - cafo
-         - nets
-      - clean
-      - html
+     - raw
+       - infogroup
+       - cafo
+       - nets
+     - clean
+     - html
 2. **Set up Conda environment**
    - conda create --name <myenv> python=3.9.16
 3. **Download the files**
@@ -54,13 +54,15 @@ This README contains information on the structure of the pipeline for the projec
        - where "x" is every year from 1997 to 2022
      - For the smoke test, create a subfolder data/raw/infogroup/smoke_test and add the file infogroup_2022_small.csv
    - From team RAFI google drive/Data/nets, into data/raw/infogroup add:
-      - 2022-NAICS-CODES-6-digit.csv
-      - MoveYear2022_RAFI(WithAddresses).txt
-      - NAICS2022_RAFI.csv
-      - NAICS2022_RAFI.txt
-      - NETSDataa2022_RAFI(WithAddresses).txt
+     - `TODO: We should probably make a data/raw/nets folder. Or I think it is supposed to be in the nets folder? Ok yeah it is`
+     - 2022-NAICS-CODES-6-digit.csv
+     - MoveYear2022_RAFI(WithAddresses).txt
+     - NAICS2022_RAFI.csv
+     - NAICS2022_RAFI.txt
+     - NETSDataa2022_RAFI(WithAddresses).txt
    - From team RAFI google drive, download .env file and place under rafi-poultry directory
 4. **Run pip install -r pipeline/requirements.txt**
+   - `TODO: Does this work in Docker?`
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
@@ -77,3 +79,6 @@ This README contains information on the structure of the pipeline for the projec
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
      - To run the NETS dataset version of the pipeline, add the flag --nets True to the command line argument
+     - `TODO: Can change this so that we add either --nets or --infogroup to the argument to run one or the other`
+     - `TODO: Actual command is python pipeline/main.py --nets True from the root directory of the project. Put this somewhere and also remove the other examples that are not correct`
+     - `TODO: If we run the --nets command, we should not run the infogroup data`
