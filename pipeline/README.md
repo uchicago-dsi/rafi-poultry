@@ -35,7 +35,7 @@ This README contains information on the structure of the pipeline for the projec
      - clean
      - html
 2. **Set up Conda environment**
-   - conda create --name <myenv> python=3.9.16
+   - conda create --name \<myenv\> python=3.9.16
 3. **Download the files**
    - From team RAFI google drive/Data, into data/raw add:
      - fsis-processors-with-location.csv
