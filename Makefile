@@ -15,12 +15,22 @@ notebooks_image_name := "rafi-notebooks"
 notebooks_container_name := "rafi-notebooks-container"
 notebooks_dir := "$(current_abs_path)notebooks"
 
+# Detect architecture
+ARCH := $(shell uname -m)
+ifeq ($(ARCH),x86_64)
+    DOCKER_PLATFORM=linux/amd64
+else ifeq ($(ARCH),arm64)
+    DOCKER_PLATFORM=linux/arm64/v8
+else
+    $(error Unsupported architecture)
+endif
+
 # environment variables
 include .env
 
 # Build Docker image for pipeline
 build-pipeline:
-	docker build -t $(pipeline_image_name) -f "${pipeline_dir}/Dockerfile" $(current_abs_path)
+	docker build --platform $(DOCKER_PLATFORM) -t $(pipeline_image_name) -f "${pipeline_dir}/Dockerfile" $(current_abs_path) --build-arg PLATFORM=$(DOCKER_PLATFORM)
 
 # Run pipeline image with interactive terminal
 run-pipeline-bash:
@@ -32,8 +42,9 @@ run-pipeline:
 
 # Build Docker image for notebooks
 build-notebooks:
-	docker build -t $(notebooks_image_name) -f "${notebooks_dir}/Dockerfile" $(current_abs_path)
+	docker build --platform $(DOCKER_PLATFORM) -t $(notebooks_image_name) -f "${notebooks_dir}/Dockerfile" $(current_abs_path) --build-arg PLATFORM=$(DOCKER_PLATFORM)
 
+# Run notebooks
 run-notebooks:
 	docker run -v $(current_abs_path)data:/app/data -v $(notebooks_dir)/:/app/notebooks \
 	--name $(notebooks_container_name) --rm -p 8888:8888 -t $(notebooks_image_name) jupyter lab --port=8888 --ip='*' \
