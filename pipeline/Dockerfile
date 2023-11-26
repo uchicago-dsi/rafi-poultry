@@ -1,8 +1,10 @@
 # Use ARG to specify the platform (default is amd64)
 ARG PLATFORM=linux/amd64
+# ARG PLATFORM=linux/arm64
 
 # Choose base image according to the platform
-FROM --platform=${PLATFORM} osgeo/gdal:ubuntu-small-latest
+# FROM --platform=${PLATFORM} osgeo/gdal:ubuntu-small-latest
+FROM --platform=${PLATFORM} osgeo/gdal:ubuntu-full-3.6.3
 
 # Update apt-get package
 RUN apt-get -y update 
