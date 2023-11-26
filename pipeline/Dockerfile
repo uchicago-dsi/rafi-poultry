@@ -1,5 +1,5 @@
 #Use ubuntu base image with gdal installed for geopandas on M1/M2 architecture
-FROM --platform=linux/arm64 osgeo/gdal:ubuntu-full-3.6.3
+FROM --platform=linux/amd64 osgeo/gdal:ubuntu-full-3.6.3
 
 #Update apt-get package
 RUN apt-get -y update 
