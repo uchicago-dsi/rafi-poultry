@@ -41,16 +41,17 @@ from constants import (
     ROOT_DIR,
     CLEAN_DIR,
     ALL_STATES_GEOJSON_FPATH,
-    CONFIG_FPATH, 
+    CONFIG_FPATH,
     SMOKE_TEST_FPATH,
     SMOKE_TEST_CLEAN_FPATH,
     DATA_DIR,
-    COLUMNS_TO_KEEP
+    COLUMNS_TO_KEEP,
 )
 
 with open(CONFIG_FPATH, "r") as jsonfile:
     config = json.load(jsonfile)
     print("Config file read successful")
+
 
 def create_parser():
     """Argparser that contains all the command line arguments for executing
@@ -59,7 +60,7 @@ def create_parser():
 
     Args:
         None
-    
+
     Returns:
         None
 
@@ -74,7 +75,7 @@ def create_parser():
         type=str,
         default="Poultry|Chicken|Broiler",
         nargs="?",
-        help="Keywords for animals to filter for, as a regex"
+        help="Keywords for animals to filter for, as a regex",
     )
     parser.add_argument(
         "distance",
@@ -82,14 +83,14 @@ def create_parser():
         default=5,
         nargs="?",
         help="Maximum distance for farm matches to be made across\
-            different datasets, in km"
+            different datasets, in km",
     )
     parser.add_argument(
         "code",
         type=str,
         default="2015",
         nargs="?",
-        help="SIC code to filter Infogroup entries on"
+        help="SIC code to filter Infogroup entries on",
     )
     parser.add_argument(
         "filtering",
@@ -97,7 +98,7 @@ def create_parser():
         default=False,
         nargs="?",
         help="Determines whether Infogroup data is raw \
-            and needs filtering by SIC Code"
+            and needs filtering by SIC Code",
     )
     parser.add_argument(
         "--function",
@@ -118,23 +119,20 @@ def create_parser():
     )
     parser.add_argument(
         "--smoke_test",
-        action='store_true',
+        action="store_true",
         help="Indicates whether smoke test on Infogroup data\
-            should be run or not"
+            should be run or not",
     )
-    parser.add_argument(
-        "--nets",
-        help="Specify using NETS dataset to match"
-    )
+    parser.add_argument("--nets", help="Specify using NETS dataset to match")
 
     return parser
 
 
 def run_all(args) -> None:
-    """In the case that no specific functions are specified in the command line, 
+    """In the case that no specific functions are specified in the command line,
     executes all functions in the script.
-    
-    Args:  
+
+    Args:
         None
 
     Returns:
@@ -143,9 +141,9 @@ def run_all(args) -> None:
     try:
         # Data Cleaning
         print("Cleaning FSIS data...")
-        clean.clean_FSIS(RAW_FSIS_1_FPATH,
-                        RAW_FSIS_2_FPATH,
-                        CLEANED_FSIS_PROCESSORS_FPATH)
+        clean.clean_FSIS(
+            RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
+        )
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -157,34 +155,37 @@ def run_all(args) -> None:
         print(f"{e}")
         exit(1)
 
-    try:
-        print("Cleaning Infogroup data...")
-        ABI_dict = config["ABI_map"]
-        if args.smoke_test:
-            clean.clean_infogroup(SMOKE_TEST_FPATH, 
-                    ABI_dict, 
-                    args.code, 
-                    SMOKE_TEST_CLEAN_FPATH,
-                    True)
-        else:
-            clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
-                                ABI_dict, 
-                                args.code, 
-                                CLEANED_INFOGROUP_FPATH,
-                                args.filtering)
-    except Exception as e:
-        print(f"{e}")
-        exit(1)
-    
+    # TODO: Just commenting out the Infogroup stuff for now
+    # try:
+    #     print("Cleaning Infogroup data...")
+    #     ABI_dict = config["ABI_map"]
+    #     if args.smoke_test:
+    #         clean.clean_infogroup(
+    #             SMOKE_TEST_FPATH, ABI_dict, args.code, SMOKE_TEST_CLEAN_FPATH, True
+    #         )
+    #     else:
+    #         clean.clean_infogroup(
+    #             RAW_INFOGROUP_FPATH,
+    #             ABI_dict,
+    #             args.code,
+    #             CLEANED_INFOGROUP_FPATH,
+    #             args.filtering,
+    #         )
+    # except Exception as e:
+    #     print(f"{e}")
+    #     exit(1)
+
     try:
         print("Cleaning NETS data...")
-        clean_nets.clean_NETS(RAW_NETS,
-                                RAW_NAICS,
-                                RAW_NAICS_LOOKUP,
-                                args.code, 
-                                CLEANED_NETS_FPATH,
-                                COLUMNS_TO_KEEP,
-                                True)
+        clean_nets.clean_NETS(
+            RAW_NETS,
+            RAW_NAICS,
+            RAW_NAICS_LOOKUP,
+            args.code,
+            CLEANED_NETS_FPATH,
+            COLUMNS_TO_KEEP,
+            True,
+        )
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -197,22 +198,22 @@ def run_all(args) -> None:
         exit(1)
 
     try:
-        if args.nets: # use NETS to match sale
-            print("Matching FSIS plants and NETS for parent company and sales volume data...")
+        if args.nets:  # use NETS to match sale
+            print(
+                "Matching FSIS plants and NETS for parent company and sales volume data..."
+            )
             match_plants_nets.save_all_matches(
-                CLEANED_NETS_FPATH, 
-                CLEANED_FSIS_PROCESSORS_FPATH, 
-                args.distance
+                CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
             )
 
-        else: # using Infogroup to match sale
+        else:  # using Infogroup to match sale
             print("Matching FSIS plants and Infogroup for sales volume data...")
             match_plants.save_all_matches(
                 CLEANED_INFOGROUP_FPATH,
-                CLEANED_FSIS_PROCESSORS_FPATH, 
-                threshold = args.distance
+                CLEANED_FSIS_PROCESSORS_FPATH,
+                threshold=args.distance,
             )
-            
+
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -230,7 +231,7 @@ def run_all(args) -> None:
         # Generate GeoJSONs and maps
         print("Creating plant capture GeoJSON...")
         try:
-            MAPBOX_KEY = os.getenv('MAPBOX_API')
+            MAPBOX_KEY = os.getenv("MAPBOX_API")
         except:
             print("Missing environment variable")
         calculate_captured_areas.full_script(MAPBOX_KEY)
@@ -245,8 +246,7 @@ def run_all(args) -> None:
         states = match_df["state"].unique().tolist()
         for state in states:
             path = "html/cafo_poultry_eda_" + state + ".html"
-            visualize.map_state(MATCHED_FARMS_FPATH, 
-                                UNMATCHED_FARMS_FPATH, state).save(
+            visualize.map_state(MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state).save(
                 ROOT_DIR / path
             )
     except Exception as e:
@@ -265,12 +265,12 @@ def run_all(args) -> None:
 
 
 def main(args) -> None:
-    """Executes functions based on what was specified in command line. 
+    """Executes functions based on what was specified in command line.
     If no function names were specified, runs all functions in the script.
 
     Args:
         None
-    
+
     Returns:
         None
     """
@@ -279,9 +279,9 @@ def main(args) -> None:
             try:
                 # Data Cleaning
                 print("Cleaning FSIS data...")
-                clean.clean_FSIS(RAW_FSIS_1_FPATH,
-                        RAW_FSIS_2_FPATH,
-                        CLEANED_FSIS_PROCESSORS_FPATH)
+                clean.clean_FSIS(
+                    RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
+                )
             except Exception as e:
                 print(f"{e}")
                 exit(1)
@@ -299,30 +299,36 @@ def main(args) -> None:
                 print("Cleaning Infogroup data...")
                 ABI_dict = config["ABI_map"]
                 if args.smoke_test:
-                    clean.clean_infogroup(SMOKE_TEST_FPATH, 
-                                          ABI_dict, 
-                                          args.code,
-                                          SMOKE_TEST_CLEAN_FPATH,
-                                          True)
+                    clean.clean_infogroup(
+                        SMOKE_TEST_FPATH,
+                        ABI_dict,
+                        args.code,
+                        SMOKE_TEST_CLEAN_FPATH,
+                        True,
+                    )
                 else:
-                    clean.clean_infogroup(RAW_INFOGROUP_FPATH, 
-                                          ABI_dict, 
-                                          args.code, 
-                                          CLEANED_INFOGROUP_FPATH,
-                                          args.filtering)
+                    clean.clean_infogroup(
+                        RAW_INFOGROUP_FPATH,
+                        ABI_dict,
+                        args.code,
+                        CLEANED_INFOGROUP_FPATH,
+                        args.filtering,
+                    )
             except Exception as e:
                 print(f"{e}")
                 exit(1)
         elif args.function == "clean_NETS":
             try:
                 print("Cleaning NETS data...")
-                clean_nets.clean_NETS(RAW_NETS,
-                                        RAW_NAICS,
-                                        RAW_NAICS_LOOKUP,
-                                        args.code, 
-                                        CLEANED_NETS_FPATH,
-                                        COLUMNS_TO_KEEP,
-                                        True)
+                clean_nets.clean_NETS(
+                    RAW_NETS,
+                    RAW_NAICS,
+                    RAW_NAICS_LOOKUP,
+                    args.code,
+                    CLEANED_NETS_FPATH,
+                    COLUMNS_TO_KEEP,
+                    True,
+                )
 
             except Exception as e:
                 print(f"{e}")
@@ -331,8 +337,7 @@ def main(args) -> None:
         elif args.function == "clean_cafo":
             try:
                 print("Cleaning CAFO Permit data...")
-                clean.clean_cafo(RAW_CAFO_FPATH, 
-                                 RAW_CAFO_FPATH / "farm_source.json")
+                clean.clean_cafo(RAW_CAFO_FPATH, RAW_CAFO_FPATH / "farm_source.json")
             except Exception as e:
                 print(f"{e}")
                 exit(1)
@@ -340,12 +345,14 @@ def main(args) -> None:
         elif args.function == "match_plants":
             try:
                 # Match plants and farms
-                print("Matching FSIS plants and Infogroup for sales volume \
-                      data...")
+                print(
+                    "Matching FSIS plants and Infogroup for sales volume \
+                      data..."
+                )
                 match_plants.save_all_matches(
                     CLEANED_INFOGROUP_FPATH,
                     CLEANED_FSIS_PROCESSORS_FPATH,
-                    args.distance
+                    args.distance,
                 )
             except Exception as e:
                 print(f"{e}")
@@ -354,12 +361,12 @@ def main(args) -> None:
         elif args.function == "match_plants_nets":
             try:
                 # Match plants and farms
-                print("Matching FSIS plants and NETS for parent company and sales \
-                      data...")
+                print(
+                    "Matching FSIS plants and NETS for parent company and sales \
+                      data..."
+                )
                 match_plants_nets.save_all_matches(
-                    CLEANED_NETS_FPATH,
-                    CLEANED_FSIS_PROCESSORS_FPATH,
-                    args.distance
+                    CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
                 )
             except Exception as e:
                 print(f"{e}")
@@ -369,9 +376,7 @@ def main(args) -> None:
             try:
                 print("Matching CAFO permit data and Counterglow for farms...")
                 match_farms.match_all_farms(
-                    CLEANED_COUNTERGLOW_FPATH, 
-                    CLEANED_CAFO_POULTRY_FPATH, 
-                    args.animal
+                    CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, args.animal
                 )
             except Exception as e:
                 print(f"{e}")
@@ -382,7 +387,7 @@ def main(args) -> None:
                 # Generate GeoJSONs and maps
                 print("Creating plant capture GeoJSON...")
                 try:
-                    MAPBOX_KEY = os.getenv('MAPBOX_API')
+                    MAPBOX_KEY = os.getenv("MAPBOX_API")
                 except:
                     print("Missing environment variable")
                 calculate_captured_areas.full_script(MAPBOX_KEY)
@@ -423,7 +428,8 @@ def main(args) -> None:
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
-    load_dotenv() 
+
+    load_dotenv()
     parser = create_parser()
     args = parser.parse_args()
     main(args)
