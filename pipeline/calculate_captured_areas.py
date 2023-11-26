@@ -550,6 +550,7 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
 
     # import cleaned data
     fsis_df = pd.read_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    # TODO: set this up to handle NETS data - do we even need this?
     info_df = pd.read_csv(CLEANED_INFOGROUP_FPATH)
 
     # make base map for country-wide visualization
@@ -563,13 +564,18 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
     add_plants(df_map, parent_dict, chrones, m)
 
     # assemble country-wide capture map, save as GEOJSON to data/clean
+    # TODO: this should be cleaned up to only do the necessary parts of the pipeline
+    print("Calculating single plant capture...")
     single_plant_cap(chrones, single_shapely, parent_dict, m)
+    print("Calculating two and three plant capture...")
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
+    print("Saving country-wide geojson...")
     save_map(single_shapely, two_shapely, three_combined, parent_dict)
     # TODO: this is breaking and may not be necessary for the entire pipeline to run
     # m.save(HTML_DIR / "poultry-map-smoothed.html")
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
+    print("Saving state-level geojson...")
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
     return m
