@@ -198,22 +198,10 @@ def run_all(args) -> None:
         exit(1)
 
     try:
-        if args.nets:  # use NETS to match sale
-            print(
-                "Matching FSIS plants and NETS for parent company and sales volume data..."
+        print("Matching FSIS plants and NETS for parent company and sales volume data...")
+        match_plants_nets.save_all_matches(
+            CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
             )
-            match_plants_nets.save_all_matches(
-                CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
-            )
-
-        else:  # using Infogroup to match sale
-            print("Matching FSIS plants and Infogroup for sales volume data...")
-            match_plants.save_all_matches(
-                CLEANED_INFOGROUP_FPATH,
-                CLEANED_FSIS_PROCESSORS_FPATH,
-                threshold=args.distance,
-            )
-
     except Exception as e:
         print(f"{e}")
         exit(1)
