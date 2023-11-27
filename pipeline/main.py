@@ -123,9 +123,22 @@ def create_parser():
         help="Indicates whether smoke test on Infogroup data\
             should be run or not",
     )
-    parser.add_argument("--nets", help="Specify using NETS dataset to match")
+    # parser.add_argument("--nets", help="Specify using NETS dataset to match")
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--use_infogroup",
+        action="store_true",
+        help="Set to use Infogroup dataset",
+    )
+    group.add_argument(
+        "--use_nets",
+        action="store_true",
+        help="Set to use NETS dataset",
+    )
+    
     return parser
+
 
 
 def run_all(args) -> None:
@@ -175,20 +188,56 @@ def run_all(args) -> None:
     #     print(f"{e}")
     #     exit(1)
 
-    try:
-        print("Cleaning NETS data...")
-        clean_nets.clean_NETS(
-            RAW_NETS,
-            RAW_NAICS,
-            RAW_NAICS_LOOKUP,
-            args.code,
-            CLEANED_NETS_FPATH,
-            COLUMNS_TO_KEEP,
-            True,
-        )
-    except Exception as e:
-        print(f"{e}")
-        exit(1)
+    if args.use_infogroup:
+        try:
+            print("Cleaning Infogroup data...")
+            ABI_dict = config["ABI_map"]
+            if args.smoke_test:
+                clean.clean_infogroup(
+                    SMOKE_TEST_FPATH, ABI_dict, args.code, SMOKE_TEST_CLEAN_FPATH, True
+                )
+            else:
+                clean.clean_infogroup(
+                    RAW_INFOGROUP_FPATH,
+                    ABI_dict,
+                    args.code,
+                    CLEANED_INFOGROUP_FPATH,
+                    args.filtering,
+                )
+        except Exception as e:
+            print(f"{e}")
+            exit(1)
+
+    if args.use_nets:
+        try:
+            print("Cleaning NETS data...")
+            clean_nets.clean_NETS(
+                        RAW_NETS,
+                        RAW_NAICS,
+                        RAW_NAICS_LOOKUP,
+                        args.code,
+                        CLEANED_NETS_FPATH,
+                        COLUMNS_TO_KEEP,
+                        True,
+                    )
+        except Exception as e:
+            print(f"{e}")
+            exit(1)
+
+    # try:
+    #     print("Cleaning NETS data...")
+    #     clean_nets.clean_NETS(
+    #         RAW_NETS,
+    #         RAW_NAICS,
+    #         RAW_NAICS_LOOKUP,
+    #         args.code,
+    #         CLEANED_NETS_FPATH,
+    #         COLUMNS_TO_KEEP,
+    #         True,
+    #     )
+    # except Exception as e:
+    #     print(f"{e}")
+    #     exit(1)
 
     try:
         print("Cleaning CAFO Permit data...")
@@ -262,6 +311,10 @@ def main(args) -> None:
     Returns:
         None
     """
+    if args.use_infogroup and args.use_nets:
+        print("Please select either --use_infogroup or --use_nets, not both.")
+        exit(1)
+
     if args.function:
         if args.function == "clean_FSIS":
             try:
