@@ -80,7 +80,9 @@ This README contains information on the structure of the pipeline for the projec
      - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
-     - To run the NETS dataset version of the pipeline, add the flag --nets True to the command line argument
+     - The full command line argument for running the NETS or Infogroup dataset version of the pipeline is:
+        - python pipeline/main.py --use_nets
+        - python pipeline/main.py --use_infogroup
      - `TODO: Can change this so that we add either --nets or --infogroup to the argument to run one or the other`
      - `TODO: Actual command is python pipeline/main.py --nets True from the root directory of the project. Put this somewhere and also remove the other examples that are not correct`
      - `TODO: If we run the --nets command, we should not run the infogroup data`
