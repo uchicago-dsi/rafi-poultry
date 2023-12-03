@@ -13,13 +13,11 @@ This README contains information on the structure of the pipeline for the projec
 
 # File Descriptions
 
-`TODO: This needs to be updated to explain the NETS structure`
-
 - **calculate_captured_area.py** Reads in clean FSIS data (2022) from CSV file, reads in clean Infogroup data (2022) from CSV file, generate plant isochrones using the Mapbox API and output a GeoJSON file, groups plants by parent corporation and number of captured areas. Groups areas captured by one plant by state, calculate the total captured area in square miles, and output a GeoJSON file. Calculates the HHI and adds it to the GeoJSON. Writes the output DataFrame to the data/clean folder as captured_area.geojson.
 - **clean.py** read in raw datasets from FSIS, Infogroup, Counterglow, and individual state websites, standardize the columns, fill in null values, filter to records of interest (e.g., poultry farms), and then output cleaned_cafo_poultry.csv, cleaned_counterglow_facility_list.csv, cleaned_infogroup_plants_all_time.csv, and cleaned_fsis_processors.csv to the data/clean folder. Because state permit data is often formatted differently, users must update the farm_source.json file in the cafo folder with the names of the columns they want to be processed (name, address, permit, lat, long).
 - **counterglow_matches.py** file contained the functionality neccessary to match Infogroup data against Counterglow data. The goal is to see if any business listed in the Infogroup dataset matches will a suspects farm in the Counterglow dataset.
 - **distances.py** contains calculations used in various parts of the research
-- **match_plants.py** Reads in clean Infogroup datasets from 1997 through the present, matches plants across years using the ABI, match plants in FSIS with plants in Infogroup by location and address, to add sales volume data to plant records, writes the combined output DataFrame as a CSV file, matched_plants.csv, in the data/clean folder.
+- **match_plants_nets.py** Reads in clean NETS datasets from 1990 through the present, matches plants and sales volume information in FSIS with plants in NETS by location and address, and writes the combined output DataFrame as a CSV file, cleaned_matched_plants.csv, in the data/clean folder.
 - **match_farms.py** Reads in clean state permit datasets and Counterglow dataset to match farms across the two for the specified animal type, making matches and fuzzy matches based on name and location (if available). Outputs standardized datasets of matched and unmatched farms: matched_farms.csv and unmatched_farms.csv.
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
 - **farm_geojson_creation.py** reads in cleaned data from Counterglow, filters it for poultry only, and generates a Counterglow GeoJSON file containing plant access data based on the parent corporation information in the all_states_with_parent_corporation_by_corp.geojson file (which is created by the calculate_captured_areas script).
@@ -56,7 +54,6 @@ This README contains information on the structure of the pipeline for the projec
        - where "x" is every year from 1997 to 2022
      - For the smoke test, create a subfolder data/raw/infogroup/smoke_test and add the file infogroup_2022_small.csv
    - From team RAFI google drive/Data/nets, into data/raw/infogroup add:
-     - `TODO: We should probably make a data/raw/nets folder. Or I think it is supposed to be in the nets folder? Ok yeah it is`
      - 2022-NAICS-CODES-6-digit.csv
      - MoveYear2022_RAFI(WithAddresses).txt
      - NAICS2022_RAFI.csv
@@ -64,7 +61,6 @@ This README contains information on the structure of the pipeline for the projec
      - NETSDataa2022_RAFI(WithAddresses).txt
    - From team RAFI google drive, download .env file and place under rafi-poultry directory
 4. **Run pip install -r pipeline/requirements.txt**
-   - `TODO: Does this work in Docker?`
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
