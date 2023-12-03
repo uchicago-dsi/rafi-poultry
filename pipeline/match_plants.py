@@ -105,6 +105,7 @@ def loc_match(no_match: pd.DataFrame,
                         "SALES VOLUME (9) - LOCATION"
                     ]
                     break
+
     return pp_2022, pp_sales
 
 
@@ -139,7 +140,7 @@ def fill_remaining_nulls(pp_sales: pd.DataFrame) -> pd.DataFrame:
     parent_dict = dict(zip(median["Parent Corporation"], median["Sales Volume (Location)"]))
 
     pp_sales_updated = pp_sales.copy()
-
+    
     for index, row in pp_sales_updated.iterrows():
         if np.isnan(row["Sales Volume (Location)"]):
             parent = row["Parent Corporation"]
@@ -170,7 +171,7 @@ def save_all_matches(infogroup_path: Path,
     infogroup = pd.read_csv(infogroup_path)
     pp_2022 = infogroup[infogroup["ARCHIVE VERSION YEAR"] == 2022]
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
-    
+
     # We do not have the Parent Corporation in this FSIS dataset as we used NETS to automate the process
     # Therefore this is no longer possible
     #pp_sales_updated = fill_remaining_nulls(pp_sales)
