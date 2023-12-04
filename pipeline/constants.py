@@ -10,7 +10,6 @@ RAW_DIR = DATA_DIR / "raw"
 HTML_DIR = DATA_DIR / "html"
 
 # raw data
-# TODO: need raw info group path
 RAW_FSIS_1_FPATH = RAW_DIR / "MPI_Directory_by_Establishment_Number.xlsx"  # new fsis 2
 RAW_FSIS_2_FPATH = RAW_DIR / "Dataset_Establishment_Demographic_Data.xlsx"  # new fsis 1
 RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"

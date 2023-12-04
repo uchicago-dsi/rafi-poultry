@@ -9,10 +9,7 @@ from constants import (
     CLEANED_NETS_FPATH,
     COLUMNS_TO_KEEP,
 )
-# # change columns to keep to upper case
-# COLUMNS_TO_KEEP = ['DUNSNUMBER', 'COMPANY', 'ADDRESS', 'CITY', 'STATE','FIRSTYEAR',
-#                       'ZIPCODE', 'HQCOMPANY', 'HQDUNS', 'SIC22', 'INDUSTRY', 'SALESHERE',
-#                       'SALESHEREC', 'SALESGROWTH', 'NAICS22', 'NAICS22 TEXT', 'LATITUDE', 'LONGITUDE']
+
 def filter_NETS(NETS_fpath: str, 
                 NAICS_fpath: str,
                 NAICS_lookup_fpath: str,
@@ -98,9 +95,3 @@ def clean_NETS(NETS_fpath: str,
                         "HQCOMPANY": "PARENT COMPANY",
                         "HQDUNS": "PARENT DUNS"}, inplace=True)
     master.to_csv(save_path)
-
-# clean_NETS(RAW_NETS_FPATH,
-#                 '2015', 
-#                 CLEANED_NETS_FPATH,
-#                 COLUMNS_TO_KEEP,
-#                 True)
