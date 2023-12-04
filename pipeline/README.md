@@ -66,8 +66,7 @@ This README contains information on the structure of the pipeline for the projec
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
-7. **Run pip install geopy**
-8. **Run main.py**
+7. **Run main.py**
    - Structure the command line arguments as:
      - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
        - FILEPATH; str; Relative path (from cwd) to raw data folder
