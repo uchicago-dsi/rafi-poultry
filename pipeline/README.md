@@ -81,3 +81,4 @@ This README contains information on the structure of the pipeline for the projec
      - The full command line argument for running the NETS or Infogroup dataset version of the pipeline is:
         - python pipeline/main.py --use_nets
         - python pipeline/main.py --use_infogroup
+          - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
