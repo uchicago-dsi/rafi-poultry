@@ -14,14 +14,17 @@ from constants import (
 
 
 def address_match(
-    nets_path: Path, fsis_path: Path, fuzz_ratio: float = 75, tier2_ratio: float = 60, num_threads: int = 4
+    nets_path: Path,
+    fsis_path: Path,
+    fuzz_ratio: float = 75,
+    tier2_ratio: float = 60,
 ):
     """
     Processes and matches FSIS dataset with the NETS dataset based on address and company information.
-    It employs a tiered fuzzy matching approach to maximize the number of accurate matches. 
+    It employs a tiered fuzzy matching approach to maximize the number of accurate matches.
 
-    The first tier matches based on the street address with a higher fuzziness threshold. 
-    If no match is found, the second tier attempts to match based on the company name combined 
+    The first tier matches based on the street address with a higher fuzziness threshold.
+    If no match is found, the second tier attempts to match based on the company name combined
     with city and state at a specified fuzziness threshold.
 
     Args:
@@ -33,7 +36,7 @@ def address_match(
 
     Returns:
         tuple: A tuple containing two DataFrames. The first DataFrame includes the FSIS dataset with added
-        NETS Parent Company and Sales columns where matches were found. The second DataFrame contains 
+        NETS Parent Company and Sales columns where matches were found. The second DataFrame contains
         FSIS entries that didn't match any NETS entry and require further processing or location-based matching.
     """
 
@@ -79,9 +82,13 @@ def address_match(
                     "Parent Corporation": nets["PARENT COMPANY"],
                     "Sales Volume (Location)": nets["SALESHERE"],
                 }
-            
+
             # Tier 2: High fuzzy match threshold for company name and lower threshold for city and state
-            if fuzz.token_sort_ratio(nets_company, fsis_company) > fuzz_ratio and fuzz.token_sort_ratio(nets_city_state, fsis_city_state) > tier2_ratio:
+            if (
+                fuzz.token_sort_ratio(nets_company, fsis_company) > fuzz_ratio
+                and fuzz.token_sort_ratio(nets_city_state, fsis_city_state)
+                > tier2_ratio
+            ):
                 return i, {
                     "Parent Corporation": nets["PARENT COMPANY"],
                     "Sales Volume (Location)": nets["SALESHERE"],
@@ -119,7 +126,9 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
 
     """
     matched_loc_df = pd.DataFrame()
-    for index, row in tqdm_progress(no_match.iterrows(), total=no_match.shape[0], desc="Matching by Location"):
+    for index, row in tqdm_progress(
+        no_match.iterrows(), total=no_match.shape[0], desc="Matching by Location"
+    ):
         target_point = (row["latitude"], row["longitude"])
         for _, nets in pp_nets.iterrows():
             candidate_point = (nets["LATITUDE"], nets["LONGITUDE"])
@@ -127,10 +136,19 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
                 target_point[1], target_point[0], candidate_point[1], candidate_point[0]
             )
             if distance <= threshold:
-                if fuzz.token_sort_ratio(row["Establishment Name"].upper(), nets["COMPANY"]) > 90:
+                if (
+                    fuzz.token_sort_ratio(
+                        row["Establishment Name"].upper(), nets["COMPANY"]
+                    )
+                    > 90
+                ):
                     matched_loc_df = matched_loc_df.append(row)
-                    matched_loc_df.at[index, "Sales Volume (Location)"] = nets["SALESHERE"]
-                    matched_loc_df.at[index, "Parent Corporation"] = nets["PARENT COMPANY"]
+                    matched_loc_df.at[index, "Sales Volume (Location)"] = nets[
+                        "SALESHERE"
+                    ]
+                    matched_loc_df.at[index, "Parent Corporation"] = nets[
+                        "PARENT COMPANY"
+                    ]
                     break
 
     print(f"Additional plants matched by location: {matched_loc_df.shape[0]}")

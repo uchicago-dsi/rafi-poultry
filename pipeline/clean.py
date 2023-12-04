@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from constants import (
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
-    SMOKE_TEST_FPATH
+    SMOKE_TEST_FPATH,
 )
 
 
@@ -28,64 +28,72 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
         N/A, writes cleaned dataset into the clean data folder.
 
     """
-    load_dotenv() 
+    load_dotenv()
     df_with_address = pd.read_excel(filepath1)
-    df_with_size = pd.read_excel(filepath2,skiprows=3)
-   
-    #only keep the columns we need
-    df_with_size = df_with_size[['EstNumber','Size', 'Chicken\nSlaughter']]
+    df_with_size = pd.read_excel(filepath2, skiprows=3)
 
-    #merge two dataframes
-    df_FSIS = pd.merge(df_with_address, df_with_size, on='EstNumber')
+    # only keep the columns we need
+    df_with_size = df_with_size[["EstNumber", "Size", "Chicken\nSlaughter"]]
 
-    df_FSIS["Full Address"] = df_FSIS['Street'] \
-    + "," + df_FSIS['City'] \
-    + "," + df_FSIS['State'] \
-    + " " + df_FSIS["Zip"].astype(str)
+    # merge two dataframes
+    df_FSIS = pd.merge(df_with_address, df_with_size, on="EstNumber")
 
-    #drop unnecessary columns
-    df_FSIS = df_FSIS.drop(columns=['Street','Zip'])
+    df_FSIS["Full Address"] = (
+        df_FSIS["Street"]
+        + ","
+        + df_FSIS["City"]
+        + ","
+        + df_FSIS["State"]
+        + " "
+        + df_FSIS["Zip"].astype(str)
+    )
+
+    # drop unnecessary columns
+    df_FSIS = df_FSIS.drop(columns=["Street", "Zip"])
 
     # preprocessing: only keep large chicken slaughter
     # chicken_slaughter = Yes; Activities include Poultry
-    df_chicken = df_FSIS[df_FSIS["Activities"].str.contains("Poultry") | (df_FSIS["Chicken\nSlaughter"] == "Yes")]
-    # keep the large size 
+    df_chicken = df_FSIS[
+        df_FSIS["Activities"].str.contains("Poultry")
+        | (df_FSIS["Chicken\nSlaughter"] == "Yes")
+    ]
+    # keep the large size
     df_large_chickens = df_chicken.loc[df_chicken.Size == "Large"]
     # Iterate through the DataFrame and geocode each address
 
-
-    #geocoding
-    access_token = os.getenv('MAPBOX_API')
+    # geocoding
+    access_token = os.getenv("MAPBOX_API")
 
     # Initialize the MapBox geocoder with your access token
     geolocator = MapBox(api_key=access_token)
-    df_large_chickens['latitude'] = None
-    df_large_chickens['longitude'] = None
+    df_large_chickens["latitude"] = None
+    df_large_chickens["longitude"] = None
 
     for index, row in df_large_chickens.iterrows():
-        location = geolocator.geocode(row['Full Address'])
+        location = geolocator.geocode(row["Full Address"])
         if location:
-            df_large_chickens.at[index, 'latitude'] = location.latitude
-            df_large_chickens.at[index, 'longitude'] = location.longitude
-
+            df_large_chickens.at[index, "latitude"] = location.latitude
+            df_large_chickens.at[index, "longitude"] = location.longitude
 
     # Renaming of certain columns to fix compatability
-    df_large_chickens = df_large_chickens.rename(columns={"Company": "Establishment Name"})
+    df_large_chickens = df_large_chickens.rename(
+        columns={"Company": "Establishment Name"}
+    )
     # Save df_FSIS to raw folder
     df_large_chickens.to_csv(save_path)
 
 
-def filter_infogroup(filename: str, 
-                     search_str: str, 
-                     chunksize: int = 10000) -> pd.DataFrame:
-    """Filters the Infogroup file for a specific string (ie. "chicken"), 
+def filter_infogroup(
+    filename: str, search_str: str, chunksize: int = 10000
+) -> pd.DataFrame:
+    """Filters the Infogroup file for a specific string (ie. "chicken"),
     meant as a helper function for clean_infogroup.
 
     Args:
         filename: path to specific file to be filtered
         search_str: SIC code (as a string) to search columns for
         chunksize: integer representing how many rows the function processes
-        at a time. 
+        at a time.
 
     Returns:
         N/A, puts cleaned df into the data/clean folder
@@ -104,8 +112,7 @@ def filter_infogroup(filename: str,
         df.columns = map(str.upper, df.columns)
         rows_to_add = df[
             df[search_cols].apply(
-                lambda r: r.astype(str).str.contains(search_str, 
-                                                     case=False).any(),
+                lambda r: r.astype(str).str.contains(search_str, case=False).any(),
                 axis=1,
             )
         ]
@@ -114,18 +121,20 @@ def filter_infogroup(filename: str,
     return filtered_df
 
 
-def clean_infogroup(filepath: Path, 
-                    ABI_dict: dict, 
-                    SIC_CODE: str, 
-                    save_path: Path,
-                    filtering: bool = False) -> None:
+def clean_infogroup(
+    filepath: Path,
+    ABI_dict: dict,
+    SIC_CODE: str,
+    save_path: Path,
+    filtering: bool = False,
+) -> None:
     """Cleans the infogroup files, combines them into one large master df.
 
     Args:
         filepath: absolute path to folder that contains all infogroup files
         ABI_dict: dictionary of all parent ABI's and their name as a str
         SIC_CODE: SIC code to filter the dataframes on
-        filtering: boolean, true if infogroup files are in their rawest form 
+        filtering: boolean, true if infogroup files are in their rawest form
             and need to be filtered
 
     Returns:
@@ -147,8 +156,9 @@ def clean_infogroup(filepath: Path,
                 dfs.append(df)
 
     all_years_df = pd.concat(dfs, ignore_index=True)
-    all_years_df = all_years_df.sort_values(by="ARCHIVE VERSION YEAR"
-                                            ).reset_index(drop=True)
+    all_years_df = all_years_df.sort_values(by="ARCHIVE VERSION YEAR").reset_index(
+        drop=True
+    )
 
     cols = ["YEAR ESTABLISHED", "PARENT NUMBER"]
 
@@ -157,8 +167,7 @@ def clean_infogroup(filepath: Path,
         all_years_df[x] = all_years_df[x].apply(np.int64)
 
     all_years_df["PARENT NAME"] = (
-        all_years_df["PARENT NUMBER"].replace({np.nan: None}
-                                              ).astype(str).map(ABI_dict)
+        all_years_df["PARENT NUMBER"].replace({np.nan: None}).astype(str).map(ABI_dict)
     )
     all_years_df["PARENT NAME"] = all_years_df["PARENT NAME"].fillna("Small Biz")
 
@@ -188,11 +197,11 @@ def clean_infogroup(filepath: Path,
 
 
 def clean_counterglow(filepath: Path) -> None:
-    """Cleans the Counterglow dataset by standardizing facility name 
+    """Cleans the Counterglow dataset by standardizing facility name
     and column formatting.
 
     Args:
-        filepath: relative path to the raw data folder 
+        filepath: relative path to the raw data folder
             with the Counterglow dataset.
 
     Returns:
@@ -208,14 +217,14 @@ def clean_counterglow(filepath: Path) -> None:
 
 def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
     """Merges state level CAFO permit data (taken from gov't websites)
-    into one CSV with columns for name, address, longitude/latitude, and state. 
-    Column names in each dataset are mapped to standardized format 
-    in accompanying farm_source.json file. Rows in complete dataset are 
-    left blank if no information is available, and raw CSVs may need to be 
+    into one CSV with columns for name, address, longitude/latitude, and state.
+    Column names in each dataset are mapped to standardized format
+    in accompanying farm_source.json file. Rows in complete dataset are
+    left blank if no information is available, and raw CSVs may need to be
     standardized/filtered by hand first.
 
     Args:
-        data_dir: filepath to raw data subfolder "cafo" 
+        data_dir: filepath to raw data subfolder "cafo"
             that contains the state permit data.
         config_fpath: filepath to farm_source.json file.
 
@@ -236,8 +245,7 @@ def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
         df = pd.read_csv(fpath)
 
         # Subset to relevant columns
-        present_cols = list(filter(None, 
-                                   list(source["column_mapping"].values())))
+        present_cols = list(filter(None, list(source["column_mapping"].values())))
         df = df[present_cols]
 
         # Rename columns to match standard model
@@ -250,8 +258,7 @@ def clean_cafo(data_dir: Path, config_fpath: Path) -> None:
 
         # Update final DataFrame
         final_df = (
-            df if final_df is None else pd.concat([df, final_df], 
-                                                  ignore_index=True)
+            df if final_df is None else pd.concat([df, final_df], ignore_index=True)
         )
 
     final_df.to_csv(CLEANED_CAFO_POULTRY_FPATH)

@@ -134,9 +134,8 @@ def create_parser():
         action="store_true",
         help="Set to use NETS dataset",
     )
-    
-    return parser
 
+    return parser
 
 
 def run_all(args) -> None:
@@ -166,7 +165,6 @@ def run_all(args) -> None:
         print(f"{e}")
         exit(1)
 
-
     if args.use_infogroup:
         try:
             print("Cleaning Infogroup data...")
@@ -187,39 +185,37 @@ def run_all(args) -> None:
             print(f"{e}")
             exit(1)
 
-
     if args.use_nets:
         try:
             print("Cleaning NETS data...")
             clean_nets.clean_NETS(
-                        RAW_NETS,
-                        RAW_NAICS,
-                        RAW_NAICS_LOOKUP,
-                        args.code,
-                        CLEANED_NETS_FPATH,
-                        COLUMNS_TO_KEEP,
-                        True,
-                    )
+                RAW_NETS,
+                RAW_NAICS,
+                RAW_NAICS_LOOKUP,
+                args.code,
+                CLEANED_NETS_FPATH,
+                COLUMNS_TO_KEEP,
+                True,
+            )
         except Exception as e:
             print(f"{e}")
             exit(1)
 
     if args.use_infogroup:
         try:
-                # Match plants and farms
-                print(
-                    "Matching FSIS plants and Infogroup for sales volume \
+            # Match plants and farms
+            print(
+                "Matching FSIS plants and Infogroup for sales volume \
                       data..."
-                )
-                match_plants.save_all_matches(
-                    CLEANED_INFOGROUP_FPATH,
-                    CLEANED_FSIS_PROCESSORS_FPATH,
-                    args.distance,
-                )
+            )
+            match_plants.save_all_matches(
+                CLEANED_INFOGROUP_FPATH,
+                CLEANED_FSIS_PROCESSORS_FPATH,
+                args.distance,
+            )
         except Exception as e:
             print(f"{e}")
             exit(1)
-
 
     try:
         print("Cleaning CAFO Permit data...")
@@ -229,10 +225,12 @@ def run_all(args) -> None:
         exit(1)
 
     try:
-        print("Matching FSIS plants and NETS for parent company and sales volume data...")
+        print(
+            "Matching FSIS plants and NETS for parent company and sales volume data..."
+        )
         match_plants_nets.save_all_matches(
             CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
-            )
+        )
     except Exception as e:
         print(f"{e}")
         exit(1)
