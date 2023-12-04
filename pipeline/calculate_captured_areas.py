@@ -548,7 +548,6 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
     df_map = make_geo_df(fsis_df, distance, token)
     add_plants(df_map, parent_dict, chrones, m)
 
-
     print("Calculating single plant capture...")
     single_plant_cap(chrones, single_shapely, parent_dict, m)
     print("Calculating two and three plant capture...")
