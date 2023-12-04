@@ -3,7 +3,6 @@ based on data from Counterglow and state permits websites.
 """
 
 import pandas as pd
-import numpy as np
 import folium
 from pathlib import Path
 

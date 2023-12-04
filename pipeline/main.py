@@ -14,7 +14,6 @@ import farm_geojson_creation
 import os
 
 import utils.visualize as visualize
-import utils.analyze as analyze
 
 import argparse
 import pandas as pd
