@@ -9,8 +9,6 @@ from fuzzywuzzy import fuzz
 from distances import haversine
 from pathlib import Path
 from constants import (CLEANED_MATCHED_PLANTS_FPATH, 
-                       CLEANED_INFOGROUP_FPATH, 
-                       CLEANED_FSIS_PROCESSORS_FPATH,
 )
 
 def address_match(infogroup_path: Path, 

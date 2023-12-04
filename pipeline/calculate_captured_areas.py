@@ -9,8 +9,7 @@ import requests
 import folium
 import geopandas as gpd
 import shapely
-from shapely.geometry import Polygon, mapping
-from shapely.ops import unary_union
+from shapely.geometry import Polygon
 from pyproj import Geod
 from typing import List, Dict, Tuple
 from constants import (
@@ -18,13 +17,9 @@ from constants import (
     US_STATES_FPATH,
     ALL_STATES_GEOJSON_FPATH,
     CLEANED_MATCHED_PLANTS_FPATH,
-    CLEANED_INFOGROUP_FPATH,
-    DATA_DIR,
-    ALBERS_EQUAL_AREA,
     WGS84,
     USA_LAT,
     USA_LNG,
-    HTML_DIR,
 )
 
 single_shapely = []
@@ -416,8 +411,6 @@ def state_level_geojson(
         "WY": "Wyoming",
     }
 
-    df_states = gpd.GeoDataFrame()
-
     corp_dfs = []
     for corp in df["Parent Corporation"].unique():
         new_df = df[df["Parent Corporation"] == corp]
@@ -443,13 +436,9 @@ def state_level_geojson(
     for _, corp in df_corps_joined.iterrows():
         for state in states:
             state_name = abb2state[state]
-            state_layer = folium.map.FeatureGroup(name=state_name, show=False)
             state_geometry = us_states[us_states["NAME"] == state_name][
                 "geometry"
             ].to_crs(WGS84)
-            state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(
-                WGS84
-            )
 
             one_plant = (
                 shapely.intersection(single_plant_combined, state_geometry)
@@ -478,11 +467,9 @@ def state_level_geojson(
 
     for state in states:
         state_name = abb2state[state]
-        state_layer = folium.map.FeatureGroup(name=state_name, show=False)
         state_geometry = us_states[us_states["NAME"] == state_name]["geometry"].to_crs(
             WGS84
         )
-        state_center = state_geometry.to_crs(ALBERS_EQUAL_AREA).centroid.to_crs(WGS84)
 
         two_plants = (
             shapely.intersection(two_plants_combined, state_geometry)
@@ -550,8 +537,6 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
 
     # import cleaned data
     fsis_df = pd.read_csv(CLEANED_MATCHED_PLANTS_FPATH)
-    # TODO: set this up to handle NETS data - do we even need this?
-    info_df = pd.read_csv(CLEANED_INFOGROUP_FPATH)
 
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)

@@ -6,13 +6,10 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
-import geopandas as gpd
-from geopandas.tools import geocode
 from geopy.geocoders import MapBox
 import os
 from dotenv import load_dotenv
 from constants import (
-    CLEANED_FSIS_PROCESSORS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
     SMOKE_TEST_FPATH

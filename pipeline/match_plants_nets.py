@@ -10,8 +10,6 @@ from distances import haversine
 from pathlib import Path
 from constants import (
     CLEANED_MATCHED_PLANTS_FPATH,
-    CLEANED_NETS_FPATH,
-    CLEANED_FSIS_PROCESSORS_FPATH,
 )
 
 
