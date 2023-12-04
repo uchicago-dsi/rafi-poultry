@@ -123,7 +123,6 @@ def create_parser():
         help="Indicates whether smoke test on Infogroup data\
             should be run or not",
     )
-    # parser.add_argument("--nets", help="Specify using NETS dataset to match")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -168,25 +167,6 @@ def run_all(args) -> None:
         print(f"{e}")
         exit(1)
 
-    # TODO: Just commenting out the Infogroup stuff for now
-    # try:
-    #     print("Cleaning Infogroup data...")
-    #     ABI_dict = config["ABI_map"]
-    #     if args.smoke_test:
-    #         clean.clean_infogroup(
-    #             SMOKE_TEST_FPATH, ABI_dict, args.code, SMOKE_TEST_CLEAN_FPATH, True
-    #         )
-    #     else:
-    #         clean.clean_infogroup(
-    #             RAW_INFOGROUP_FPATH,
-    #             ABI_dict,
-    #             args.code,
-    #             CLEANED_INFOGROUP_FPATH,
-    #             args.filtering,
-    #         )
-    # except Exception as e:
-    #     print(f"{e}")
-    #     exit(1)
 
     if args.use_infogroup:
         try:
@@ -208,6 +188,7 @@ def run_all(args) -> None:
             print(f"{e}")
             exit(1)
 
+
     if args.use_nets:
         try:
             print("Cleaning NETS data...")
@@ -224,20 +205,22 @@ def run_all(args) -> None:
             print(f"{e}")
             exit(1)
 
-    # try:
-    #     print("Cleaning NETS data...")
-    #     clean_nets.clean_NETS(
-    #         RAW_NETS,
-    #         RAW_NAICS,
-    #         RAW_NAICS_LOOKUP,
-    #         args.code,
-    #         CLEANED_NETS_FPATH,
-    #         COLUMNS_TO_KEEP,
-    #         True,
-    #     )
-    # except Exception as e:
-    #     print(f"{e}")
-    #     exit(1)
+    if args.use_infogroup:
+        try:
+                # Match plants and farms
+                print(
+                    "Matching FSIS plants and Infogroup for sales volume \
+                      data..."
+                )
+                match_plants.save_all_matches(
+                    CLEANED_INFOGROUP_FPATH,
+                    CLEANED_FSIS_PROCESSORS_FPATH,
+                    args.distance,
+                )
+        except Exception as e:
+            print(f"{e}")
+            exit(1)
+
 
     try:
         print("Cleaning CAFO Permit data...")
