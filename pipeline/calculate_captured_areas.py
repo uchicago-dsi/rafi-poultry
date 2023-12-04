@@ -563,16 +563,13 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
     df_map = make_geo_df(fsis_df, distance, token)
     add_plants(df_map, parent_dict, chrones, m)
 
-    # assemble country-wide capture map, save as GEOJSON to data/clean
-    # TODO: this should be cleaned up to only do the necessary parts of the pipeline
+
     print("Calculating single plant capture...")
     single_plant_cap(chrones, single_shapely, parent_dict, m)
     print("Calculating two and three plant capture...")
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
     print("Saving country-wide geojson...")
     save_map(single_shapely, two_shapely, three_combined, parent_dict)
-    # TODO: this is breaking and may not be necessary for the entire pipeline to run
-    # m.save(HTML_DIR / "poultry-map-smoothed.html")
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
     print("Saving state-level geojson...")

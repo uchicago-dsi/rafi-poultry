@@ -16,24 +16,27 @@ from constants import (
 
 
 def address_match(
-    nets_path: Path, fsis_path: Path, fuzz_ratio: float = 75, num_threads: int = 4
+    nets_path: Path, fsis_path: Path, fuzz_ratio: float = 75, tier2_ratio: float = 60, num_threads: int = 4
 ):
-    """Takes a cleaned FSIS and NETS dataset. Outputs a new dataset that combines the
-    NETS parent corporation and sales volume data with the base FSIS dataset
+    """
+    Processes and matches FSIS dataset with the NETS dataset based on address and company information.
+    It employs a tiered fuzzy matching approach to maximize the number of accurate matches. 
+
+    The first tier matches based on the street address with a higher fuzziness threshold. 
+    If no match is found, the second tier attempts to match based on the company name combined 
+    with city and state at a specified fuzziness threshold.
 
     Args:
-        fsis_path: relative path to the clean data folder with the
-            cleaned new fsis data.
-        nets_path: relative path to the clean data folder with the
-            cleaned new nets data.
-        fuzz_ratio: float; minimum "fuzziness" (or similarity) score
-            to accept that two strings are "the same"; default of 60
-        num_threads: int; number of simultaneous threads to run using
-            multi-threading on the fuzzy matching
+        fsis_path (Path): Relative path to the clean data folder with the cleaned FSIS data.
+        nets_path (Path): Relative path to the clean data folder with the cleaned NETS data.
+        fuzz_ratio (float): Minimum fuzziness score for the primary matching; default is 75.
+        tier2_ratio (float): Fuzziness score for the secondary tier of matching; default is 60.
+        num_threads (int): Number of threads for parallel processing; currently not implemented.
 
     Returns:
-        FSIS dataset including the NETS Parent Company and Sales columns.
-
+        tuple: A tuple containing two DataFrames. The first DataFrame includes the FSIS dataset with added
+        NETS Parent Company and Sales columns where matches were found. The second DataFrame contains 
+        FSIS entries that didn't match any NETS entry and require further processing or location-based matching.
     """
 
     fsis_df = pd.read_csv(fsis_path)
@@ -62,41 +65,45 @@ def address_match(
     # Apply standardization to FSIS short addresses
     fsis_df["Short Address"] = fsis_df["Short Address"].apply(standardize_address)
 
-    # TODO: why don't we match these two?
-    # df[df['Company'].str.contains("BUDDIG", na=False) & df['State'].str.contains("IL", na=False)]
-    # df[df['Company'].str.contains("AGRA", na=False) & df['State'].str.contains("IA", na=False) & df['City'].str.contains("COUNCIL BLUFFS", na=False)]
-    # Idea: have a few thresholds for matching and aggregate them as we iterate through the dataframe
-    # Tier 1 match: matches address at high fuzzy match threshold
-    # Tier 2 match: matches company name at high fuzzy match threshold and lower tier address match (maybe just city and state)
-
     def find_match(i, fsis_df, nets_df):
         fsis_address = fsis_df.at[i, "Short Address"].lower()
+        fsis_company = fsis_df.at[i, "Establishment Name"].upper()
+        fsis_city_state = f"{fsis_df.at[i, 'City']}, {fsis_df.at[i, 'State']}"
+
         for k, nets in nets_df.iterrows():
-            nets_address = nets["ADDRESS"]
+            nets_address = nets["ADDRESS"].lower()
+            nets_company = nets["COMPANY"].upper()
+            nets_city_state = f"{nets['CITY']}, {nets['STATE']}"
+
+            # Tier 1: High fuzzy match threshold for address
             if fuzz.token_sort_ratio(nets_address, fsis_address) > fuzz_ratio:
                 return i, {
                     "Parent Corporation": nets["PARENT COMPANY"],
                     "Sales Volume (Location)": nets["SALESHERE"],
                 }
+            
+            # Tier 2: High fuzzy match threshold for company name and lower threshold for city and state
+            if fuzz.token_sort_ratio(nets_company, fsis_company) > fuzz_ratio and fuzz.token_sort_ratio(nets_city_state, fsis_city_state) > tier2_ratio:
+                return i, {
+                    "Parent Corporation": nets["PARENT COMPANY"],
+                    "Sales Volume (Location)": nets["SALESHERE"],
+                }
+
         return i, {}
 
-    # Iterating over each row in fsis_df and finding matches
-    # TODO: let's also include a count of the number of plants matched
+    matched_count = 0
     for i in tqdm_progress(fsis_df.index, desc="Matching Addresses"):
         _, result = find_match(i, fsis_df, nets_df)
         if result:
+            matched_count += 1
             fsis_df.at[i, "Parent Corporation"] = result["Parent Corporation"]
             fsis_df.at[i, "Sales Volume (Location)"] = result["Sales Volume (Location)"]
 
-    return fsis_df
+    print(f"Total plants matched: {matched_count}")
+    return fsis_df, fsis_df[fsis_df["Parent Corporation"].isna()]
 
 
-def loc_match(
-    no_match: pd.DataFrame,
-    pp_nets: pd.DataFrame,
-    pp_sales: pd.DataFrame,
-    threshold: float,
-) -> (pd.DataFrame, pd.DataFrame):
+def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
     """Match NETS plants to the remaining unmatched FSIS plants
     after running address_match based on longitude/latitude
     to add parent company and sales volume data to each poultry plant from FSIS.
@@ -106,36 +113,30 @@ def loc_match(
         no_match: Filtered DataFrame that contains the unmatched poultry plants
             after running address_match.
         pp_nets: NETS dataset loaded as a DataFrame.
-        pp_sales: DataFrame returned by address_match, which contains
-            FSIS poultry plants matched with sales volume.
         threshold: threshold for maximum distance possible
             to be considered a match.
 
     Returns:
-        NETS DataFrame (pp_nets) and DataFrame with sales volume data
-        filled in for location matches (pp_sales).
+        DataFrame with sales volume data filled in for location matches.
 
     """
-    no_match_nulls = no_match[no_match["Parent Corporation"].isna()]
-    for index, row in no_match_nulls.iterrows():
+    matched_loc_df = pd.DataFrame()
+    for index, row in tqdm_progress(no_match.iterrows(), total=no_match.shape[0], desc="Matching by Location"):
         target_point = (row["latitude"], row["longitude"])
         for _, nets in pp_nets.iterrows():
-            candidate_point = nets["LATITUDE"], nets["LONGITUDE"]
+            candidate_point = (nets["LATITUDE"], nets["LONGITUDE"])
             distance = haversine(
                 target_point[1], target_point[0], candidate_point[1], candidate_point[0]
             )
             if distance <= threshold:
-                if (
-                    fuzz.token_sort_ratio(
-                        row["Establishment Name"].upper(), nets["COMPANY"]
-                    )
-                    > 90
-                ):
-                    pp_sales.loc[index, "Sales Volume (Location)"] = nets["SALESHERE"]
-                    pp_sales.loc[index, "Parent Corporation"] = nets["PARENT COMPANY"]
+                if fuzz.token_sort_ratio(row["Establishment Name"].upper(), nets["COMPANY"]) > 90:
+                    matched_loc_df = matched_loc_df.append(row)
+                    matched_loc_df.at[index, "Sales Volume (Location)"] = nets["SALESHERE"]
+                    matched_loc_df.at[index, "Parent Corporation"] = nets["PARENT COMPANY"]
                     break
 
-    return pp_sales
+    print(f"Additional plants matched by location: {matched_loc_df.shape[0]}")
+    return matched_loc_df
 
 
 def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> None:
@@ -152,17 +153,11 @@ def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> 
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    address_matches = address_match(nets_path, fsis_path)
-    no_match = address_matches[address_matches["Parent Corporation"].isna()]
-    # TODO: wait...dumb question but do we actually save the address matches somewhere else?
-    # Seems like we save them in the loc_match function but this is sort of counter
-    # intuitive. Maybe we should just concat the address_matches and the loc_matches
-    # in one function?
+    print("Matching based on address...")
+    address_matches, no_match = address_match(nets_path, fsis_path)
+    print("Matching based on location...")
+    loc_matches = loc_match(no_match, pd.read_csv(nets_path), threshold)
 
-    nets = pd.read_csv(nets_path)
-    print("Trying to match missing plants on location...")
-    # TODO: a progress bar here would be nice also
-    # TODO: how many additional plants do we get with a location match anyway?
-    pp_sales = loc_match(no_match, nets, address_matches, threshold)
-    pp_sales = pp_sales.dropna(subset=["Parent Corporation"])
-    pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    final_matches = pd.concat([address_matches, loc_matches]).drop_duplicates()
+    final_matches = final_matches.dropna(subset=["Parent Corporation"])
+    final_matches.to_csv(CLEANED_MATCHED_PLANTS_FPATH)

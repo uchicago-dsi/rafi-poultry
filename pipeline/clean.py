@@ -47,7 +47,7 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
     + " " + df_FSIS["Zip"].astype(str)
 
     #drop unnecessary columns
-    df_FSIS = df_FSIS.drop(columns=['Street','City','Zip'])
+    df_FSIS = df_FSIS.drop(columns=['Street','Zip'])
 
     # preprocessing: only keep large chicken slaughter
     # chicken_slaughter = Yes; Activities include Poultry
