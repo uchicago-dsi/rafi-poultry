@@ -109,46 +109,6 @@ def loc_match(no_match: pd.DataFrame,
     return pp_2022, pp_sales
 
 
-def fill_remaining_nulls(pp_sales: pd.DataFrame) -> pd.DataFrame:
-    """Fills in sales volume for all remaining unmatched plants after running 
-    loc_match function with the median of the sales volume 
-    of all matched plants so far for each plant, based on 
-    its respective parent corporation.
-
-    Args:
-        pp_sales: DataFrame returned by loc_match, 
-            which contains FSIS poultry plants matched with sales volume.
-
-    Returns:
-        DataFrame with all sales volume data filled in.
-
-    """
-    median = (
-        pp_sales.groupby(["Parent Corporation"])["Sales Volume (Location)"]
-        .median()
-        .reset_index()
-    )
-    median_sales = pp_sales["Sales Volume (Location)"].median()
-
-    median["Sales Volume (Location)"] = median["Sales Volume (Location)"].fillna(
-        median_sales
-    )
-    median["Sales Volume (Location)"] = median["Sales Volume (Location)"].replace(
-        0, median_sales
-    )
-
-    parent_dict = dict(zip(median["Parent Corporation"], median["Sales Volume (Location)"]))
-
-    pp_sales_updated = pp_sales.copy()
-    
-    for index, row in pp_sales_updated.iterrows():
-        if np.isnan(row["Sales Volume (Location)"]):
-            parent = row["Parent Corporation"]
-            pp_sales_updated.loc[index, "Sales Volume (Location)"] = parent_dict[parent]
-
-    return pp_sales_updated
-
-
 def save_all_matches(infogroup_path: Path, 
                      fsis_path: Path, 
                      threshold: float=5) -> None:
@@ -171,9 +131,6 @@ def save_all_matches(infogroup_path: Path,
     infogroup = pd.read_csv(infogroup_path)
     pp_2022 = infogroup[infogroup["ARCHIVE VERSION YEAR"] == 2022]
     pp_2022, pp_sales = loc_match(no_match, pp_2022, address_matches, threshold)
-
-    # We do not have the Parent Corporation in this FSIS dataset as we used NETS to automate the process
-    # Therefore this is no longer possible
-    #pp_sales_updated = fill_remaining_nulls(pp_sales)
-    #pp_sales_updated.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    
+    pp_sales = pp_sales.dropna(subset=["Parent Corporation"])
     pp_sales.to_csv(CLEANED_MATCHED_PLANTS_FPATH)

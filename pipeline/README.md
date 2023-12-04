@@ -9,6 +9,7 @@ This README contains information on the structure of the pipeline for the projec
 - counterglow_matches.py
 - distances.py
 - match_plants.py
+- match_plants_nets.py
 - sic_matcher.py
 
 # File Descriptions
@@ -17,6 +18,7 @@ This README contains information on the structure of the pipeline for the projec
 - **clean.py** read in raw datasets from FSIS, Infogroup, Counterglow, and individual state websites, standardize the columns, fill in null values, filter to records of interest (e.g., poultry farms), and then output cleaned_cafo_poultry.csv, cleaned_counterglow_facility_list.csv, cleaned_infogroup_plants_all_time.csv, and cleaned_fsis_processors.csv to the data/clean folder. Because state permit data is often formatted differently, users must update the farm_source.json file in the cafo folder with the names of the columns they want to be processed (name, address, permit, lat, long).
 - **counterglow_matches.py** file contained the functionality neccessary to match Infogroup data against Counterglow data. The goal is to see if any business listed in the Infogroup dataset matches will a suspects farm in the Counterglow dataset.
 - **distances.py** contains calculations used in various parts of the research
+- **match_plants.py** Reads in clean Infogroup datasets from 1997 through the present, matches plants across years using the ABI, match plants in FSIS with plants in Infogroup by location and address, to add sales volume data to plant records, writes the combined output DataFrame as a CSV file, matched_plants.csv, in the data/clean folder.
 - **match_plants_nets.py** Reads in clean NETS datasets from 1990 through the present, matches plants and sales volume information in FSIS with plants in NETS by location and address, and writes the combined output DataFrame as a CSV file, cleaned_matched_plants.csv, in the data/clean folder.
 - **match_farms.py** Reads in clean state permit datasets and Counterglow dataset to match farms across the two for the specified animal type, making matches and fuzzy matches based on name and location (if available). Outputs standardized datasets of matched and unmatched farms: matched_farms.csv and unmatched_farms.csv.
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
@@ -79,6 +81,4 @@ This README contains information on the structure of the pipeline for the projec
      - The full command line argument for running the NETS or Infogroup dataset version of the pipeline is:
         - python pipeline/main.py --use_nets
         - python pipeline/main.py --use_infogroup
-     - `TODO: Can change this so that we add either --nets or --infogroup to the argument to run one or the other`
-     - `TODO: Actual command is python pipeline/main.py --nets True from the root directory of the project. Put this somewhere and also remove the other examples that are not correct`
-     - `TODO: If we run the --nets command, we should not run the infogroup data`
+          - Running the --use_nets version is the main version
