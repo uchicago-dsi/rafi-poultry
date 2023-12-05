@@ -34,4 +34,3 @@ beforehand.
 - ```make run-pipeline``` will run the Docker container from the pipeline image
 - ```make build-notebooks``` will build the Docker image for the notebooks to be run in Jupyter lab
 - ```run-notebooks``` will build the Docker image for the Jupyter notebooks
-- ```run-notebooks``` will run the Docker container from the notebooks image
