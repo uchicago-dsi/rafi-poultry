@@ -68,6 +68,7 @@ This README contains information on the structure of the pipeline for the projec
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
 7. **Run main.py**
+     - To run the pipeline, from the rafi-poultry directory run the command python pipeline main.py
      - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
      - The full command line argument for running the NETS or Infogroup dataset version of the pipeline is:
