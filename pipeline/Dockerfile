@@ -27,5 +27,6 @@ COPY setup.py .
 COPY pipeline ./pipeline
 RUN pip install -e .
 
-# Run the main.py script when the container launches
+# CMD instruction is set to execute main.py. 
+# When running the container, additional arguments can be passed, which will be appended to this CMD.
 CMD ["python", "pipeline/main.py"]

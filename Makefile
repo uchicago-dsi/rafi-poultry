@@ -36,9 +36,9 @@ build-pipeline:
 run-pipeline-bash:
 	docker run -e "MAPBOX_API=${MAPBOX_API}" -it -v $(current_abs_path)data:/app/data $(pipeline_image_name) /bin/bash 
 
-# Run pipeline image
+# Run pipeline image with arguments
 run-pipeline:
-	docker run -e "MAPBOX_API=${MAPBOX_API}" -v $(current_abs_path)data:/app/data $(pipeline_image_name)
+	docker run -e "MAPBOX_API=${MAPBOX_API}" -v $(current_abs_path)data:/app/data $(pipeline_image_name) python pipeline/main.py $(args)
 
 # Build Docker image for notebooks
 build-notebooks:
