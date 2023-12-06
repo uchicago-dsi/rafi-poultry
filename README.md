@@ -32,10 +32,10 @@ beforehand.
 - ```make build-pipeline``` will build the Docker image for the pipeline scripts
 - ```make run-pipeline-bash``` will run the Docker container from the pipeline image with interactive terminal
 - ```make run-pipeline args="..."``` will run the Docker container from the pipeline image using an argument to specify which dataset to use (see ReadMe in pipeline for further explanation)
-- Inside the args statement (replacing the ...), add the flag:
-    - ```--use_nets``` which will run the pipeline with the NETS dataset
-    - ```--use_infogroup``` which will run the pipeline with the Infogroup dataset
-    - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
-    - For example, the full line would be ```make run-pipeline args="--use_nets"```
+    - Inside the args statement (replacing the ...), add the flag:
+        - ```--use_nets``` which will run the pipeline with the NETS dataset
+        - ```--use_infogroup``` which will run the pipeline with the Infogroup dataset
+        - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
+            - For example, the full line would be ```make run-pipeline args="--use_nets"```
 - ```make build-notebooks``` will build the Docker image for the notebooks to be run in Jupyter lab
 - ```run-notebooks``` will run the Docker container from the notebooks image
