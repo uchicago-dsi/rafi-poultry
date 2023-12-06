@@ -61,7 +61,7 @@ This README contains information on the structure of the pipeline for the projec
      - MoveYear2022_RAFI(WithAddresses).txt
      - NAICS2022_RAFI.csv
      - NAICS2022_RAFI.txt
-     - NETSDataa2022_RAFI(WithAddresses).txt
+     - NETSData2022_RAFI(WithAddresses).txt
    - From team RAFI google drive, download .env file and place under rafi-poultry directory
      - You will likely have to rename the file to place the "." in front
 4. **Run pip install -r pipeline/requirements.txt**
