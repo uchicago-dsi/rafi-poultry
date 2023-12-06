@@ -75,5 +75,6 @@ This README contains information on the structure of the pipeline for the projec
         - python pipeline/main.py --use_nets
         - python pipeline/main.py --use_infogroup
           - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
-     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
+     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually
+        - In this case, you would remove the --use_nets or --use_infogroup tag as this is meant only for when running the entire pipeline
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
