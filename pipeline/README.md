@@ -68,7 +68,10 @@ This README contains information on the structure of the pipeline for the projec
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
 7. **Run main.py**
-     - Structure the command line to run the pipline specifying either the use of the NETS or Infogroup dataset. The full command lines would be:
+     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
+     - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
+     - The full command line argument for running the pipeline requires the specification of using either the NETS or Infogroup dataset
+     - The command is:
         - python pipeline/main.py --use_nets
         - python pipeline/main.py --use_infogroup
           - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
