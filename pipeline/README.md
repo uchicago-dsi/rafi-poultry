@@ -36,6 +36,7 @@ This README contains information on the structure of the pipeline for the projec
        - nets
      - clean
      - html
+   - Note: clone the repository first and then add the data directory in the rafi-poultry directory
 2. **Set up Conda environment**
    - conda create --name \<myenv\> python=3.9.16
 3. **Download the files**
