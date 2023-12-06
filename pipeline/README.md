@@ -68,17 +68,9 @@ This README contains information on the structure of the pipeline for the projec
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
 7. **Run main.py**
-   - Structure the command line arguments as:
-     - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
-       - FILEPATH; str; Relative path (from cwd) to raw data folder
-       - ANIMAL; str; Keywords for animals to filter for, as a regex
-       - DISTANCE; float; Maximum distance for farm matches to be made across different datasets, in km
-       - SIC_CODE; str; SIC code to filter the dataset on, if FILTERING is False, this variable is not used
-       - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
-     - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
-     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
-     - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
-     - The full command line argument for running the NETS or Infogroup dataset version of the pipeline is:
+     - Structure the command line to run the pipline specifying either the use of the NETS or Infogroup dataset. The full command lines would be:
         - python pipeline/main.py --use_nets
         - python pipeline/main.py --use_infogroup
           - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
+     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
+     - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
