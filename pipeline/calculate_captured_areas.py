@@ -8,6 +8,7 @@ import numpy as np
 import requests
 import folium
 import geopandas as gpd
+from tqdm import tqdm
 import shapely
 from shapely.geometry import Polygon
 from pyproj import Geod
@@ -56,7 +57,7 @@ def isochrones(
     )  # turns miles into meters
 
     isochrones = []
-    for lat, lng in coords:
+    for lat, lng in tqdm(coords, desc="Mapbox Isochrones"):
         # add driving radius isochrone to map
         url = (
             ENDPOINT
@@ -135,9 +136,10 @@ def add_plants(
 
     """
 
+    # TODO: this whole thing is maybe unnecessary
     plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
 
-    for _, row in df_map.iterrows():
+    for _, row in tqdm(df_map.iterrows()):
         lat = str(row["latitude"])
         lng = str(row["longitude"])
 
@@ -165,6 +167,7 @@ def add_plants(
         chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
 
+    # TODO: prob don't need this folium stuff here either
     plants_layer.add_to(m)
 
 
@@ -189,13 +192,14 @@ def single_plant_cap(
 
     """
 
-    for index, poly in enumerate(chrones):
+    for index, poly in tqdm(enumerate(chrones), desc="Single plant capture"):
         others = shapely.unary_union(chrones[:index] + chrones[index + 1 :])
         single_plant = shapely.difference(poly, others)
         single_shapely.append(single_plant)
 
     parent_names = list(parent_dict.keys())
 
+    # TODO: probably don't need the folium stuff here
     for index, poly in enumerate(single_shapely):
         corp = parent_names[index]
         title = "Only access to " + corp
@@ -236,11 +240,13 @@ def two_and_three_plant_cap(
     competition_single_plant = shapely.difference(everything, single_plant_combined)
 
     isochrones_shapely_two_plants = []
-    for isochrone in chrones:
+    for isochrone in tqdm(chrones, desc="Two plant intersections"):
         if isochrone.intersection(competition_single_plant):
             isochrones_shapely_two_plants.append(isochrone)
 
-    for i in range(len(isochrones_shapely_two_plants)):
+    for i in tqdm(
+        range(len(isochrones_shapely_two_plants)), desc="Two and three plant capture"
+    ):
         for j in range(i + 1, len(isochrones_shapely_two_plants)):
             plant_1 = isochrones_shapely_two_plants[i]
             plant_2 = isochrones_shapely_two_plants[j]
@@ -267,6 +273,7 @@ def two_and_three_plant_cap(
             if captured_area:
                 two_shapely.append(captured_area)
 
+    # TODO: Should prob ditch this also
     two_plant_layer = folium.map.FeatureGroup(
         name="Access to 2 Parent \
                                               Corporations"
@@ -311,6 +318,7 @@ def save_map(
         n/a.
 
     """
+    tqdm.write("Saving country-wide geojson...")
 
     one_df = gpd.GeoDataFrame(
         {
@@ -433,7 +441,7 @@ def state_level_geojson(
     single_plant_combined = shapely.unary_union(single)
     two_plants_combined = shapely.unary_union(two)
 
-    for _, corp in df_corps_joined.iterrows():
+    for _, corp in tqdm(df_corps_joined.iterrows(), desc="State GeoJSON"):
         for state in states:
             state_name = abb2state[state]
             state_geometry = us_states[us_states["NAME"] == state_name][
@@ -538,6 +546,7 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
     # import cleaned data
     fsis_df = pd.read_csv(CLEANED_MATCHED_PLANTS_FPATH)
 
+    # TODO: don't need to do the folium stuff by default
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
 
@@ -548,15 +557,11 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
     df_map = make_geo_df(fsis_df, distance, token)
     add_plants(df_map, parent_dict, chrones, m)
 
-    print("Calculating single plant capture...")
     single_plant_cap(chrones, single_shapely, parent_dict, m)
-    print("Calculating two and three plant capture...")
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
-    print("Saving country-wide geojson...")
     save_map(single_shapely, two_shapely, three_combined, parent_dict)
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
-    print("Saving state-level geojson...")
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
     return m

@@ -2,7 +2,7 @@
 from Infogroup 2022 data to the FSIS dataset, based on address and location. 
 """
 
-from tqdm import tqdm as tqdm_progress
+from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from fuzzywuzzy import fuzz
@@ -97,14 +97,14 @@ def address_match(
         return i, {}
 
     matched_count = 0
-    for i in tqdm_progress(fsis_df.index, desc="Matching Addresses"):
+    for i in tqdm(fsis_df.index, desc="Matching Addresses"):
         _, result = find_match(i, fsis_df, nets_df)
         if result:
             matched_count += 1
             fsis_df.at[i, "Parent Corporation"] = result["Parent Corporation"]
             fsis_df.at[i, "Sales Volume (Location)"] = result["Sales Volume (Location)"]
 
-    print(f"Total plants matched: {matched_count}")
+    tqdm.write(f"Total plants matched: {matched_count}")
     return fsis_df, fsis_df[fsis_df["Parent Corporation"].isna()]
 
 
@@ -126,7 +126,7 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
 
     """
     matched_loc_df = pd.DataFrame()
-    for index, row in tqdm_progress(
+    for index, row in tqdm(
         no_match.iterrows(), total=no_match.shape[0], desc="Matching by Location"
     ):
         target_point = (row["latitude"], row["longitude"])
@@ -151,7 +151,7 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
                     ]
                     break
 
-    print(f"Additional plants matched by location: {matched_loc_df.shape[0]}")
+    tqdm.write(f"Additional plants matched by location: {matched_loc_df.shape[0]}")
     return matched_loc_df
 
 
@@ -169,9 +169,7 @@ def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> 
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    print("Matching based on address...")
     address_matches, no_match = address_match(nets_path, fsis_path)
-    print("Matching based on location...")
     loc_matches = loc_match(no_match, pd.read_csv(nets_path), threshold)
 
     final_matches = pd.concat([address_matches, loc_matches]).drop_duplicates()
