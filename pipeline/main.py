@@ -5,13 +5,13 @@ individually by including a function flag; the default is to run all of them.
 """
 # TODO: ok these functions shouldn't be NETS or Infogroup specific
 import clean
-import clean_nets
 import match_farms
 import match_plants
 import match_plants_nets
 import calculate_captured_areas
 import farm_geojson_creation
 import os
+from tqdm import tqdm
 
 import utils.visualize as visualize
 
@@ -49,7 +49,7 @@ from constants import (
 
 with open(CONFIG_FPATH, "r") as jsonfile:
     config = json.load(jsonfile)
-    print("Config file read successful")
+    tqdm.write("Config file read successful")
 
 
 def create_parser():
@@ -213,7 +213,7 @@ def run_function(args) -> None:
     elif args.function == "clean_NETS":
         try:
             print("Cleaning NETS data...")
-            clean_nets.clean_NETS(
+            clean.clean_NETS(
                 RAW_NETS,
                 RAW_NAICS,
                 RAW_NAICS_LOOKUP,
@@ -361,7 +361,7 @@ def main(args) -> None:
             print("Cleaning NETS data...")
             # TODO: this should be generalized to handle Infogroup and NETS
             # Also add keyword arguments so you know what these things even are
-            clean_nets.clean_NETS(
+            clean.clean_NETS(
                 RAW_NETS,
                 RAW_NAICS,
                 RAW_NAICS_LOOKUP,
@@ -382,6 +382,7 @@ def main(args) -> None:
         match_plants_nets.save_all_matches(
             cleaned_business_data, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
         )
+        print("FSIS plant match completed.")
     except Exception as e:
         print(f"{e}")
         exit(1)
