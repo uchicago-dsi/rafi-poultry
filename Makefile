@@ -37,6 +37,7 @@ run-pipeline-bash:
 	docker run -e "MAPBOX_API=${MAPBOX_API}" -it -v $(current_abs_path)data:/app/data $(pipeline_image_name) /bin/bash 
 
 # Run pipeline image with arguments
+# TODO: Should this actually be how we set up args for this?
 run-pipeline:
 	docker run -e "MAPBOX_API=${MAPBOX_API}" -v $(current_abs_path)data:/app/data $(pipeline_image_name) python pipeline/main.py $(args)
 
