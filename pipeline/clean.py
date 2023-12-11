@@ -15,13 +15,12 @@ from constants import (
 )
 
 
-def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
+def clean_FSIS(fsis_fpath: Path, fsis_mpi_fpath: Path) -> None:
     """Filters the FSIS dataset for large poultry processing plants.
 
     Args:
-        filepath1: relative path to the raw FSIS MPI dataset.
-        filepath2: relative path to the raw FSIS dataset.
-        save_path: the path to save filtered FSIS dataset.
+        fsis_fpath: path to the raw FSIS dataset.
+        fsis_mpi_fpath: path to the raw FSIS MPI dataset.
 
     Returns:
         N/A, writes cleaned dataset into the clean data folder.
@@ -32,8 +31,8 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
 
         load_dotenv()
 
-    df_with_address = pd.read_excel(filepath1)
-    df_with_size = pd.read_excel(filepath2, skiprows=3)
+    df_with_address = pd.read_excel(fsis_fpath)
+    df_with_size = pd.read_excel(fsis_mpi_fpath, skiprows=3)
 
     # only keep the columns we need
     df_with_size = df_with_size[["EstNumber", "Size", "Chicken\nSlaughter"]]
@@ -82,8 +81,8 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
     df_large_chickens = df_large_chickens.rename(
         columns={"Company": "Establishment Name"}
     )
-    # Save df_FSIS to raw folder
-    df_large_chickens.to_csv(save_path)
+
+    return df_large_chickens
 
 
 def filter_infogroup(
@@ -244,12 +243,11 @@ def filter_NETS(
     return rows_to_keep
 
 
-def clean_NETS(
-    NETS_fpath: str,
-    NAICS_fpath: str,
-    save_path: str,
+def clean_nets(
+    nets_fpath: str,
+    naics_fpath: str,
     cols_to_keep: list,
-    NAICS_lookup_fpath: str,
+    naics_lookup_fpath: str,
     SIC_code: str,
     filtering: bool = False,
 ) -> None:
@@ -270,16 +268,17 @@ def clean_NETS(
     """
     # TODO: I don't like this. load the thing then do something with it
     if filtering:
-        df = filter_NETS(NETS_fpath, NAICS_fpath, NAICS_lookup_fpath, SIC_code)
+        df = filter_NETS(nets_fpath, naics_fpath, naics_lookup_fpath, SIC_code)
     else:
-        df = pd.read_csv(NETS_fpath, sep="\t", encoding="latin-1", low_memory=False)
+        df = pd.read_csv(nets_fpath, sep="\t", encoding="latin-1", low_memory=False)
 
     df = df.reset_index(drop=True)
 
-    master = df[cols_to_keep]
+    df_clean = df[cols_to_keep]
 
     # TODO: this should probably be somewhere else/abstracted
-    master.rename(
+    # and name this something more descriptive
+    df_clean.rename(
         columns={
             "FIRSTYEAR": "YEAR ESTABLISHED",
             "HQCOMPANY": "PARENT COMPANY",
@@ -287,7 +286,7 @@ def clean_NETS(
         },
         inplace=True,
     )
-    master.to_csv(save_path)
+    return df_clean
 
 
 def clean_counterglow(filepath: Path) -> None:

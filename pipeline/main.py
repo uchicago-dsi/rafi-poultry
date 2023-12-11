@@ -159,6 +159,7 @@ def create_parser():
     return parser
 
 
+# TODO: This is going to be totally broken after refactoring...
 def run_function(args) -> None:
     """Executes functions based on what was specified in command line.
     Useful for debugging and running specific functions in the pipeline.
@@ -326,6 +327,13 @@ def main(args) -> None:
         None
     """
     # update filepaths for smoke_test
+    cleaned_fsis_processors_fpath = (
+        CLEANED_FSIS_PROCESSORS_FPATH.with_name(
+            f"{CLEANED_FSIS_PROCESSORS_FPATH.stem}_smoke_test{CLEANED_FSIS_PROCESSORS_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else CLEANED_FSIS_PROCESSORS_FPATH
+    )
     cleaned_business_fpath = (
         CLEANED_NETS_FPATH.with_name(
             f"{CLEANED_NETS_FPATH.stem}_smoke_test{CLEANED_NETS_FPATH.suffix}"
@@ -344,13 +352,16 @@ def main(args) -> None:
     try:
         # Data Cleaning
         print("Cleaning FSIS data...")
-        clean.clean_FSIS(
-            RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
-        )
+        df_fsis = clean.clean_FSIS(RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH)
+        if args.smoke_test:
+            df_fsis = df_fsis[(df_fsis["State"] == "NC") | (df_fsis["State"] == "SC")]
+        df_fsis.to_csv(cleaned_fsis_processors_fpath)
     except Exception as e:
         print(f"{e}")
         exit(1)
 
+    # TODO: this is all going to be broken...
+    # Did this for NETS and haven't been checking this for infogroup
     if args.infogroup:
         try:
             print("Cleaning Infogroup data...")
@@ -378,47 +389,34 @@ def main(args) -> None:
             print("Cleaning NETS data...")
             # TODO: this should be generalized to handle Infogroup and NETS
             # Also add keyword arguments so you know what these things even are
-
-            cleaned_business_fpath = (
-                CLEANED_NETS_FPATH.with_name(
-                    f"{CLEANED_NETS_FPATH.stem}_smoke_test{CLEANED_NETS_FPATH.suffix}"
-                )
-                if args.smoke_test
-                else CLEANED_NETS_FPATH
-            )
-
-            clean.clean_NETS(
-                RAW_NETS,
-                RAW_NAICS,
-                cleaned_business_fpath,
-                COLUMNS_TO_KEEP,
-                NAICS_lookup_fpath=RAW_NAICS_LOOKUP,
+            df_nets = clean.clean_nets(
+                nets_fpath=RAW_NETS,
+                naics_fpath=RAW_NAICS,
+                cols_to_keep=COLUMNS_TO_KEEP,
+                naics_lookup_fpath=RAW_NAICS_LOOKUP,
                 SIC_code=args.code,
                 filtering=True,
             )
+            if args.smoke_test:
+                df_nets = df_nets[
+                    (df_nets["STATE"] == "NC") | (df_nets["STATE"] == "SC")
+                ]
+            df_nets.to_csv(cleaned_business_fpath)
         except Exception as e:
             print(f"{e}")
             exit(1)
-
-    # TODO: this is not great but trying to do this while maintaining the kinda weird filepath setup here
-    # Should be able to do this somehwere else
-    # We should set everything up so that stuff gets returned and written
-    if args.smoke_test:
-        df = pd.read_csv(cleaned_business_fpath)
-        df = df[(df["STATE"] == "NC") | (df["STATE"] == "SC")]
-        df.to_csv(cleaned_business_fpath)
 
     try:
         print(
             "Matching FSIS plants and cleaned business data for parent company and sales volume..."
         )
         # TODO: Wait...how are we handling unmatched plants?
-        match_plants_nets.save_all_matches(
-            nets_path=cleaned_business_fpath,
-            fsis_path=CLEANED_FSIS_PROCESSORS_FPATH,
-            output_fpath=cleaned_matched_plants_fpath,
+        df_matched_plants = match_plants_nets.match_plants(
+            df_nets,
+            df_fsis,
             threshold=args.distance,
         )
+        df_matched_plants.to_csv(cleaned_matched_plants_fpath)
         print("FSIS plant match completed.")
     except Exception as e:
         print(f"{e}")
@@ -476,8 +474,7 @@ def main(args) -> None:
             print(f"{e}")
             exit(1)
 
-    # TODO: this is also not ideal need to set this up to work with a smoke test
-    # Set this up to take a filepath argument
+    # TODO: this one is a mess and needs to be totally rewritten
     try:
         # Generate GeoJSONs and maps
         print("Creating plant capture GeoJSON...")
@@ -485,7 +482,7 @@ def main(args) -> None:
             MAPBOX_KEY = os.getenv("MAPBOX_API")
         except:
             print("Missing environment variable")
-        calculate_captured_areas.full_script(MAPBOX_KEY)
+        calculate_captured_areas.full_script(df_matched_plants, token=MAPBOX_KEY)
     except Exception as e:
         print(f"{e}")
         exit(1)
