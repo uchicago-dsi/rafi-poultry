@@ -35,6 +35,7 @@ from constants import (
     CLEANED_NETS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
+    CLEANED_MATCHED_PLANTS_FPATH,
     MATCHED_FARMS_FPATH,
     UNMATCHED_FARMS_FPATH,
     ROOT_DIR,
@@ -324,6 +325,22 @@ def main(args) -> None:
     Returns:
         None
     """
+    # update filepaths for smoke_test
+    cleaned_business_fpath = (
+        CLEANED_NETS_FPATH.with_name(
+            f"{CLEANED_NETS_FPATH.stem}_smoke_test{CLEANED_NETS_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else CLEANED_NETS_FPATH
+    )
+    cleaned_matched_plants_fpath = (
+        CLEANED_MATCHED_PLANTS_FPATH.with_name(
+            f"{CLEANED_MATCHED_PLANTS_FPATH.stem}_smoke_test{CLEANED_MATCHED_PLANTS_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else CLEANED_MATCHED_PLANTS_FPATH
+    )
+
     try:
         # Data Cleaning
         print("Cleaning FSIS data...")
@@ -351,7 +368,7 @@ def main(args) -> None:
                     CLEANED_INFOGROUP_FPATH,
                     args.filtering,
                 )
-            cleaned_business_data = CLEANED_INFOGROUP_FPATH
+            cleaned_business_fpath = CLEANED_INFOGROUP_FPATH
         except Exception as e:
             print(f"{e}")
             exit(1)
@@ -361,26 +378,46 @@ def main(args) -> None:
             print("Cleaning NETS data...")
             # TODO: this should be generalized to handle Infogroup and NETS
             # Also add keyword arguments so you know what these things even are
+
+            cleaned_business_fpath = (
+                CLEANED_NETS_FPATH.with_name(
+                    f"{CLEANED_NETS_FPATH.stem}_smoke_test{CLEANED_NETS_FPATH.suffix}"
+                )
+                if args.smoke_test
+                else CLEANED_NETS_FPATH
+            )
+
             clean.clean_NETS(
                 RAW_NETS,
                 RAW_NAICS,
-                RAW_NAICS_LOOKUP,
-                args.code,
-                CLEANED_NETS_FPATH,
+                cleaned_business_fpath,
                 COLUMNS_TO_KEEP,
-                True,
+                NAICS_lookup_fpath=RAW_NAICS_LOOKUP,
+                SIC_code=args.code,
+                filtering=True,
             )
-            cleaned_business_data = CLEANED_NETS_FPATH
         except Exception as e:
             print(f"{e}")
             exit(1)
+
+    # TODO: this is not great but trying to do this while maintaining the kinda weird filepath setup here
+    # Should be able to do this somehwere else
+    # We should set everything up so that stuff gets returned and written
+    if args.smoke_test:
+        df = pd.read_csv(cleaned_business_fpath)
+        df = df[(df["STATE"] == "NC") | (df["STATE"] == "SC")]
+        df.to_csv(cleaned_business_fpath)
 
     try:
         print(
             "Matching FSIS plants and cleaned business data for parent company and sales volume..."
         )
+        # TODO: Wait...how are we handling unmatched plants?
         match_plants_nets.save_all_matches(
-            cleaned_business_data, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
+            nets_path=cleaned_business_fpath,
+            fsis_path=CLEANED_FSIS_PROCESSORS_FPATH,
+            output_fpath=cleaned_matched_plants_fpath,
+            threshold=args.distance,
         )
         print("FSIS plant match completed.")
     except Exception as e:
@@ -439,9 +476,10 @@ def main(args) -> None:
             print(f"{e}")
             exit(1)
 
+    # TODO: this is also not ideal need to set this up to work with a smoke test
+    # Set this up to take a filepath argument
     try:
         # Generate GeoJSONs and maps
-        # TODO: Need a progress bar here for sure
         print("Creating plant capture GeoJSON...")
         try:
             MAPBOX_KEY = os.getenv("MAPBOX_API")

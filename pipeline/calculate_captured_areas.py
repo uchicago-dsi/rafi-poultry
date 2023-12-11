@@ -136,10 +136,10 @@ def add_plants(
 
     """
 
-    # TODO: this whole thing is maybe unnecessary
+    # TODO: this whole folium thing is maybe unnecessary
     plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
 
-    for _, row in tqdm(df_map.iterrows()):
+    for _, row in df_map.iterrows():
         lat = str(row["latitude"])
         lng = str(row["longitude"])
 
@@ -167,7 +167,6 @@ def add_plants(
         chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
 
-    # TODO: prob don't need this folium stuff here either
     plants_layer.add_to(m)
 
 

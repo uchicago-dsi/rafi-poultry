@@ -247,19 +247,20 @@ def filter_NETS(
 def clean_NETS(
     NETS_fpath: str,
     NAICS_fpath: str,
-    NAICS_lookup_fpath: str,
-    SIC_CODE: str,
     save_path: str,
-    colums_to_keep: list,
+    cols_to_keep: list,
+    NAICS_lookup_fpath: str,
+    SIC_code: str,
     filtering: bool = False,
 ) -> None:
-    """Cleans the infogroup files, combines them into one large master df.
+    """Cleans the NETS files, combines them into one large master df.
 
     Args:
+        # TODO: what is the NAICS lookup path?
         filepath: absolute path to folder that contains all infogroup files
-        SIC_CODE: SIC code to filter the dataframes on
+        SIC_code: SIC code to filter the dataframes on
         save_path: path to save cleaned df to
-        colums_to_keep: list of columns to keep in the final df
+        cols_to_keep: list of columns to keep in the final df
         filtering: boolean, true if infogroup files are in their rawest form
             and need to be filtered
 
@@ -267,15 +268,17 @@ def clean_NETS(
         N/A, puts cleaned df into the data/clean folder
 
     """
+    # TODO: I don't like this. load the thing then do something with it
     if filtering:
-        df = filter_NETS(NETS_fpath, NAICS_fpath, NAICS_lookup_fpath, SIC_CODE)
+        df = filter_NETS(NETS_fpath, NAICS_fpath, NAICS_lookup_fpath, SIC_code)
     else:
         df = pd.read_csv(NETS_fpath, sep="\t", encoding="latin-1", low_memory=False)
 
     df = df.reset_index(drop=True)
 
-    master = df[colums_to_keep]
+    master = df[cols_to_keep]
 
+    # TODO: this should probably be somewhere else/abstracted
     master.rename(
         columns={
             "FIRSTYEAR": "YEAR ESTABLISHED",

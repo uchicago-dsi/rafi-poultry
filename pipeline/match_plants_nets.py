@@ -155,7 +155,12 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
     return matched_loc_df
 
 
-def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> None:
+def save_all_matches(
+    nets_path: Path,
+    fsis_path: Path,
+    output_fpath: Path = CLEANED_MATCHED_PLANTS_FPATH,
+    threshold: float = 5,
+) -> None:
     """Executes match function.
 
 
@@ -163,6 +168,7 @@ def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> 
         nets_path: relative path to the raw data folder
             with the NETS dataset.
         fsis_path: relative path to the raw data folder with the FSIS dataset.
+        output_fpath: path where the output csv will be saved
         threshold: threshold for maximum distance possible
             to be considered a match.
 
@@ -174,4 +180,4 @@ def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> 
 
     final_matches = pd.concat([address_matches, loc_matches]).drop_duplicates()
     final_matches = final_matches.dropna(subset=["Parent Corporation"])
-    final_matches.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    final_matches.to_csv(output_fpath)
