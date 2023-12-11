@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from geopy.geocoders import MapBox
 import os
-from dotenv import load_dotenv
 from constants import (
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
@@ -28,7 +27,10 @@ def clean_FSIS(filepath1: Path, filepath2: Path, save_path: Path) -> None:
         N/A, writes cleaned dataset into the clean data folder.
 
     """
-    load_dotenv()
+    if not os.getenv("INSIDE_DOCKER"):
+        from dotenv import load_dotenv
+
+        load_dotenv()
     df_with_address = pd.read_excel(filepath1)
     df_with_size = pd.read_excel(filepath2, skiprows=3)
 

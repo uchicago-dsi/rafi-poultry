@@ -27,6 +27,9 @@ COPY setup.py .
 COPY pipeline ./pipeline
 RUN pip install -e .
 
+# Set environment variable for pipeline logic
+ENV INSIDE_DOCKER=True
+
 # CMD instruction is set to execute main.py. 
 # When running the container, additional arguments can be passed, which will be appended to this CMD.
 CMD ["python", "pipeline/main.py"]
