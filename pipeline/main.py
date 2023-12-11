@@ -35,6 +35,7 @@ from constants import (
     CLEANED_NETS_FPATH,
     CLEANED_COUNTERGLOW_FPATH,
     CLEANED_CAFO_POULTRY_FPATH,
+    CLEANED_MATCHED_PLANTS_FPATH,
     MATCHED_FARMS_FPATH,
     UNMATCHED_FARMS_FPATH,
     ROOT_DIR,
@@ -158,6 +159,7 @@ def create_parser():
     return parser
 
 
+# TODO: This is going to be totally broken after refactoring...
 def run_function(args) -> None:
     """Executes functions based on what was specified in command line.
     Useful for debugging and running specific functions in the pipeline.
@@ -324,16 +326,42 @@ def main(args) -> None:
     Returns:
         None
     """
+    # update filepaths for smoke_test
+    cleaned_fsis_processors_fpath = (
+        CLEANED_FSIS_PROCESSORS_FPATH.with_name(
+            f"{CLEANED_FSIS_PROCESSORS_FPATH.stem}_smoke_test{CLEANED_FSIS_PROCESSORS_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else CLEANED_FSIS_PROCESSORS_FPATH
+    )
+    cleaned_business_fpath = (
+        CLEANED_NETS_FPATH.with_name(
+            f"{CLEANED_NETS_FPATH.stem}_smoke_test{CLEANED_NETS_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else CLEANED_NETS_FPATH
+    )
+    cleaned_matched_plants_fpath = (
+        CLEANED_MATCHED_PLANTS_FPATH.with_name(
+            f"{CLEANED_MATCHED_PLANTS_FPATH.stem}_smoke_test{CLEANED_MATCHED_PLANTS_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else CLEANED_MATCHED_PLANTS_FPATH
+    )
+
     try:
         # Data Cleaning
         print("Cleaning FSIS data...")
-        clean.clean_FSIS(
-            RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
-        )
+        df_fsis = clean.clean_FSIS(RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH)
+        if args.smoke_test:
+            df_fsis = df_fsis[(df_fsis["State"] == "NC") | (df_fsis["State"] == "SC")]
+        df_fsis.to_csv(cleaned_fsis_processors_fpath)
     except Exception as e:
         print(f"{e}")
         exit(1)
 
+    # TODO: this is all going to be broken...
+    # Did this for NETS and haven't been checking this for infogroup
     if args.infogroup:
         try:
             print("Cleaning Infogroup data...")
@@ -351,7 +379,7 @@ def main(args) -> None:
                     CLEANED_INFOGROUP_FPATH,
                     args.filtering,
                 )
-            cleaned_business_data = CLEANED_INFOGROUP_FPATH
+            cleaned_business_fpath = CLEANED_INFOGROUP_FPATH
         except Exception as e:
             print(f"{e}")
             exit(1)
@@ -361,16 +389,19 @@ def main(args) -> None:
             print("Cleaning NETS data...")
             # TODO: this should be generalized to handle Infogroup and NETS
             # Also add keyword arguments so you know what these things even are
-            clean.clean_NETS(
-                RAW_NETS,
-                RAW_NAICS,
-                RAW_NAICS_LOOKUP,
-                args.code,
-                CLEANED_NETS_FPATH,
-                COLUMNS_TO_KEEP,
-                True,
+            df_nets = clean.clean_nets(
+                nets_fpath=RAW_NETS,
+                naics_fpath=RAW_NAICS,
+                cols_to_keep=COLUMNS_TO_KEEP,
+                naics_lookup_fpath=RAW_NAICS_LOOKUP,
+                SIC_code=args.code,
+                filtering=True,
             )
-            cleaned_business_data = CLEANED_NETS_FPATH
+            if args.smoke_test:
+                df_nets = df_nets[
+                    (df_nets["STATE"] == "NC") | (df_nets["STATE"] == "SC")
+                ]
+            df_nets.to_csv(cleaned_business_fpath)
         except Exception as e:
             print(f"{e}")
             exit(1)
@@ -379,9 +410,13 @@ def main(args) -> None:
         print(
             "Matching FSIS plants and cleaned business data for parent company and sales volume..."
         )
-        match_plants_nets.save_all_matches(
-            cleaned_business_data, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
+        # TODO: Wait...how are we handling unmatched plants?
+        df_matched_plants = match_plants_nets.match_plants(
+            df_nets,
+            df_fsis,
+            threshold=args.distance,
         )
+        df_matched_plants.to_csv(cleaned_matched_plants_fpath)
         print("FSIS plant match completed.")
     except Exception as e:
         print(f"{e}")
@@ -439,15 +474,15 @@ def main(args) -> None:
             print(f"{e}")
             exit(1)
 
+    # TODO: this one is a mess and needs to be totally rewritten
     try:
         # Generate GeoJSONs and maps
-        # TODO: Need a progress bar here for sure
         print("Creating plant capture GeoJSON...")
         try:
             MAPBOX_KEY = os.getenv("MAPBOX_API")
         except:
             print("Missing environment variable")
-        calculate_captured_areas.full_script(MAPBOX_KEY)
+        calculate_captured_areas.full_script(df_matched_plants, token=MAPBOX_KEY)
     except Exception as e:
         print(f"{e}")
         exit(1)

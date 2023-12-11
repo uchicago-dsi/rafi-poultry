@@ -4,6 +4,7 @@
 """
 
 import pandas as pd
+from pandas import DataFrame
 import numpy as np
 import requests
 import folium
@@ -91,7 +92,7 @@ def make_geo_df(
     """Adds slightly simplified isochrones to fsis dataframe.
 
     Args:
-        df: dataframe; the cleaned fsis_df file.
+        df: dataframe; the cleaned df_fsis file.
         dist: float; radius of captured area (in driving distance) to be passed
             to isochrones function.
         token: str; API token to access mapbox.
@@ -136,10 +137,10 @@ def add_plants(
 
     """
 
-    # TODO: this whole thing is maybe unnecessary
+    # TODO: this whole folium thing is maybe unnecessary
     plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
 
-    for _, row in tqdm(df_map.iterrows()):
+    for _, row in df_map.iterrows():
         lat = str(row["latitude"])
         lng = str(row["longitude"])
 
@@ -167,7 +168,6 @@ def add_plants(
         chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
 
-    # TODO: prob don't need this folium stuff here either
     plants_layer.add_to(m)
 
 
@@ -528,12 +528,15 @@ def state_level_geojson(
     )
 
 
-def full_script(token: str, distance: float = 60) -> folium.Map:
+def full_script(
+    df_matched_plants: DataFrame, token: str, distance: float = 60
+) -> folium.Map:
     """Loads in cleaned data, adds isochrones based on passed radius,
         calculates areas that have access to 1, 2, and 3+ plants, and plots
         them on a country-wide map and a state-level map
 
     Args:
+        TODO: Update docstring
         token: str; API token to access mapbox.
         distance: float; radius of plant isochrones based on driving distance,
             in miles; default is 60 miles.
@@ -543,9 +546,6 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
 
     """
 
-    # import cleaned data
-    fsis_df = pd.read_csv(CLEANED_MATCHED_PLANTS_FPATH)
-
     # TODO: don't need to do the folium stuff by default
     # make base map for country-wide visualization
     m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
@@ -554,10 +554,20 @@ def full_script(token: str, distance: float = 60) -> folium.Map:
     parent_dict = {}
     chrones = []
 
-    df_map = make_geo_df(fsis_df, distance, token)
+    # TODO: wut...
+    # where does parent dict get populated?
+    # and we modify chrones in add_plants???
+
+    df_map = make_geo_df(df_matched_plants, distance, token)
+    # TODO: I think we can just skip this add_plants function
+    # since it just does folium stuff?
     add_plants(df_map, parent_dict, chrones, m)
 
+    # TODO: ok...single_shapely, etc. are constants...so they get updated in these functions?
+    # Need to refactor this so that we are just returning stuff
+    # I don't understand what chrones is here since it looks like an empty list also...
     single_plant_cap(chrones, single_shapely, parent_dict, m)
+    tqdm.write("Completed single plant capture.")
     two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
     save_map(single_shapely, two_shapely, three_combined, parent_dict)
 
