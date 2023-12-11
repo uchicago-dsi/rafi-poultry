@@ -3,7 +3,7 @@ and a distance threshold in km to find matching farms within, and whether
 filtering needs to be done on Infogroup or not. Functions can be run 
 individually by including a function flag; the default is to run all of them.
 """
-
+# TODO: ok these functions shouldn't be NETS or Infogroup specific
 import clean
 import clean_nets
 import match_farms
@@ -351,20 +351,7 @@ def main(args) -> None:
                     CLEANED_INFOGROUP_FPATH,
                     args.filtering,
                 )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
-        try:
-            # Match plants and farms
-            print(
-                "Matching FSIS plants and Infogroup for sales volume \
-                      data..."
-            )
-            match_plants.save_all_matches(
-                CLEANED_INFOGROUP_FPATH,
-                CLEANED_FSIS_PROCESSORS_FPATH,
-                args.distance,
-            )
+            cleaned_business_data = CLEANED_INFOGROUP_FPATH
         except Exception as e:
             print(f"{e}")
             exit(1)
@@ -373,6 +360,7 @@ def main(args) -> None:
         try:
             print("Cleaning NETS data...")
             # TODO: this should be generalized to handle Infogroup and NETS
+            # Also add keyword arguments so you know what these things even are
             clean_nets.clean_NETS(
                 RAW_NETS,
                 RAW_NAICS,
@@ -382,19 +370,21 @@ def main(args) -> None:
                 COLUMNS_TO_KEEP,
                 True,
             )
+            cleaned_business_data = CLEANED_NETS_FPATH
         except Exception as e:
             print(f"{e}")
             exit(1)
-        try:
-            print(
-                "Matching FSIS plants and NETS for parent company and sales volume data..."
-            )
-            match_plants_nets.save_all_matches(
-                CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
-            )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+
+    try:
+        print(
+            "Matching FSIS plants and cleaned business data for parent company and sales volume..."
+        )
+        match_plants_nets.save_all_matches(
+            cleaned_business_data, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
+        )
+    except Exception as e:
+        print(f"{e}")
+        exit(1)
 
     if args.counterglow:
         try:
