@@ -459,7 +459,7 @@ def main(args) -> None:
             exit(1)
 
         # TODO: This should be optional
-        # This is also unclear if we need both to be done for this or?
+        # This is also unclear if we need both counterglow and cafor for this?
         try:
             print("Mapping CAFO permits...")
             match_df = pd.read_csv(MATCHED_FARMS_FPATH)
@@ -482,6 +482,7 @@ def main(args) -> None:
             MAPBOX_KEY = os.getenv("MAPBOX_API")
         except:
             print("Missing environment variable")
+        # TODO: split this into creating of geojsons, saving of geojsons, and folium map
         calculate_captured_areas.full_script(df_matched_plants, token=MAPBOX_KEY)
     except Exception as e:
         print(f"{e}")
