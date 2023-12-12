@@ -171,7 +171,6 @@ def make_geo_df(
 def add_plants(
     df_map: pd.DataFrame,
     parent_dict: Dict[str, Polygon],
-    # m: folium.Map,
 ) -> None:
     """Take geo_df and adds the plant isochrones to the map as well as sorts
         the isochrones by parent corporation.
@@ -191,25 +190,7 @@ def add_plants(
 
     chrones = []
 
-    # TODO: this whole folium thing is maybe unnecessary
-    # plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
-
     for _, row in df_map.iterrows():
-        # TODO: I think we can get rid of this?
-        # lat = str(row["latitude"])
-        # lng = str(row["longitude"])
-
-        # set up plant tooltip
-        # name = row["Establishment Name"]
-        # corp = row["Parent Corporation"]
-        # address = row["Full Address"]
-
-        # add plant marker to map
-        # tooltip = folium.map.Tooltip(
-        #     f"{name}<br>{address}<br>Parent Corporation: {corp}"
-        # )
-        # folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(plants_layer)
-
         isochrone = row["Isochrone Cleaned"]
         corp = row["Parent Corporation"]
 
@@ -222,8 +203,6 @@ def add_plants(
     for key in parent_dict:
         chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
-
-    # plants_layer.add_to(m)
 
     return chrones
 
@@ -255,17 +234,6 @@ def single_plant_cap(
         others = shapely.unary_union(chrones[:index] + chrones[index + 1 :])
         single_plant = shapely.difference(poly, others)
         single_shapely.append(single_plant)
-
-    # parent_names = list(parent_dict.keys())
-
-    # # TODO: probably don't need the folium stuff here
-    # for index, poly in enumerate(single_shapely):
-    #     corp = parent_names[index]
-    #     title = "Only access to " + corp
-    #     layer = folium.map.FeatureGroup(name=title)
-    #     tooltip = folium.map.Tooltip(f"Parent Corporation: {corp}")
-    #     folium.GeoJson(poly, tooltip=tooltip).add_to(layer)
-    #     layer.add_to(m)
 
     return single_shapely
 
@@ -337,21 +305,7 @@ def two_and_three_plant_cap(
             if captured_area:
                 two_shapely.append(captured_area)
 
-    # # TODO: Should prob ditch this also
-    # two_plant_layer = folium.map.FeatureGroup(
-    #     name="Access to 2 Parent \
-    #                                           Corporations"
-    # )
     two_plants_combined = shapely.unary_union(two_shapely)
-    # folium.GeoJson(two_plants_combined, style_function=two_plant_color).add_to(
-    #     two_plant_layer
-    # )
-    # two_plant_layer.add_to(m)
-
-    # three_plant_layer = folium.map.FeatureGroup(
-    #     name="Access to 3+ Parent \
-    #                                             Corporations"
-    # )
     three_shapely = shapely.difference(everything, single_plant_combined)
     three_shapely = shapely.difference(
         three_shapely.buffer(0), two_plants_combined.buffer(0)
@@ -543,6 +497,59 @@ def state_level_geojson(
     )
 
 
+def save_to_folium():
+    # TODO: don't need to do the folium stuff by default
+    # make base map for country-wide visualization
+    m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
+
+    # TODO: this whole folium thing is maybe unnecessary
+    # plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
+
+    # for _, row in df_map.iterrows():
+    #     lat = str(row["latitude"])
+    #     lng = str(row["longitude"])
+
+    #     set up plant tooltip
+    #     name = row["Establishment Name"]
+    #     corp = row["Parent Corporation"]
+    #     address = row["Full Address"]
+
+    #     add plant marker to map
+    #     tooltip = folium.map.Tooltip(
+    #         f"{name}<br>{address}<br>Parent Corporation: {corp}"
+    #     )
+    #     folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(plants_layer)
+
+    # plants_layer.add_to(m)
+
+    # parent_names = list(parent_dict.keys())
+
+    # # TODO: probably don't need the folium stuff here
+    # for index, poly in enumerate(single_shapely):
+    #     corp = parent_names[index]
+    #     title = "Only access to " + corp
+    #     layer = folium.map.FeatureGroup(name=title)
+    #     tooltip = folium.map.Tooltip(f"Parent Corporation: {corp}")
+    #     folium.GeoJson(poly, tooltip=tooltip).add_to(layer)
+    #     layer.add_to(m)
+
+    # # TODO: Should prob ditch this also
+    # two_plant_layer = folium.map.FeatureGroup(
+    #     name="Access to 2 Parent \
+    #                                           Corporations"
+    # )
+    # folium.GeoJson(two_plants_combined, style_function=two_plant_color).add_to(
+    #     two_plant_layer
+    # )
+    # two_plant_layer.add_to(m)
+
+    # three_plant_layer = folium.map.FeatureGroup(
+    #     name="Access to 3+ Parent \
+    #                                             Corporations"
+    # )
+    return
+
+
 def full_script(
     df_matched_plants: DataFrame, token: str, distance: float = 60
 ) -> folium.Map:
@@ -561,23 +568,21 @@ def full_script(
 
     """
 
-    # TODO: don't need to do the folium stuff by default
-    # make base map for country-wide visualization
-    m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
-
     # TODO: Figure out how to actually deal with parent_dict
+    # This gets passed in and updated in all of these different functions...maybe
     parent_dict = {}
-    # chrones = []
 
+    # TODO: should probably move this stuff out of this script and into the main pipeline
     df_map = make_geo_df(df_matched_plants, distance, token)
     chrones = add_plants(df_map, parent_dict)
 
     single_shapely = single_plant_cap(chrones)
     two_shapely, three_combined = two_and_three_plant_cap(chrones, single_shapely)
     # TODO: This is actually the full country. Rename this function.
+    # Should probably return the object also and then save it later?
     save_map(single_shapely, two_shapely, three_combined, parent_dict)
 
     # assemble state-specific capture map, save as GEOJSON to data/clean
     state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
 
-    return m
+    return
