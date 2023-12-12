@@ -351,7 +351,7 @@ def main(args) -> None:
 
     try:
         # Data Cleaning
-        print("Cleaning FSIS data...")
+        tqdm.write("Cleaning FSIS data...")
         df_fsis = clean.clean_FSIS(RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH)
         if args.smoke_test:
             df_fsis = df_fsis[(df_fsis["State"] == "NC") | (df_fsis["State"] == "SC")]
@@ -364,7 +364,7 @@ def main(args) -> None:
     # Did this for NETS and haven't been checking this for infogroup
     if args.infogroup:
         try:
-            print("Cleaning Infogroup data...")
+            tqdm.write("Cleaning Infogroup data...")
             ABI_dict = config["ABI_map"]
             # TODO: There's prob an easier way to do the smoke test stuff and just pass it in
             if args.smoke_test:
@@ -386,7 +386,7 @@ def main(args) -> None:
 
     if args.nets:
         try:
-            print("Cleaning NETS data...")
+            tqdm.write("Cleaning NETS data...")
             # TODO: this should be generalized to handle Infogroup and NETS
             # Also add keyword arguments so you know what these things even are
             df_nets = clean.clean_nets(
@@ -407,7 +407,7 @@ def main(args) -> None:
             exit(1)
 
     try:
-        print(
+        tqdm.write(
             "Matching FSIS plants and cleaned business data for parent company and sales volume..."
         )
         # TODO: Wait...how are we handling unmatched plants?
@@ -417,20 +417,20 @@ def main(args) -> None:
             threshold=args.distance,
         )
         df_matched_plants.to_csv(cleaned_matched_plants_fpath)
-        print("FSIS plant match completed.")
+        tqdm.write("FSIS plant match completed.")
     except Exception as e:
         print(f"{e}")
         exit(1)
 
     if args.counterglow:
         try:
-            print("Cleaning Counterglow data...")
+            tqdm.write("Cleaning Counterglow data...")
             clean.clean_counterglow(RAW_COUNTERGLOW_FPATH)
         except Exception as e:
             print(f"{e}")
             exit(1)
         try:
-            print("Creating Counterglow GeoJSON...")
+            tqdm.write("Creating Counterglow GeoJSON...")
             farm_geojson_creation.create_counterglow_geojson(
                 CLEANED_COUNTERGLOW_FPATH,
                 CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson",
@@ -441,7 +441,7 @@ def main(args) -> None:
 
     if args.cafomaps:
         try:
-            print("Cleaning CAFO Permit data...")
+            tqdm.write("Cleaning CAFO Permit data...")
             clean.clean_cafo(RAW_CAFO_FPATH, RAW_CAFO_FPATH / "farm_source.json")
         except Exception as e:
             print(f"{e}")
@@ -450,7 +450,7 @@ def main(args) -> None:
     # If using both Counterglow and CAFOmaps, look for matches between the two datasets
     if args.cafomaps and args.counterglow:
         try:
-            print("Matching CAFO permit data and Counterglow for farms...")
+            tqdm.write("Matching CAFO permit data and Counterglow for farms...")
             match_farms.match_all_farms(
                 CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, args.animal
             )
@@ -461,7 +461,7 @@ def main(args) -> None:
         # TODO: This should be optional
         # This is also unclear if we need both counterglow and cafor for this?
         try:
-            print("Mapping CAFO permits...")
+            tqdm.write("Mapping CAFO permits...")
             match_df = pd.read_csv(MATCHED_FARMS_FPATH)
             match_df = match_df[match_df["lat"].notna()]
             states = match_df["state"].unique().tolist()
@@ -477,7 +477,7 @@ def main(args) -> None:
     # TODO: this one is a mess and needs to be totally rewritten
     try:
         # Generate GeoJSONs and maps
-        print("Creating plant capture GeoJSON...")
+        tqdm.write("Creating plant capture GeoJSON...")
         try:
             MAPBOX_KEY = os.getenv("MAPBOX_API")
         except:
