@@ -160,160 +160,160 @@ def create_parser():
 
 
 # TODO: This is going to be totally broken after refactoring...
-def run_function(args) -> None:
-    """Executes functions based on what was specified in command line.
-    Useful for debugging and running specific functions in the pipeline.
+# def run_function(args) -> None:
+#     """Executes functions based on what was specified in command line.
+#     Useful for debugging and running specific functions in the pipeline.
 
-    Args:
-        None
+#     Args:
+#         None
 
-    Returns:
-        None
-    """
-    if args.function == "clean_FSIS":
-        try:
-            # Data Cleaning
-            print("Cleaning FSIS data...")
-            clean.clean_FSIS(
-                RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
-            )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     Returns:
+#         None
+#     """
+#     if args.function == "clean_FSIS":
+#         try:
+#             # Data Cleaning
+#             print("Cleaning FSIS data...")
+#             clean.clean_FSIS(
+#                 RAW_FSIS_1_FPATH, RAW_FSIS_2_FPATH, CLEANED_FSIS_PROCESSORS_FPATH
+#             )
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "clean_counterglow":
-        try:
-            print("Cleaning Counterglow data...")
-            clean.clean_counterglow(RAW_COUNTERGLOW_FPATH)
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "clean_counterglow":
+#         try:
+#             print("Cleaning Counterglow data...")
+#             clean.clean_counterglow(RAW_COUNTERGLOW_FPATH)
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "clean_infogroup":
-        try:
-            print("Cleaning Infogroup data...")
-            ABI_dict = config["ABI_map"]
-            if args.smoke_test:
-                clean.clean_infogroup(
-                    SMOKE_TEST_FPATH,
-                    ABI_dict,
-                    args.code,
-                    SMOKE_TEST_CLEAN_FPATH,
-                    True,
-                )
-            else:
-                clean.clean_infogroup(
-                    RAW_INFOGROUP_FPATH,
-                    ABI_dict,
-                    args.code,
-                    CLEANED_INFOGROUP_FPATH,
-                    args.filtering,
-                )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
-    elif args.function == "clean_NETS":
-        try:
-            print("Cleaning NETS data...")
-            clean.clean_NETS(
-                RAW_NETS,
-                RAW_NAICS,
-                RAW_NAICS_LOOKUP,
-                args.code,
-                CLEANED_NETS_FPATH,
-                COLUMNS_TO_KEEP,
-                True,
-            )
+#     elif args.function == "clean_infogroup":
+#         try:
+#             print("Cleaning Infogroup data...")
+#             ABI_dict = config["ABI_map"]
+#             if args.smoke_test:
+#                 clean.clean_infogroup(
+#                     SMOKE_TEST_FPATH,
+#                     ABI_dict,
+#                     args.code,
+#                     SMOKE_TEST_CLEAN_FPATH,
+#                     True,
+#                 )
+#             else:
+#                 clean.clean_infogroup(
+#                     RAW_INFOGROUP_FPATH,
+#                     ABI_dict,
+#                     args.code,
+#                     CLEANED_INFOGROUP_FPATH,
+#                     args.filtering,
+#                 )
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
+#     elif args.function == "clean_NETS":
+#         try:
+#             print("Cleaning NETS data...")
+#             clean.clean_NETS(
+#                 RAW_NETS,
+#                 RAW_NAICS,
+#                 RAW_NAICS_LOOKUP,
+#                 args.code,
+#                 CLEANED_NETS_FPATH,
+#                 COLUMNS_TO_KEEP,
+#                 True,
+#             )
 
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "clean_cafo":
-        try:
-            print("Cleaning CAFO Permit data...")
-            clean.clean_cafo(RAW_CAFO_FPATH, RAW_CAFO_FPATH / "farm_source.json")
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "clean_cafo":
+#         try:
+#             print("Cleaning CAFO Permit data...")
+#             clean.clean_cafo(RAW_CAFO_FPATH, RAW_CAFO_FPATH / "farm_source.json")
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "match_plants":
-        try:
-            # Match plants and farms
-            print(
-                "Matching FSIS plants and Infogroup for sales volume \
-                    data..."
-            )
-            match_plants.save_all_matches(
-                CLEANED_INFOGROUP_FPATH,
-                CLEANED_FSIS_PROCESSORS_FPATH,
-                args.distance,
-            )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "match_plants":
+#         try:
+#             # Match plants and farms
+#             print(
+#                 "Matching FSIS plants and Infogroup for sales volume \
+#                     data..."
+#             )
+#             match_plants.save_all_matches(
+#                 CLEANED_INFOGROUP_FPATH,
+#                 CLEANED_FSIS_PROCESSORS_FPATH,
+#                 args.distance,
+#             )
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "match_plants_nets":
-        try:
-            # Match plants and farms
-            print(
-                "Matching FSIS plants and NETS for parent company and sales \
-                    data..."
-            )
-            match_plants_nets.save_all_matches(
-                CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
-            )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "match_plants_nets":
+#         try:
+#             # Match plants and farms
+#             print(
+#                 "Matching FSIS plants and NETS for parent company and sales \
+#                     data..."
+#             )
+#             match_plants_nets.save_all_matches(
+#                 CLEANED_NETS_FPATH, CLEANED_FSIS_PROCESSORS_FPATH, args.distance
+#             )
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "match_farms":
-        try:
-            print("Matching CAFO permit data and Counterglow for farms...")
-            match_farms.match_all_farms(
-                CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, args.animal
-            )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "match_farms":
+#         try:
+#             print("Matching CAFO permit data and Counterglow for farms...")
+#             match_farms.match_all_farms(
+#                 CLEANED_COUNTERGLOW_FPATH, CLEANED_CAFO_POULTRY_FPATH, args.animal
+#             )
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "calculate_captured_areas":
-        try:
-            # Generate GeoJSONs and maps
-            print("Creating plant capture GeoJSON...")
-            try:
-                MAPBOX_KEY = os.getenv("MAPBOX_API")
-            except:
-                print("Missing environment variable")
-            calculate_captured_areas.full_script(MAPBOX_KEY)
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "calculate_captured_areas":
+#         try:
+#             # Generate GeoJSONs and maps
+#             print("Creating plant capture GeoJSON...")
+#             try:
+#                 MAPBOX_KEY = os.getenv("MAPBOX_API")
+#             except:
+#                 print("Missing environment variable")
+#             calculate_captured_areas.full_script(MAPBOX_KEY)
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "visualize":
-        try:
-            print("Mapping CAFO permits...")
-            match_df = pd.read_csv(MATCHED_FARMS_FPATH)
-            match_df = match_df[match_df["lat"].notna()]
-            states = match_df["state"].unique().tolist()
-            for state in states:
-                path = "html/cafo_poultry_eda_" + state + ".html"
-                visualize.map_state(
-                    MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state
-                ).save(DATA_DIR / path)
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "visualize":
+#         try:
+#             print("Mapping CAFO permits...")
+#             match_df = pd.read_csv(MATCHED_FARMS_FPATH)
+#             match_df = match_df[match_df["lat"].notna()]
+#             states = match_df["state"].unique().tolist()
+#             for state in states:
+#                 path = "html/cafo_poultry_eda_" + state + ".html"
+#                 visualize.map_state(
+#                     MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state
+#                 ).save(DATA_DIR / path)
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
-    elif args.function == "create_counterglow_geojson":
-        try:
-            print("Creating Counterglow GeoJSON...")
-            farm_geojson_creation.create_counterglow_geojson(
-                CLEANED_COUNTERGLOW_FPATH, ALL_STATES_GEOJSON_FPATH
-            )
-        except Exception as e:
-            print(f"{e}")
-            exit(1)
+#     elif args.function == "create_counterglow_geojson":
+#         try:
+#             print("Creating Counterglow GeoJSON...")
+#             farm_geojson_creation.create_counterglow_geojson(
+#                 CLEANED_COUNTERGLOW_FPATH, ALL_STATES_GEOJSON_FPATH
+#             )
+#         except Exception as e:
+#             print(f"{e}")
+#             exit(1)
 
 
 def main(args) -> None:
@@ -347,6 +347,13 @@ def main(args) -> None:
         )
         if args.smoke_test
         else CLEANED_MATCHED_PLANTS_FPATH
+    )
+    all_states_geojson_fpath = (
+        ALL_STATES_GEOJSON_FPATH.with_name(
+            f"{ALL_STATES_GEOJSON_FPATH.stem}_smoke_test{ALL_STATES_GEOJSON_FPATH.suffix}"
+        )
+        if args.smoke_test
+        else ALL_STATES_GEOJSON_FPATH
     )
 
     try:
@@ -474,7 +481,6 @@ def main(args) -> None:
             print(f"{e}")
             exit(1)
 
-    # TODO: this one is a mess and needs to be totally rewritten
     try:
         # Generate GeoJSONs and maps
         tqdm.write("Creating plant capture GeoJSON...")
@@ -482,8 +488,14 @@ def main(args) -> None:
             MAPBOX_KEY = os.getenv("MAPBOX_API")
         except:
             print("Missing environment variable")
-        # TODO: split this into creating of geojsons, saving of geojsons, and folium map
-        calculate_captured_areas.full_script(df_matched_plants, token=MAPBOX_KEY)
+        df_corp_state = calculate_captured_areas.full_script(
+            df_matched_plants, token=MAPBOX_KEY
+        )
+        df_corp_state.to_file(
+            all_states_geojson_fpath,
+            driver="GeoJSON",
+        )
+        # TODO: Include option to save folium map
     except Exception as e:
         print(f"{e}")
         exit(1)
@@ -500,7 +512,7 @@ if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
 
-    if args.function:
-        run_function(args)
+    # if args.function:
+    #     run_function(args)
 
     main(args)

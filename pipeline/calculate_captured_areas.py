@@ -170,7 +170,7 @@ def make_geo_df(
 
 def add_plants(
     df_map: pd.DataFrame,
-    parent_dict: Dict[str, Polygon],
+    # parent_dict: Dict[str, Polygon],
 ) -> None:
     """Take geo_df and adds the plant isochrones to the map as well as sorts
         the isochrones by parent corporation.
@@ -189,6 +189,7 @@ def add_plants(
     """
 
     chrones = []
+    parent_dict = {}
 
     for _, row in df_map.iterrows():
         isochrone = row["Isochrone Cleaned"]
@@ -204,7 +205,7 @@ def add_plants(
         chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
 
-    return chrones
+    return chrones, parent_dict
 
 
 def single_plant_cap(
@@ -491,10 +492,12 @@ def state_level_geojson(
 
     df_corp_state = gpd.GeoDataFrame(corp_state_geojsons)
     df_corp_state = df_corp_state.sort_values(by="state")
-    df_corp_state.to_file(
-        ALL_STATES_GEOJSON_FPATH,
-        driver="GeoJSON",
-    )
+
+    return df_corp_state
+    # df_corp_state.to_file(
+    #     ALL_STATES_GEOJSON_FPATH,
+    #     driver="GeoJSON",
+    # )
 
 
 def save_to_folium():
@@ -568,21 +571,23 @@ def full_script(
 
     """
 
-    # TODO: Figure out how to actually deal with parent_dict
-    # This gets passed in and updated in all of these different functions...maybe
-    parent_dict = {}
-
     # TODO: should probably move this stuff out of this script and into the main pipeline
     df_map = make_geo_df(df_matched_plants, distance, token)
-    chrones = add_plants(df_map, parent_dict)
+    # TODO: It seems like the parent dict isn't actually used???
+    # It gets passed to one of the functions but the other one just does it???
+    chrones, parent_dict = add_plants(df_map)
 
     single_shapely = single_plant_cap(chrones)
     two_shapely, three_combined = two_and_three_plant_cap(chrones, single_shapely)
+
     # TODO: This is actually the full country. Rename this function.
     # Should probably return the object also and then save it later?
-    save_map(single_shapely, two_shapely, three_combined, parent_dict)
+    # Or do we even need this at all? I think the one with state info is what we actually need?
+    # save_map(single_shapely, two_shapely, three_combined, parent_dict)
 
-    # assemble state-specific capture map, save as GEOJSON to data/clean
-    state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
+    # assemble state-specific capture map
+    df_corp_state = state_level_geojson(
+        df_map, single_shapely, two_shapely, three_combined
+    )
 
-    return
+    return df_corp_state
