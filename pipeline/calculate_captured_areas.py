@@ -24,14 +24,67 @@ from constants import (
     USA_LNG,
 )
 
-single_shapely = []
-two_shapely = []
-three_combined = []
+# single_shapely = []
+# two_shapely = []
+# three_combined = []
 
 empty_color = lambda x: {"fillColor": "00"}  # empty
 one_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
 two_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
 three_plant_color = lambda x: {"fillColor": "#9F2B68"}  # amaranth
+
+abb2state = {
+    "AL": "Alabama",
+    "AK": "Alaska",
+    "AZ": "Arizona",
+    "AR": "Arkansas",
+    "CA": "California",
+    "CO": "Colorado",
+    "CT": "Connecticut",
+    "DE": "Delaware",
+    "FL": "Florida",
+    "GA": "Georgia",
+    "HI": "Hawaii",
+    "ID": "Idaho",
+    "IL": "Illinois",
+    "IN": "Indiana",
+    "IA": "Iowa",
+    "KS": "Kansas",
+    "KY": "Kentucky",
+    "LA": "Louisiana",
+    "ME": "Maine",
+    "MD": "Maryland",
+    "MA": "Massachusetts",
+    "MI": "Michigan",
+    "MN": "Minnesota",
+    "MS": "Mississippi",
+    "MO": "Missouri",
+    "MT": "Montana",
+    "NE": "Nebraska",
+    "NV": "Nevada",
+    "NH": "New Hampshire",
+    "NJ": "New Jersey",
+    "NM": "New Mexico",
+    "NY": "New York",
+    "NC": "North Carolina",
+    "ND": "North Dakota",
+    "OH": "Ohio",
+    "OK": "Oklahoma",
+    "OR": "Oregon",
+    "PA": "Pennsylvania",
+    "RI": "Rhode Island",
+    "SC": "South Carolina",
+    "SD": "South Dakota",
+    "TN": "Tennessee",
+    "TX": "Texas",
+    "UT": "Utah",
+    "VT": "Vermont",
+    "VA": "Virginia",
+    "WA": "Washington",
+    "WV": "West Virginia",
+    "WI": "Wisconsin",
+    "WY": "Wyoming",
+}
 
 
 def isochrones(
@@ -117,9 +170,7 @@ def make_geo_df(
 
 def add_plants(
     df_map: pd.DataFrame,
-    parent_dict: Dict[str, Polygon],
-    chrones: List[Polygon],
-    m: folium.Map,
+    # parent_dict: Dict[str, Polygon],
 ) -> None:
     """Take geo_df and adds the plant isochrones to the map as well as sorts
         the isochrones by parent corporation.
@@ -137,24 +188,10 @@ def add_plants(
 
     """
 
-    # TODO: this whole folium thing is maybe unnecessary
-    plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
+    chrones = []
+    parent_dict = {}
 
     for _, row in df_map.iterrows():
-        lat = str(row["latitude"])
-        lng = str(row["longitude"])
-
-        # set up plant tooltip
-        name = row["Establishment Name"]
-        corp = row["Parent Corporation"]
-        address = row["Full Address"]
-
-        # add plant marker to map
-        tooltip = folium.map.Tooltip(
-            f"{name}<br>{address}<br>Parent Corporation: {corp}"
-        )
-        folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(plants_layer)
-
         isochrone = row["Isochrone Cleaned"]
         corp = row["Parent Corporation"]
 
@@ -168,14 +205,13 @@ def add_plants(
         chrone = shapely.unary_union(parent_dict[key])
         chrones.append(chrone)
 
-    plants_layer.add_to(m)
+    return chrones, parent_dict
 
 
 def single_plant_cap(
     chrones: List[Polygon],
-    single_shapely: List[Polygon],
-    parent_dict: Dict[str, Polygon],
-    m: folium.Map,
+    # parent_dict: Dict[str, Polygon],
+    # m: folium.Map,
 ) -> None:
     """Adds a layer containing areas that have access to one plant to
         country-wide visualization
@@ -192,29 +228,21 @@ def single_plant_cap(
 
     """
 
+    # TODO: maybe rename this so it's a bit more clear?
+    single_shapely = []
+
     for index, poly in tqdm(enumerate(chrones), desc="Single plant capture"):
         others = shapely.unary_union(chrones[:index] + chrones[index + 1 :])
         single_plant = shapely.difference(poly, others)
         single_shapely.append(single_plant)
 
-    parent_names = list(parent_dict.keys())
-
-    # TODO: probably don't need the folium stuff here
-    for index, poly in enumerate(single_shapely):
-        corp = parent_names[index]
-        title = "Only access to " + corp
-        layer = folium.map.FeatureGroup(name=title)
-        tooltip = folium.map.Tooltip(f"Parent Corporation: {corp}")
-        folium.GeoJson(poly, tooltip=tooltip).add_to(layer)
-        layer.add_to(m)
+    return single_shapely
 
 
 def two_and_three_plant_cap(
     chrones: List[Polygon],
     single_shapely: List[Polygon],
-    two_shapely: List[Polygon],
-    three_shapely: List[Polygon],
-    m: folium.Map,
+    # m: folium.Map,
 ) -> None:
     """Adds 2 layers to country-wide visualization
         - One containing areas that have access to two plants
@@ -234,6 +262,11 @@ def two_and_three_plant_cap(
         n/a, updates m.
 
     """
+
+    # TODO: what is the deal with three_combined?
+    two_shapely = []
+    three_shapely = []
+    three_combined = []
 
     everything = shapely.unary_union(chrones)
     single_plant_combined = shapely.unary_union(single_shapely)
@@ -273,31 +306,19 @@ def two_and_three_plant_cap(
             if captured_area:
                 two_shapely.append(captured_area)
 
-    # TODO: Should prob ditch this also
-    two_plant_layer = folium.map.FeatureGroup(
-        name="Access to 2 Parent \
-                                              Corporations"
-    )
     two_plants_combined = shapely.unary_union(two_shapely)
-    folium.GeoJson(two_plants_combined, style_function=two_plant_color).add_to(
-        two_plant_layer
-    )
-    two_plant_layer.add_to(m)
-
-    three_plant_layer = folium.map.FeatureGroup(
-        name="Access to 3+ Parent \
-                                                Corporations"
-    )
     three_shapely = shapely.difference(everything, single_plant_combined)
     three_shapely = shapely.difference(
         three_shapely.buffer(0), two_plants_combined.buffer(0)
     )
     three_combined.append(three_shapely)
 
-    folium.GeoJson(three_shapely, style_function=three_plant_color).add_to(
-        three_plant_layer
-    )
-    three_plant_layer.add_to(m)
+    # folium.GeoJson(three_shapely, style_function=three_plant_color).add_to(
+    #     three_plant_layer
+    # )
+    # three_plant_layer.add_to(m)
+
+    return two_shapely, three_combined
 
 
 def save_map(
@@ -353,6 +374,7 @@ def state_level_geojson(
     """Assembles state-specific map of plant access, exports to data/clean as
         a geojson
 
+    # TODO: These are bad arg names — fix this
     Args:
         df: dataframe; contains all plant isochrones, raw and simplified.
         single: list; isochrones of areas that have access to only one plant.
@@ -364,60 +386,7 @@ def state_level_geojson(
         n/a.
 
     """
-
     us_states = gpd.read_file(US_STATES_FPATH).set_crs(WGS84)
-    abb2state = {
-        "AL": "Alabama",
-        "AK": "Alaska",
-        "AZ": "Arizona",
-        "AR": "Arkansas",
-        "CA": "California",
-        "CO": "Colorado",
-        "CT": "Connecticut",
-        "DE": "Delaware",
-        "FL": "Florida",
-        "GA": "Georgia",
-        "HI": "Hawaii",
-        "ID": "Idaho",
-        "IL": "Illinois",
-        "IN": "Indiana",
-        "IA": "Iowa",
-        "KS": "Kansas",
-        "KY": "Kentucky",
-        "LA": "Louisiana",
-        "ME": "Maine",
-        "MD": "Maryland",
-        "MA": "Massachusetts",
-        "MI": "Michigan",
-        "MN": "Minnesota",
-        "MS": "Mississippi",
-        "MO": "Missouri",
-        "MT": "Montana",
-        "NE": "Nebraska",
-        "NV": "Nevada",
-        "NH": "New Hampshire",
-        "NJ": "New Jersey",
-        "NM": "New Mexico",
-        "NY": "New York",
-        "NC": "North Carolina",
-        "ND": "North Dakota",
-        "OH": "Ohio",
-        "OK": "Oklahoma",
-        "OR": "Oregon",
-        "PA": "Pennsylvania",
-        "RI": "Rhode Island",
-        "SC": "South Carolina",
-        "SD": "South Dakota",
-        "TN": "Tennessee",
-        "TX": "Texas",
-        "UT": "Utah",
-        "VT": "Vermont",
-        "VA": "Virginia",
-        "WA": "Washington",
-        "WV": "West Virginia",
-        "WI": "Wisconsin",
-        "WY": "Wyoming",
-    }
 
     corp_dfs = []
     for corp in df["Parent Corporation"].unique():
@@ -441,7 +410,8 @@ def state_level_geojson(
     single_plant_combined = shapely.unary_union(single)
     two_plants_combined = shapely.unary_union(two)
 
-    for _, corp in tqdm(df_corps_joined.iterrows(), desc="State GeoJSON"):
+    tqdm.write("Saving state-level GeoJSON...")
+    for _, corp in df_corps_joined.iterrows():
         for state in states:
             state_name = abb2state[state]
             state_geometry = us_states[us_states["NAME"] == state_name][
@@ -522,10 +492,65 @@ def state_level_geojson(
 
     df_corp_state = gpd.GeoDataFrame(corp_state_geojsons)
     df_corp_state = df_corp_state.sort_values(by="state")
-    df_corp_state.to_file(
-        ALL_STATES_GEOJSON_FPATH,
-        driver="GeoJSON",
-    )
+
+    return df_corp_state
+    # df_corp_state.to_file(
+    #     ALL_STATES_GEOJSON_FPATH,
+    #     driver="GeoJSON",
+    # )
+
+
+def save_to_folium():
+    # TODO: don't need to do the folium stuff by default
+    # make base map for country-wide visualization
+    m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
+
+    # TODO: this whole folium thing is maybe unnecessary
+    # plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
+
+    # for _, row in df_map.iterrows():
+    #     lat = str(row["latitude"])
+    #     lng = str(row["longitude"])
+
+    #     set up plant tooltip
+    #     name = row["Establishment Name"]
+    #     corp = row["Parent Corporation"]
+    #     address = row["Full Address"]
+
+    #     add plant marker to map
+    #     tooltip = folium.map.Tooltip(
+    #         f"{name}<br>{address}<br>Parent Corporation: {corp}"
+    #     )
+    #     folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(plants_layer)
+
+    # plants_layer.add_to(m)
+
+    # parent_names = list(parent_dict.keys())
+
+    # # TODO: probably don't need the folium stuff here
+    # for index, poly in enumerate(single_shapely):
+    #     corp = parent_names[index]
+    #     title = "Only access to " + corp
+    #     layer = folium.map.FeatureGroup(name=title)
+    #     tooltip = folium.map.Tooltip(f"Parent Corporation: {corp}")
+    #     folium.GeoJson(poly, tooltip=tooltip).add_to(layer)
+    #     layer.add_to(m)
+
+    # # TODO: Should prob ditch this also
+    # two_plant_layer = folium.map.FeatureGroup(
+    #     name="Access to 2 Parent \
+    #                                           Corporations"
+    # )
+    # folium.GeoJson(two_plants_combined, style_function=two_plant_color).add_to(
+    #     two_plant_layer
+    # )
+    # two_plant_layer.add_to(m)
+
+    # three_plant_layer = folium.map.FeatureGroup(
+    #     name="Access to 3+ Parent \
+    #                                             Corporations"
+    # )
+    return
 
 
 def full_script(
@@ -546,32 +571,23 @@ def full_script(
 
     """
 
-    # TODO: don't need to do the folium stuff by default
-    # make base map for country-wide visualization
-    m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
-
-    # dictionary of parent
-    parent_dict = {}
-    chrones = []
-
-    # TODO: wut...
-    # where does parent dict get populated?
-    # and we modify chrones in add_plants???
-
+    # TODO: should probably move this stuff out of this script and into the main pipeline
     df_map = make_geo_df(df_matched_plants, distance, token)
-    # TODO: I think we can just skip this add_plants function
-    # since it just does folium stuff?
-    add_plants(df_map, parent_dict, chrones, m)
+    # TODO: It seems like the parent dict isn't actually used???
+    # It gets passed to one of the functions but the other one just does it???
+    chrones, parent_dict = add_plants(df_map)
 
-    # TODO: ok...single_shapely, etc. are constants...so they get updated in these functions?
-    # Need to refactor this so that we are just returning stuff
-    # I don't understand what chrones is here since it looks like an empty list also...
-    single_plant_cap(chrones, single_shapely, parent_dict, m)
-    tqdm.write("Completed single plant capture.")
-    two_and_three_plant_cap(chrones, single_shapely, two_shapely, three_combined, m)
-    save_map(single_shapely, two_shapely, three_combined, parent_dict)
+    single_shapely = single_plant_cap(chrones)
+    two_shapely, three_combined = two_and_three_plant_cap(chrones, single_shapely)
 
-    # assemble state-specific capture map, save as GEOJSON to data/clean
-    state_level_geojson(df_map, single_shapely, two_shapely, three_combined)
+    # TODO: This is actually the full country. Rename this function.
+    # Should probably return the object also and then save it later?
+    # Or do we even need this at all? I think the one with state info is what we actually need?
+    # save_map(single_shapely, two_shapely, three_combined, parent_dict)
 
-    return m
+    # assemble state-specific capture map
+    df_corp_state = state_level_geojson(
+        df_map, single_shapely, two_shapely, three_combined
+    )
+
+    return df_corp_state
