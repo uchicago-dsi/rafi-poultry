@@ -139,3 +139,7 @@ venv.bak/
 # data files
 *.avro
 data/*
+html/poultry-map-smoothed.html
+html/state-poultry-map-smoothed.html
+html/poultry-map-smoothed.html
+html/poultry-map-smoothed.html
