@@ -21,6 +21,7 @@ RAW_NAICS = RAW_DIR / "nets/NAICS2022_RAFI.csv"
 RAW_NAICS_LOOKUP = RAW_DIR / "nets/2022-NAICS-Codes-6-digit.csv"
 RAW_CAFO_FPATH = RAW_DIR / "cafo"
 US_STATES_FPATH = RAW_DIR / "gz_2010_us_040_00_500k.json"
+# TODO: should this be done differently
 SMOKE_TEST_FPATH = RAW_INFOGROUP_FPATH / "smoke_test"
 SMOKE_TEST_CLEAN_FPATH = CLEAN_DIR / "infogroup_2022_small_clean.csv"
 

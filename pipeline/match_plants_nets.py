@@ -2,8 +2,9 @@
 from Infogroup 2022 data to the FSIS dataset, based on address and location. 
 """
 
-from tqdm import tqdm as tqdm_progress
+from tqdm import tqdm
 import pandas as pd
+from pandas import DataFrame
 import numpy as np
 from fuzzywuzzy import fuzz
 from distances import haversine
@@ -14,8 +15,8 @@ from constants import (
 
 
 def address_match(
-    nets_path: Path,
-    fsis_path: Path,
+    df_nets: DataFrame,
+    df_fsis: DataFrame,
     fuzz_ratio: float = 75,
     tier2_ratio: float = 60,
 ):
@@ -28,8 +29,9 @@ def address_match(
     with city and state at a specified fuzziness threshold.
 
     Args:
-        fsis_path (Path): Relative path to the clean data folder with the cleaned FSIS data.
-        nets_path (Path): Relative path to the clean data folder with the cleaned NETS data.
+        # TODO: Fix the docstring here
+        fsis_path (DataFrame): Relative path to the clean data folder with the cleaned FSIS data.
+        nets_path (DataFrame): Relative path to the clean data folder with the cleaned NETS data.
         fuzz_ratio (float): Minimum fuzziness score for the primary matching; default is 75.
         tier2_ratio (float): Fuzziness score for the secondary tier of matching; default is 60.
         num_threads (int): Number of threads for parallel processing; currently not implemented.
@@ -40,11 +42,8 @@ def address_match(
         FSIS entries that didn't match any NETS entry and require further processing or location-based matching.
     """
 
-    fsis_df = pd.read_csv(fsis_path)
-    nets_df = pd.read_csv(nets_path)
-
-    fsis_df["Parent Corporation"] = np.NaN
-    fsis_df["Sales Volume (Location)"] = np.NaN
+    df_nets["Parent Corporation"] = np.NaN
+    df_fsis["Sales Volume (Location)"] = np.NaN
 
     def standardize_address(address):
         replacements = {
@@ -61,17 +60,18 @@ def address_match(
         return address
 
     # Extract the part of the address before the first comma: only want street address to match NETS
-    fsis_df["Short Address"] = fsis_df["Full Address"].apply(lambda x: x.split(",")[0])
+    df_fsis["Short Address"] = df_fsis["Full Address"].apply(lambda x: x.split(",")[0])
 
     # Apply standardization to FSIS short addresses
-    fsis_df["Short Address"] = fsis_df["Short Address"].apply(standardize_address)
+    df_fsis["Short Address"] = df_fsis["Short Address"].apply(standardize_address)
 
-    def find_match(i, fsis_df, nets_df):
-        fsis_address = fsis_df.at[i, "Short Address"].lower()
-        fsis_company = fsis_df.at[i, "Establishment Name"].upper()
-        fsis_city_state = f"{fsis_df.at[i, 'City']}, {fsis_df.at[i, 'State']}"
+    # TODO: Review this carefully to see why we are missing matches
+    def find_match(i, df_fsis, df_nets):
+        fsis_address = df_fsis.at[i, "Short Address"].lower()
+        fsis_company = df_fsis.at[i, "Establishment Name"].upper()
+        fsis_city_state = f"{df_fsis.at[i, 'City']}, {df_fsis.at[i, 'State']}"
 
-        for k, nets in nets_df.iterrows():
+        for k, nets in df_nets.iterrows():
             nets_address = nets["ADDRESS"].lower()
             nets_company = nets["COMPANY"].upper()
             nets_city_state = f"{nets['CITY']}, {nets['STATE']}"
@@ -97,15 +97,15 @@ def address_match(
         return i, {}
 
     matched_count = 0
-    for i in tqdm_progress(fsis_df.index, desc="Matching Addresses"):
-        _, result = find_match(i, fsis_df, nets_df)
+    for i in tqdm(df_fsis.index, desc="Matching Addresses"):
+        _, result = find_match(i, df_fsis, df_nets)
         if result:
             matched_count += 1
-            fsis_df.at[i, "Parent Corporation"] = result["Parent Corporation"]
-            fsis_df.at[i, "Sales Volume (Location)"] = result["Sales Volume (Location)"]
+            df_fsis.at[i, "Parent Corporation"] = result["Parent Corporation"]
+            df_fsis.at[i, "Sales Volume (Location)"] = result["Sales Volume (Location)"]
 
-    print(f"Total plants matched: {matched_count}")
-    return fsis_df, fsis_df[fsis_df["Parent Corporation"].isna()]
+    tqdm.write(f"Total plants matched: {matched_count}")
+    return df_fsis, df_fsis[df_fsis["Parent Corporation"].isna()]
 
 
 def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
@@ -126,7 +126,7 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
 
     """
     matched_loc_df = pd.DataFrame()
-    for index, row in tqdm_progress(
+    for index, row in tqdm(
         no_match.iterrows(), total=no_match.shape[0], desc="Matching by Location"
     ):
         target_point = (row["latitude"], row["longitude"])
@@ -151,11 +151,15 @@ def loc_match(no_match: pd.DataFrame, pp_nets: pd.DataFrame, threshold: float):
                     ]
                     break
 
-    print(f"Additional plants matched by location: {matched_loc_df.shape[0]}")
+    tqdm.write(f"Additional plants matched by location: {matched_loc_df.shape[0]}")
     return matched_loc_df
 
 
-def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> None:
+def match_plants(
+    df_nets: DataFrame,
+    df_fsis: DataFrame,
+    threshold: float = 5,
+) -> None:
     """Executes match function.
 
 
@@ -163,17 +167,16 @@ def save_all_matches(nets_path: Path, fsis_path: Path, threshold: float = 5) -> 
         nets_path: relative path to the raw data folder
             with the NETS dataset.
         fsis_path: relative path to the raw data folder with the FSIS dataset.
+        output_fpath: path where the output csv will be saved
         threshold: threshold for maximum distance possible
             to be considered a match.
 
     Returns:
         N/A, saves updated CSV to the cleaned data folder.
     """
-    print("Matching based on address...")
-    address_matches, no_match = address_match(nets_path, fsis_path)
-    print("Matching based on location...")
-    loc_matches = loc_match(no_match, pd.read_csv(nets_path), threshold)
+    address_matches, no_match = address_match(df_nets, df_fsis)
+    loc_matches = loc_match(no_match, df_nets, threshold)
 
     final_matches = pd.concat([address_matches, loc_matches]).drop_duplicates()
     final_matches = final_matches.dropna(subset=["Parent Corporation"])
-    final_matches.to_csv(CLEANED_MATCHED_PLANTS_FPATH)
+    return final_matches
