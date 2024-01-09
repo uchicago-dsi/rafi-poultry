@@ -1,6 +1,4 @@
 # RAFI-USA: Concentration in the Meat-Packing Industry
-Name: Stella Chen
-Email: stellaqc@uchicago.edu
 
 ## Context
 
