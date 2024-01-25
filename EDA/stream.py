@@ -22,7 +22,7 @@ SIC_MAP = {"Livestock":51540000,
            "Sheep":51549905}
 
 # read in data
-df = pd.read_csv('auction_info.csv')
+df = pd.read_csv('../data/raw/nets/auction_info.csv')
 
 # filter data by state and sic code
 def get_subset(df, condition_sic, condition_state):
@@ -135,10 +135,8 @@ def flux_plot(df, start_year, end_year):
     ax.bar(close_flux['ClosingYear'], close_flux['count'], label = 'close')
     ax.set_ylabel('Count of auction houses open/close')
     ax.set_xlabel('Year')
-    #ax.set_xticks(range(start_year, end_year + 1))
-    #ax.set_xticklabels(range(start_year, end_year + 1), rotation=45)
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    plt.title('Auction House business flux(1990-2021)')
+    plt.title('Auction House Business Flux (1990-2021)')
 
     plt.legend()
     return plt
@@ -186,7 +184,7 @@ def create_choropleth(df):
     state_counts = df.groupby('State').size().reset_index(name='AuctionHouseCount')
 
     # Load GeoJSON and merge with the aggregated data
-    us_map = gpd.read_file('states.geojson')
+    us_map = gpd.read_file('../data/raw/states.geojson')
     map_df = us_map.merge(state_counts, how='left', left_on='STUSPS', right_on='State')
 
     # Convert GeoDataFrame to JSON
