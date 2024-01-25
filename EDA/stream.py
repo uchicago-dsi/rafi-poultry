@@ -26,16 +26,35 @@ df = pd.read_csv('auction_info.csv')
 
 # filter data by state and sic code
 def get_subset(df, condition_sic, condition_state):
+    """Filters data based on specified SIC descriptions and states.
 
+    Args:
+        df: DataFrame containing auction information.
+        condition_sic: List of SIC descriptions to filter by.
+        condition_state: List of states to filter by.
+
+    Returns:
+        A filtered DataFrame based on the specified SIC descriptions and states.
+    """
     df_new = df[(df['State'].isin(condition_state)) & (df['SICDescription'].isin(condition_sic))]
 
     return df_new
 
 
 ## Functions
-# revnue and count
+
+
 def calculate_revenue(df, start_year, end_year):
-    # Get revenue and count
+    """Calculates revenue and auction count for each year in the specified range.
+
+    Args:
+        df: DataFrame to calculate revenue and count from.
+        start_year: Starting year of the range.
+        end_year: Ending year of the range.
+
+    Returns:
+        A new DataFrame with years, revenue in millions, and revenue per auction in thousands.
+    """
     revenue = []
     auction_count = []
     for i in range(start_year,end_year+1):
@@ -55,6 +74,14 @@ def calculate_revenue(df, start_year, end_year):
 
 # revenue plot
 def revenue_plot(df):
+    """Generates a plot of total revenue over the years.
+
+    Args:
+        df: DataFrame containing revenue data.
+
+    Returns:
+        A matplotlib plot showing the revenue trend over the years.
+    """
     fig, ax1 = plt.subplots()
 
     ax1.plot(df['Year'], df['Revenue(Millions)'], 'g-')  # 'g-' is for green solid line
@@ -65,20 +92,39 @@ def revenue_plot(df):
     ax2.plot(df['Year'], df['Revenue/Auction(Thousands)'], 'b-')  
     ax2.set_ylabel('Revenue/Auction(Thousands)', color='b')
     ax2.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    plt.title("Revenue of auction houses over the years")
+    plt.title("Revenue of Auction Houses over Selected Year Range")
     return plt
 
 
 def count_plot(df):
+    """Generates a plot of the count of auction houses over the years.
+
+    Args:
+        df: DataFrame containing count data.
+
+    Returns:
+        A matplotlib plot showing the count trend over the years.
+    """
     fig, ax = plt.subplots()
     ax.plot(df['Year'], df['Count'])  
-    ax.set_xlabel('Count of Auction Houses')
+    ax.set_xlabel('Year')
     ax.set_ylabel('Total Count')
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    plt.title("Count of Auction Houses over Selected Year Range")
     return fig
 
 
 def flux_plot(df, start_year, end_year):
+    """Generates a bar plot showing the flux of auction houses opening and closing.
+
+    Args:
+        df: DataFrame containing opening and closing year data.
+        start_year: Starting year of the range for the plot.
+        end_year: Ending year of the range for the plot.
+
+    Returns:
+        A matplotlib plot showing the number of auction houses opened and closed each year.
+    """
     fig, ax = plt.subplots()
     st.write()
     open_flux = pd.DataFrame(df['OpeningYear'].value_counts()).reset_index().rename(columns={"index":"OpeningYear",
@@ -98,16 +144,44 @@ def flux_plot(df, start_year, end_year):
     return plt
 
 
+# Helper function to the chloropleth map to check if an auction house is operational in a specific year and then filter a dataframe by operational year
 def is_operational(year_to_check, opening_year, closing_year):
+    """Checks if an auction house was operational in a given year.
+
+    Args:
+        year_to_check: The year to check the operational status.
+        opening_year: The year the auction house opened.
+        closing_year: The year the auction house closed.
+
+    Returns:
+        Boolean indicating whether the auction house was operational in the year_to_check.
+    """
     if pd.isna(closing_year):
         closing_year = float('10000') # placeholder value for if it has not closed yet
     return opening_year <= year_to_check <= closing_year
 
 def filter_by_operational_year(df, year_to_check):
+    """Filters the DataFrame for auction houses operational in a specific year.
+
+    Args:
+        df: DataFrame containing auction house data with opening and closing years.
+        year_to_check: The year to filter the operational auction houses.
+
+    Returns:
+        A filtered DataFrame with auction houses operational in the specified year.
+    """
     return df[df.apply(lambda x: is_operational(year_to_check, x['OpeningYear'], x['ClosingYear']), axis=1)]
 
 
 def create_choropleth(df):
+    """Creates a choropleth map showing the count of auction houses per state.
+
+    Args:
+        df: DataFrame containing auction house data.
+
+    Returns:
+        A Plotly choropleth map visualization.
+    """
     # Aggregate data to get the count of auction houses per state
     state_counts = df.groupby('State').size().reset_index(name='AuctionHouseCount')
 
@@ -143,12 +217,12 @@ with st.sidebar:
     st.subheader('Count, revenues and geolocation', divider='rainbow')
     st.text("")
 
-    # Add a slider for selecting the year range
+    # Year range selection slider
     year_range = st.slider(
         'Select Year Range',
         1990, 2022, (1990, 2022))
 
-    # Slider for a single year
+    # Single year selection slider
     selected_year = st.slider(
     'Select a Year For Map',
     min_value=1990,
@@ -157,19 +231,21 @@ with st.sidebar:
     step=1
     )
 
-    # check for sic
+    # SIC type selection (multiple and checkbox for all)
     sic_options = st.multiselect(
         'Select SIC types', 
         sics,
         'Hogs')
     sic_all = st.checkbox('View all SIC types')
-    # check for states
+
+    # State type selection (multiple and checkbox for all)
     state_option = st.multiselect(
     'Select a state', 
     states,
     'AL')
     state_all = st.checkbox('View all States')
 
+    # Data filtering based on selections of select all checkboxes
     if sic_all and state_all:
         df2 = df
     elif sic_all:
@@ -179,31 +255,35 @@ with st.sidebar:
     else: 
         df2 = get_subset(df, sic_options, state_option) # allows for multiple sic types
     
+    # Calculate revenue based on filtered data + looking at year range: revenue is always thus bound to these two filters
     df_revenue = calculate_revenue(df2, year_range[0], year_range[1])
     
-    # filter for map data using df2
+    # Filter for map data
     year_column = 'SIC'+str(selected_year)[-2:]
     df_map = df2[df2[year_column].notnull()]
-    # View original data
+
+    # Display the filtered data: useful for debugging but also makes it so you can download data easily
     with st.expander("View data for this filter"):
-        dt = st.dataframe(df2) # used to check data
-    # Apply filters to the DataFrame
+        dt = st.dataframe(df2)
+
+    # Apply filters for the chloropleth map: namely, the single year selection index
     df_filtered_for_map = filter_by_operational_year(df2, selected_year)
     
 
-# layout: 2*2 grid + 1 full-width display on bottom
+# Main layout configuration: 2*2 grid + 1 full-width display on bottom
 c1, c2 = st.columns(2, gap="large")
 c3, c4 = st.columns(2, gap="large") 
 c5 = st.columns(1)
 
+# Display plots in the layout
 with c1:
-    plot = st.pyplot(revenue_plot(df_revenue)) #revenue over the years
+    plot = st.pyplot(revenue_plot(df_revenue)) # Revenue over the years plot
 with c2:
-    plot2 = st.pyplot(count_plot(df_revenue)) #count of auction houses
+    plot2 = st.pyplot(count_plot(df_revenue)) # Count of auction houses plot
 with c3:
-    plot = st.map(data = df_map, latitude = 'Latitude', longitude = 'Longitude') # geographical
+    plot = st.map(data = df_map, latitude = 'Latitude', longitude = 'Longitude') # Geographical map
 with c4:
-    plot2 = st.pyplot(flux_plot(df2, year_range[0], year_range[1]))
+    plot2 = st.pyplot(flux_plot(df2, year_range[0], year_range[1])) # Business flux plot
 with c5[0]:
     choropleth_fig = create_choropleth(df_filtered_for_map)
-    plot = st.plotly_chart(choropleth_fig)
+    plot = st.plotly_chart(choropleth_fig) # Choropleth map
