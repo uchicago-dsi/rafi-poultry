@@ -10,7 +10,7 @@ RUN apt -y install python3-pip libspatialindex-dev \
        gdal-bin \
        libgdal-dev \
     && rm -rf /var/lib/apt/lists/*
-
+    
 #Set the working directory
 WORKDIR /app
 
