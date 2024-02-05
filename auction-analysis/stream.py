@@ -16,6 +16,7 @@ def get_subset(df, condition_state):
     """Filters data based on specified SIC descriptions and states.
 
     Args:
+    
         df: DataFrame containing auction information.
         condition_state: List of states to filter by.
 
