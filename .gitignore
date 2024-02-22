@@ -47,7 +47,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/ # need this for Next app
 lib64/
 parts/
 sdist/
