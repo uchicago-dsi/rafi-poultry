@@ -190,6 +190,7 @@ function calculateCapturedAreaByBarns() {
   // initialize object for reduce operation
   const counts = {
     totalFarms: 0,
+    totalCapturedFarms: 0,
     plantAccessCounts: {
       0: 0, // '0' represents NaN or no access
       1: 0,
@@ -199,9 +200,12 @@ function calculateCapturedAreaByBarns() {
   };
 
   state.stateData.farms.features.reduce((accumulator, feature) => {
-    accumulator.totalFarms += 1;
-
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
+    accumulator.totalFarms += 1
+    // Only count farms in captive draw areas
+    if (plantAccess != "0") {
+      accumulator.totalCapturedFarms += 1;
+    }
     accumulator.plantAccessCounts[plantAccess] += 1;
 
     return accumulator;
@@ -209,7 +213,9 @@ function calculateCapturedAreaByBarns() {
 
   let percentCaptured = {};
   Object.keys(counts.plantAccessCounts).forEach((key) => {
-    percentCaptured[key] = counts.plantAccessCounts[key] / counts.totalFarms;
+    if (key != "0") {
+      percentCaptured[key] = counts.plantAccessCounts[key] / counts.totalCapturedFarms;
+    }
   });
 
   state.stateData.capturedAreas = percentCaptured;
