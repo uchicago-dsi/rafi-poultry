@@ -79,16 +79,16 @@ export function SummaryStats() {
       {snapshot.filteredCaptureAreas &&
       Object.keys(snapshot.filteredCaptureAreas).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
-          <div className="flex justify-center">
+          <div className="flex justify-center m-10">
             <div>
-              <table className="table table-sm inline-block">
+              <table className="table table-sm">
                 <thead>
-                  <th>Access to Integrators in Selected Area</th>
+                  <th>% of Barns with Access to Integrators in Selected Area</th>
                 </thead>
                 <tbody>
                   {Object.entries(snapshot.capturedAreas).map(([key, item]) => (
                     <tr key={key}>
-                      <td>{key}</td>
+                      <td>{key} Integrator(s)</td>
                       <td>{(item * 100).toFixed(1) + "%"}</td>
                     </tr>
                   ))}
