@@ -12,6 +12,7 @@ RUN apt -y install python3-pip libspatialindex-dev \
        gdal-bin \
        libgdal-dev \
        git \
+       openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
@@ -29,6 +30,5 @@ RUN pip install -e .
 # Set environment variable for pipeline logic
 ENV INSIDE_DOCKER=True
 
-# CMD instruction is set to execute main.py. 
 # When running the container, additional arguments can be passed, which will be appended to this CMD.
 CMD ["python", "pipeline/main.py"]
