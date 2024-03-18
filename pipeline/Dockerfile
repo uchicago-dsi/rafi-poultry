@@ -1,18 +1,17 @@
 # Use ARG to specify the platform (default is amd64)
+# Note: this is set to match the machine with the Make command make build-pipeline
 ARG PLATFORM=linux/amd64
-# ARG PLATFORM=linux/arm64
 
-# Choose base image according to the platform
+# Dynamically choose correct base image based on platform
 FROM --platform=${PLATFORM} osgeo/gdal:ubuntu-full-3.6.3
 
-# Update apt-get package
-RUN apt-get -y update 
-
 # Install Python and gdal dependencies
+RUN apt-get -y update 
 RUN apt -y install python3-pip libspatialindex-dev \
     && apt-get install -y --no-install-recommends \
        gdal-bin \
        libgdal-dev \
+       git \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
