@@ -10,7 +10,8 @@ const POULTRY_PLANTS_CSV = "../data/location_match_fullest.csv";
 const PLANT_ACCESS_GEOJSON =
   "../data/new_all_states_with_parent_corp_by_corp.geojson";
 // const COUNTERGLOW_FARMS = "../data/counterglow_geojson.geojson";
-const FARMS = "../data/nc_farms_plants.geojson";
+// const FARMS = "../data/nc_farms_plants.geojson";
+const FARMS = "../data/test_barns_filtering.geojson";
 
 const getJSON = async (dataPath) => {
   const response = await fetch(dataPath);
