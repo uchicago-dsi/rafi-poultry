@@ -1,18 +1,18 @@
 # Use ARG to specify the platform (default is amd64)
+# Note: this is set to match the machine with the Make command make build-pipeline
 ARG PLATFORM=linux/amd64
-# ARG PLATFORM=linux/arm64
 
-# Choose base image according to the platform
+# Dynamically choose correct base image based on platform
 FROM --platform=${PLATFORM} osgeo/gdal:ubuntu-full-3.6.3
 
-# Update apt-get package
-RUN apt-get -y update 
-
 # Install Python and gdal dependencies
+RUN apt-get -y update 
 RUN apt -y install python3-pip libspatialindex-dev \
     && apt-get install -y --no-install-recommends \
        gdal-bin \
        libgdal-dev \
+       git \
+       openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
@@ -30,6 +30,5 @@ RUN pip install -e .
 # Set environment variable for pipeline logic
 ENV INSIDE_DOCKER=True
 
-# CMD instruction is set to execute main.py. 
 # When running the container, additional arguments can be passed, which will be appended to this CMD.
 CMD ["python", "pipeline/main.py"]

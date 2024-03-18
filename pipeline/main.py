@@ -466,7 +466,7 @@ def main(args) -> None:
             exit(1)
 
         # TODO: This should be optional
-        # This is also unclear if we need both counterglow and cafor for this?
+        # This is also unclear if we need both counterglow and cafo for this?
         try:
             tqdm.write("Mapping CAFO permits...")
             match_df = pd.read_csv(MATCHED_FARMS_FPATH)
@@ -512,6 +512,7 @@ if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
 
+    # TODO: We should be able to run individual functions by calling that function, we shouldn't have to pass this through main.py
     # if args.function:
     #     run_function(args)
 
