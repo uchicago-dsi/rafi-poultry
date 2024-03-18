@@ -11,3 +11,4 @@ Shapely==2.0.1
 tqdm==4.66.1
 geopy==2.4.0
 openpyxl==3.1.2
+pyarrow==15.0.2
