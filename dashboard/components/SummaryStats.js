@@ -79,7 +79,7 @@ export function SummaryStats() {
       {snapshot.filteredCaptureAreas &&
       Object.keys(snapshot.filteredCaptureAreas).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
-          <div className="flex justify-center m-10">
+          <div className="flex justify-center m-10 ">
             <div>
               <table className="table table-sm">
                 <thead>
