@@ -118,7 +118,7 @@ export function DeckGLMap() {
 
   const farmLayer = new IconLayer({
     id: "icon-layer",
-    data: stateData.counterglowFarms.features,
+    data: stateData.farms.features,
     pickable: true,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
