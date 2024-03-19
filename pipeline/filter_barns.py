@@ -1,10 +1,12 @@
 import argparse
+import os
 import pandas as pd
 import geopandas as gpd
 
 FILENAME = "../data/raw/nc_only_unfiltered.geojson"
 # FILENAME = "../data/raw/chesapeake-bay-3-18-2021_filtered.gpkg"
 STATES_FILE = "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
+STATES = gpd.read_file(STATES_FILE)
 
 CITIES = {
     "North Carolina": [
@@ -25,12 +27,29 @@ SMOKE_TEST = False
 PROJECTION = 4326
 
 
+def load_geography(filepath, state=None):
+    _, file_extension = os.path.splitext(filepath)
+    if file_extension.lower() == ".parquet":
+        gdf = gpd.read_parquet(filepath)
+    else:
+        gdf = gpd.read_file(filepath)
+    if state is not None:
+        gdf = gdf.to_crs(STATES.crs)
+        gdf = gpd.overlay(
+            gdf,
+            STATES[STATES["NAME"] == state],
+            how="intersection",
+            keep_geom_type=False,
+        )
+    return gdf
+
+
 def filter_on_road_distance(gdf):
     # TODO: This should already be filtered but it filters only on 0 maybe? Look into this further
     pass
 
 
-def get_state(gdf, states_fp=STATES_FILE):
+def get_state_info(gdf, states_fp=STATES_FILE):
     states = gpd.read_file(states_fp)
     states = states.to_crs(gdf.crs)
     gdf_with_state = gpd.sjoin(gdf, states, how="left", predicate="intersects")
@@ -39,20 +58,34 @@ def get_state(gdf, states_fp=STATES_FILE):
     return gdf_with_state
 
 
-def filter_on_membership(gdf, gdf_exclude, buffer=0):
+def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0):
     if buffer != 0:
         gdf_exclude = gdf_exclude.to_crs(
-            epsg=32633
+            epsg=5070
         )  # convert to CRS where the buffer unit is in meters
         gdf_exclude["geometry"] = gdf_exclude["geometry"].buffer(buffer)
 
     gdf_exclude = gdf_exclude.to_crs(gdf.crs)
 
     joined = gpd.sjoin(gdf, gdf_exclude, how="left", predicate="within")
-    gdf_filtered = joined[joined["index_right"].isna()]
-    gdf_filtered = gdf_filtered.drop(columns=["index_right"])
 
-    return gdf_filtered
+    if how == "inside":
+        joined["exclude"] = joined.apply(
+            lambda row: (1 if not pd.isna(row["index_right"]) else row["exclude"]),
+            axis=1,
+        )
+    elif how == "outside":
+        joined["exclude"] = joined.apply(
+            lambda row: (
+                1
+                if pd.isna(row["index_right"]) and row["exclude"] == 0
+                else row["exclude"]
+            ),
+            axis=1,
+        )
+
+    joined = joined.drop(columns=["index_right"])
+    return joined
 
 
 if __name__ == "__main__":
@@ -64,8 +97,9 @@ if __name__ == "__main__":
 
     gdf = gpd.read_file(FILENAME)
     if args.smoke_test:
-        gdf = gdf[:1000]
-        print("Running in smoke test mode.")
+        n = 1000
+        gdf = gdf.sample(n=n)
+        print(f"Running in smoke test mode with {n} samples.")
     else:
         print("Running in normal mode.")
 
@@ -76,13 +110,16 @@ if __name__ == "__main__":
     # Project to latitude and longitude
     gdf = gdf.to_crs(epsg=PROJECTION)
 
+    # Initialize the "exclude" column
+    gdf["exclude"] = 0
+
     # Get state membership for each barn
     print("Getting states for all barns...")
-    gdf = get_state(
+    gdf = get_state_info(
         gdf, "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
     )
-    length = len(gdf)
-    print(f"len(gdf) before filtering: {length}")
+    excluded_count = len(gdf[gdf.exclude == 1])
+    print(f"Barns before filtering: {len(gdf)}")
 
     # Exclude barns on the coastline
     # Source: https://catalog.data.gov/dataset/tiger-line-shapefile-2019-nation-u-s-coastline-national-shapefile
@@ -92,9 +129,10 @@ if __name__ == "__main__":
         gpd.read_file(
             "../data/shapefiles/tl_2019_us_coastline/tl_2019_us_coastline.shp"
         ),
-        buffer=150,
+        buffer=1000,
     )
-    print(f"Excluded {length - len(gdf)} barns on the coastline")
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns on the coastline")
     length = len(gdf)
 
     # Exclude barns in major cities
@@ -115,8 +153,8 @@ if __name__ == "__main__":
     cities_filtered = pd.concat(matches, ignore_index=True).drop_duplicates()
     cities_filtered = gpd.GeoDataFrame(cities_filtered, geometry="geometry")
     gdf = filter_on_membership(gdf, cities_filtered)
-    print(f"Excluded {length - len(gdf)} barns in major cities")
-    length = len(gdf)
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in major cities")
 
     # Exclude barns in airports
     # Source: https://geodata.bts.gov/datasets/c3ca6a6cdcb242698f1eadb7681f6162_0/explore
@@ -125,10 +163,12 @@ if __name__ == "__main__":
     gdf = filter_on_membership(
         gdf,
         gpd.read_file(
-            "../data/shapefiles/Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp"
+            "../data/shapefiles/Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
+            buffer=400,
         ),
     )
-    print(f"Excluded {length - len(gdf)} barns in airports")
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in airports")
     length = len(gdf)
 
     # TODO: Could maybe filter this on state to speed this step up
@@ -139,8 +179,8 @@ if __name__ == "__main__":
         gdf = filter_on_membership(
             gdf, gpd.read_file("../data/shapefiles/USA_Detailed_Water_Bodies.geojson")
         )
-        print(f"Excluded {length - len(gdf)} barns in bodies of water")
-        length = len(gdf)
+        excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+        print(f"Excluded {excluded_count} barns in bodies of water")
 
     # Join with plant access isochrones
     plant_access = gpd.read_file("../data/clean/isochrones_with_parent_corp.geojson")
@@ -150,7 +190,7 @@ if __name__ == "__main__":
     gdf = gdf.rename(
         columns={"Parent Corporation": "company", "Plant Access": "plant_access"}
     )
-    OUTPUT_COLS = ["state", "company", "plant_access", "geometry"]
+    OUTPUT_COLS = ["state", "company", "plant_access", "geometry", "exclude"]
     gdf = gdf[OUTPUT_COLS]
 
     gdf.to_file("../data/clean/test_barns_filtering.geojson", driver="GeoJSON")
