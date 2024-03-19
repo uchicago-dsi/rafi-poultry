@@ -1,6 +1,6 @@
 "use client";
-import Papa from "papaparse";
 import { coords2geo } from "geotoolbox";
+import Papa from "papaparse";
 
 import { state, updateFilteredData } from "../lib/state";
 
@@ -51,9 +51,16 @@ export const loadData = async () => {
     .map((feature) => feature.properties.state)
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
-  // TODO: Switch variable name to be non-specific to counterglow
-  state.stateData.counterglowFarms = await getJSON(FARMS);
-  state.stateData.farms = await getJSON(FARMS);
+  // TODO: Switch variable name to be non-specific to counterglow » make sure this isn't anywhere else in the code
+  let rawFarms = await getJSON(FARMS);
+  // state.stateData.farms = rawFarms.filter(farm => farm.exclude === 0 && farm.plant_access !== null);
+  // state.stateData.counterglowFarms = state.stateData.counterglowFarms.filter(farm => farm.exclude === 0 && farm.plant_access !== null);
+  state.stateData.farms = {
+    type: 'FeatureCollection',
+    features: rawFarms.features.filter(feature => 
+      feature.properties.exclude === 0 && feature.properties.plant_access !== null
+    )
+  };
 
   // Filter FSIS plant data
   const rawPlants = await getPoultryCSV(POULTRY_PLANTS_CSV);
