@@ -94,6 +94,7 @@ export function SummaryStats() {
                   ))}
                 </tbody>
               </table>
+              <p>Total Barns: {snapshot.totalFarms}</p>
             </div>
           </div>
         </div>

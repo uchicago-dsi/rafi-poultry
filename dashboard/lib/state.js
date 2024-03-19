@@ -218,6 +218,7 @@ function calculateCapturedAreaByBarns() {
     }
   });
 
+  state.stateData.totalFarms = counts.totalFarms;
   state.stateData.capturedAreas = percentCaptured;
 }
 
