@@ -8,7 +8,6 @@ import booleanWithin from "@turf/boolean-point-in-polygon";
 export const state = proxy({
   // basic data
   stateData: {
-    counterglowFarms: [],
     plantAccess: [],
     poultryPlants: [],
     allStates: [],
