@@ -52,9 +52,8 @@ export const loadData = async () => {
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
   // TODO: Switch variable name to be non-specific to counterglow » make sure this isn't anywhere else in the code
-  let rawFarms = await getJSON(FARMS);
-  // state.stateData.farms = rawFarms.filter(farm => farm.exclude === 0 && farm.plant_access !== null);
-  // state.stateData.counterglowFarms = state.stateData.counterglowFarms.filter(farm => farm.exclude === 0 && farm.plant_access !== null);
+  let farmsResponse = await fetch('/api/farms/');
+  let rawFarms = await farmsResponse.json();
   state.stateData.farms = {
     type: 'FeatureCollection',
     features: rawFarms.features.filter(feature => 
