@@ -171,6 +171,9 @@ if __name__ == "__main__":
     print(f"Excluded {excluded_count} barns in airports")
     length = len(gdf)
 
+    # Exclude barns in parks
+    # Source: https://www.arcgis.com/home/item.html?id=578968f975774d3fab79fe56c8c90941
+
     # TODO: Could maybe filter this on state to speed this step up
     # Exclude barns in bodies of water
     # Source: https://www.arcgis.com/home/item.html?id=48c77cbde9a0470fb371f8c8a8a7421a
