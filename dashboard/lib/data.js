@@ -87,22 +87,22 @@ export const loadData = async () => {
   };
 
   // Filter FSIS plant data
-  // TODO: This is a mess. Rewrite to save the plants as GeoJSON
-  const rawPlants = await getPoultryCSV(POULTRY_PLANTS_CSV);
-  // const rawPlants = await fetch('/api/plants/');
-  // const parsedPlants = await parsePlantCSV(rawPlants);
-  // debugger;
-  const rawPoultryPlants = rawPlants.filter((row) => {
-    if (row["Animals Processed"] === "Chicken" && row.Size === "Large") {
+  // TODO: Rewrite pipeline to save the plants as GeoJSON
+  // TODO: Change geojson so it has better feature names?
+  // TODO: Question — how much of this processing should be done in the API call?
+  let plantsResponse = await fetch('/api/plants/');
+  let rawPlants = await plantsResponse.json();
+  const rawPoultryPlants = rawPlants.features.filter((plant) => {
+    if (plant.properties["Animals Processed"] === "Chicken" && plant.properties.Size === "Large") {
       return true;
     } else {
       return false;
     }
   });
-  state.stateData.poultryPlants = coords2geo(rawPoultryPlants, {
-    lat: "latitude",
-    lng: "longitude",
-  });
+  state.stateData.poultryPlants = {
+    type: "FeatureCollection",
+    features: rawPoultryPlants
+  };
 
   // Initialize display data
   state.stateData.filteredStates = [...state.stateData.allStates]; // Start with all states selected
