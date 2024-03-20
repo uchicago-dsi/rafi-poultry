@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import path from "path";
 import fs from 'fs';
 
-// const PLANTS = "test_plants.geojson";
+const PLANTS = "test_plants.geojson";
+const bucketName = 'rafi-poultry';
+const serviceAccountKey = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, 'base64').toString('ascii'));
+
 
 // TODO: This is the version for loading the files locally
 // export async function GET(_req) {
@@ -13,15 +16,16 @@ import fs from 'fs';
 //     return NextResponse.json(data, { status: 200 });
 //   }
 
-const PLANTS = "test_plants.geojson";
-const bucketName = 'rafi-poultry';
+
 
 export async function GET(_req) {
-  const storage = new Storage();
-  const bucket = storage.bucket(bucketName);
-  const file = bucket.file(PLANTS);
-  console.log(file)
-  const [fileContents] = await file.download();
-  const data = JSON.parse(fileContents.toString('utf-8'));
-  return NextResponse.json(data, { status: 200 });
+    const storage = new Storage({
+        credentials: serviceAccountKey
+    });
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file(PLANTS);
+    console.log(file)
+    const [fileContents] = await file.download();
+    const data = JSON.parse(fileContents.toString('utf-8'));
+    return NextResponse.json(data, { status: 200 });
 }
