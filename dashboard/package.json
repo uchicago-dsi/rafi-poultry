@@ -11,6 +11,7 @@
   "dependencies": {
     "@deck.gl/layers": "^8.9.19",
     "@deck.gl/react": "^8.9.19",
+    "@google-cloud/storage": "^7.9.0",
     "@mapbox/tiny-sdf": "^2.0.6",
     "@turf/bbox": "^6.5.0",
     "@turf/turf": "^6.5.0",
