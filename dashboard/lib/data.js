@@ -43,6 +43,31 @@ const getPoultryCSV = async (dataPath) => {
   });
 };
 
+const parsePlantCSV = async (response) => {
+  // const response = await fetch(dataPath);
+  const reader = response.body.getReader();
+  const result = await reader.read(); // raw array
+  const decoder = new TextDecoder("utf-8");
+  const csv = decoder.decode(result.value);
+
+  return new Promise((resolve, reject) => {
+    Papa.parse(csv, {
+      header: true,
+      complete: (results) => {
+        const data = results.data.map((row) => ({
+          ...row,
+          "Sales Volume (Location)": parseFloat(row["Sales Volume (Location)"]),
+        }));
+
+        resolve(data);
+      },
+      error: (error) => {
+        reject(error);
+      },
+    });
+  });
+};
+
 // Function to load data
 export const loadData = async () => {
   // Read raw files
@@ -62,7 +87,11 @@ export const loadData = async () => {
   };
 
   // Filter FSIS plant data
+  // TODO: This is a mess. Rewrite to save the plants as GeoJSON
   const rawPlants = await getPoultryCSV(POULTRY_PLANTS_CSV);
+  // const rawPlants = await fetch('/api/plants/');
+  // const parsedPlants = await parsePlantCSV(rawPlants);
+  // debugger;
   const rawPoultryPlants = rawPlants.filter((row) => {
     if (row["Animals Processed"] === "Chicken" && row.Size === "Large") {
       return true;
