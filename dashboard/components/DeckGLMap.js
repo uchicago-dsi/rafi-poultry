@@ -73,9 +73,13 @@ const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
 export function DeckGLMap() {
   const { stateData, stateMapSettings } = useSnapshot(state);
+  console.log("In DeckGLMap")
+
+
 
   // Don't render the component until the data is loaded
   if (!stateData.isDataLoaded) {
+    console.log("Loading...")
     return "";
   }
 

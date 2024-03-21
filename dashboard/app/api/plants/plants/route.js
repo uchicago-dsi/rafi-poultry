@@ -27,12 +27,13 @@ export async function GET(_req) {
     console.log(file)
     const [fileContents] = await file.download();
     const data = JSON.parse(fileContents.toString('utf-8'));
+
     // TODO: Make this change once the other endpoint is working in context
     // Remove sales data (proprietary data that can't be exposed disaggregated)
-    const modifiedData = data.features.map(item => {
-        const newItem = {...item}; // Shallow copy to avoid mutating the original data
-        delete newItem.properties['Sales Volume (Location)']; // Remove the sales data
-        return newItem;
-    });
+    // const modifiedData = data.features.map(item => {
+    //     const newItem = {...item}; // Shallow copy to avoid mutating the original data
+    //     delete newItem.properties['Sales Volume (Location)']; // Remove the sales data
+    //     return newItem;
+    // });
     return NextResponse.json(data, { status: 200 });
 }

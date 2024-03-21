@@ -115,11 +115,8 @@ function updateFilteredSales() {
       percent: unnestedSales[key] / totalSales,
     };
   }
-  console.log(nestedSales);
   state.stateData.filteredSales = nestedSales;
-
-  // TODO: How should I actually do this?
-  // state.stateData.filteredSales = await fetch('/api/plants/sales/');
+  // debugger;
 }
 
 function updateMapZoom() {
@@ -225,11 +222,15 @@ function calculateCapturedAreaByBarns() {
   state.stateData.capturedAreas = percentCaptured;
 }
 
-export function updateFilteredData() {
+export async function updateFilteredData() {
   updateFilteredStates();
   updateFilteredPlants();
   updateFilteredCompanies();
+  // const response = await fetch('/api/farms');
+  // const data = await response.json();
+  // state.stateData.filteredSales = data;
   updateFilteredSales();
+
   calculateCapturedArea();
   calculateCapturedAreaByBarns();
   updateMapZoom();

@@ -106,6 +106,10 @@ export const loadData = async () => {
 
   // Initialize display data
   state.stateData.filteredStates = [...state.stateData.allStates]; // Start with all states selected
+
+  // TODO: Maybe the filtering needs to happen here (for state selection)
+  // state.stateData.filteredSales = await fetch('/api/plants/sales');
+
   updateFilteredData();
   state.stateData.isDataLoaded = true;
 };
