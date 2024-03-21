@@ -115,7 +115,11 @@ function updateFilteredSales() {
       percent: unnestedSales[key] / totalSales,
     };
   }
+  console.log(nestedSales);
   state.stateData.filteredSales = nestedSales;
+
+  // TODO: How should I actually do this?
+  // state.stateData.filteredSales = await fetch('/api/plants/sales/');
 }
 
 function updateMapZoom() {
