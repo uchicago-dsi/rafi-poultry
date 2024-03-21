@@ -41,7 +41,8 @@ function getFilteredSales(filteredData) {
 
 export async function GET(req) {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const stateName = url.searchParams.get('state');
+    const stateNamesParam = url.searchParams.get('state');
+    const stateNames = stateNamesParam ? stateNamesParam.split(',').map(name => name.trim()) : [];
 
     const storage = new Storage({
         credentials: serviceAccountKey
@@ -51,8 +52,8 @@ export async function GET(req) {
     const [fileContents] = await file.download();
     const data = JSON.parse(fileContents.toString('utf-8'));
     let filteredData = data;
-    if (stateName) {
-        filteredData.features = data.features.filter(item => item.properties.State === stateName);
+    if (stateNames.length) {
+        filteredData.features = data.features.filter(item => stateNames.includes(item.properties.State))
     }
     let salesSummary = getFilteredSales(filteredData);
     return NextResponse.json(salesSummary, { status: 200 });
