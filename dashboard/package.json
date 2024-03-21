@@ -11,11 +11,13 @@
   "dependencies": {
     "@deck.gl/layers": "^8.9.19",
     "@deck.gl/react": "^8.9.19",
+    "@google-cloud/storage": "^7.9.0",
     "@mapbox/tiny-sdf": "^2.0.6",
     "@turf/bbox": "^6.5.0",
     "@turf/turf": "^6.5.0",
     "chart.js": "^4.3.0",
     "colorbrewer": "^1.5.3",
+    "csv-parser": "^3.0.0",
     "deck.gl": "^8.9.19",
     "geotoolbox": "^1.9.7",
     "mapbox-gl": "^2.15.0",
