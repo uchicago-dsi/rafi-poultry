@@ -146,7 +146,7 @@ export function DeckGLMap() {
     getPosition: (d) => d.geometry.coordinates,
     getSize: 35,
     getColor: colorPalette.plant,
-    getLineColor: (d) => [0, 0, 0, 255], // TODO: I want these to be outlined buy maybe there's a transparent border?
+    getLineColor: (d) => [0, 0, 0, 255], // TODO: I want these to be outlined but maybe there's a transparent border?
     getTooltip: (d) => `Address: ${d.properties["Full Address"]}`,
 
     pickable: true,
