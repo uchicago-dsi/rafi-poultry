@@ -90,7 +90,7 @@ export const loadData = async () => {
   // TODO: Rewrite pipeline to save the plants as GeoJSON
   // TODO: Change geojson so it has better feature names?
   // TODO: Question — how much of this processing should be done in the API call?
-  let plantsResponse = await fetch('/api/plants/');
+  let plantsResponse = await fetch('/api/plants/plants');
   let rawPlants = await plantsResponse.json();
   const rawPoultryPlants = rawPlants.features.filter((plant) => {
     if (plant.properties["Animals Processed"] === "Chicken" && plant.properties.Size === "Large") {
