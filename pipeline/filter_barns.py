@@ -158,7 +158,6 @@ if __name__ == "__main__":
 
     # Exclude barns in airports
     # Source: https://geodata.bts.gov/datasets/c3ca6a6cdcb242698f1eadb7681f6162_0/explore
-    # TODO: This seems like it isn't working
     print("Excluding barns in airports...")
     gdf = filter_on_membership(
         gdf,
@@ -173,6 +172,17 @@ if __name__ == "__main__":
 
     # Exclude barns in parks
     # Source: https://www.arcgis.com/home/item.html?id=578968f975774d3fab79fe56c8c90941
+    print("Excluding barns in parks...")
+    parks_gdb_path = '../data/shapefiles/USA_Parks/v10/park_dtl.gdb'
+    layer_name = 'park_dtl'
+    parks_gdf = gpd.read_file(parks_gdb_path, layer=layer_name)
+    gdf = filter_on_membership(
+        gdf,
+        parks_gdf,
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in airports")
+    length = len(gdf)
 
     # TODO: Could maybe filter this on state to speed this step up
     # Exclude barns in bodies of water
