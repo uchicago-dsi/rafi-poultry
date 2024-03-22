@@ -31,14 +31,8 @@ export function SummaryStats() {
   }
 
   console.log(snapshot.filteredSales)
-
   const calculatedHHI = calculateHHI(snapshot.filteredSales);
-  // TODO: This was moved to the global state
-  // calculateCapturedArea(snapshot.filteredCaptureAreas);
-  // state.stateData.capturedAreas = calculateCapturedArea(
-  //   snapshot.filteredCaptureAreas
-  // );
-  // const capturedAreas = calculateCapturedArea(snapshot.filteredCaptureAreas);
+
 
   return (
     <div>
