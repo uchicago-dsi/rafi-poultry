@@ -195,6 +195,7 @@ if __name__ == "__main__":
         excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
         print(f"Excluded {excluded_count} barns in bodies of water")
 
+    # Note: This will not match the final barn count since we only count barns in the capture areas
     print(f"There are {len(gdf[gdf.exclude == 0])} barns remaining")
 
     # Join with plant access isochrones
