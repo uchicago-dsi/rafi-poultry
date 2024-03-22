@@ -222,14 +222,20 @@ function calculateCapturedAreaByBarns() {
   state.stateData.capturedAreas = percentCaptured;
 }
 
+async function updateFilteredSalesAPI() {
+  const statesParam = state.stateData.filteredStates.join(',');
+  const encodedStatesParam = encodeURIComponent(statesParam);
+  const url = `/api/plants/sales?states=${encodedStatesParam}`;
+  let salesResponse = await fetch(url);
+  state.stateData.filteredSales = await salesResponse.json();
+}
+
 export async function updateFilteredData() {
   updateFilteredStates();
   updateFilteredPlants();
   updateFilteredCompanies();
-  // const response = await fetch('/api/farms');
-  // const data = await response.json();
-  // state.stateData.filteredSales = data;
-  updateFilteredSales();
+  // updateFilteredSales(); TODO: This works correctly but loads the data in a way that exposes the sales data
+  updateFilteredSalesAPI(); // TODO: This doesn't update properly but doesn't expose the sales data
 
   calculateCapturedArea();
   calculateCapturedAreaByBarns();

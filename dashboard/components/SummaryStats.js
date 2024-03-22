@@ -23,38 +23,14 @@ function calculateHHI(filteredSales) {
   }
 }
 
-// TODO: This was moved to the global state
-// function calculateCapturedArea(filteredAreas) {
-//   let areas = {
-//     1: 0,
-//     2: 0,
-//     3: 0,
-//     // 4: 0,
-//   };
-
-//   // TODO: Need to add area to GeoJSON
-//   for (let i = 0; i < filteredAreas.length; i++) {
-//     areas[filteredAreas[i].properties.corporate_access] +=
-//       filteredAreas[i].properties.area;
-//   }
-
-//   let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
-
-//   let percentArea = {};
-//   Object.keys(areas).forEach((key) => {
-//     percentArea[key] = areas[key] / totalArea;
-//   });
-
-//   // return percentArea;
-//   state.stateData.capturedAreas = percentArea;
-// }
-
 export function SummaryStats() {
   const snapshot = useSnapshot(state.stateData);
 
   if (!snapshot.isDataLoaded) {
     return "";
   }
+
+  console.log(snapshot.filteredSales)
 
   const calculatedHHI = calculateHHI(snapshot.filteredSales);
   // TODO: This was moved to the global state

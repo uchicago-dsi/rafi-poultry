@@ -107,9 +107,14 @@ export const loadData = async () => {
   // Initialize display data
   state.stateData.filteredStates = [...state.stateData.allStates]; // Start with all states selected
 
-  // TODO: Maybe the filtering needs to happen here (for state selection)
-  // state.stateData.filteredSales = await fetch('/api/plants/sales');
-
   updateFilteredData();
+
+  // TODO: This works...but needs to moved so that the update triggers whenever there's an actual update
+  // const statesParam = state.stateData.filteredStates.join(',');
+  // const encodedStatesParam = encodeURIComponent(statesParam);
+  // const url = `/api/plants/sales?states=${encodedStatesParam}`;
+  // let salesResponse = await fetch(url);
+  // state.stateData.filteredSales = await salesResponse.json();
+
   state.stateData.isDataLoaded = true;
 };
