@@ -195,6 +195,8 @@ if __name__ == "__main__":
         excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
         print(f"Excluded {excluded_count} barns in bodies of water")
 
+    print(f"There are {len(gdf[gdf.exclude == 0])} barns remaining")
+
     # Join with plant access isochrones
     plant_access = gpd.read_file("../data/clean/isochrones_with_parent_corp.geojson")
     gdf = gpd.sjoin(gdf, plant_access, how="left", predicate="within")
