@@ -181,7 +181,7 @@ if __name__ == "__main__":
         parks_gdf,
     )
     excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
-    print(f"Excluded {excluded_count} barns in airports")
+    print(f"Excluded {excluded_count} barns in parks")
     length = len(gdf)
 
     # TODO: Could maybe filter this on state to speed this step up
