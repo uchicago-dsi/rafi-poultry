@@ -7,8 +7,8 @@ const bucketName = 'rafi-poultry';
 const FARMS = "test_barns_filtering_NC_MS_AR.geojson";
 const serviceAccountKey = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, 'base64').toString('ascii'));
 
-const DATA_SOURCE = "local"
-// DATA_SOURCE = "cloud"
+// const DATA_SOURCE = "local"
+const DATA_SOURCE = "cloud"
 
 export async function GET(_req) {
   if (DATA_SOURCE == "local") {
