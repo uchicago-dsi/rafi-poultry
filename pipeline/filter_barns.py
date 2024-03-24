@@ -138,7 +138,7 @@ def get_state_info(gdf, states=STATES):
     return gdf_with_state
 
 
-def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0):
+def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0, smoke_test=False):
     if buffer != 0:
         gdf_exclude = gdf_exclude.to_crs(
             epsg=5070
@@ -147,7 +147,15 @@ def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0):
 
     gdf_exclude = gdf_exclude.to_crs(gdf.crs)
 
+    # Simplify geometries if smoke_test is passed
+    if smoke_test:
+        tolerance = 0.1
+        gdf_exclude['geometry'] = gdf_exclude['geometry'].simplify(tolerance, preserve_topology=True)
+
     # Only check barns that aren't already excluded
+    # TODO: I think this is throwing this warning, figure out what's wrong:
+    # /Users/toddnief/miniconda3/lib/python3.10/site-packages/pandas/core/reshape/merge.py:1204: RuntimeWarning: invalid value encountered in cast
+    # if not (lk == lk.astype(rk.dtype))[~np.isnan(lk)].all():
     joined = gpd.sjoin(gdf[gdf.exclude == 0], gdf_exclude, how="left", predicate="within")
 
     if how == "inside":
@@ -180,12 +188,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     gdf = gpd.read_file(FILENAME)
-    if args.smoke_test:
-        n = 1000
-        gdf = gdf.sample(n=n)
-        print(f"Running in smoke test mode with {n} samples.")
-    else:
-        print("Running in normal mode.")
         
     # Project to equal area projection and get centroid for each barn
     gdf = gdf.to_crs(epsg=2163)
@@ -205,23 +207,16 @@ if __name__ == "__main__":
     if args.states:
         states_list = [state.strip() for state in args.states]
     gdf = gdf[gdf.state.isin(states_list)]
-    excluded_count = len(gdf[gdf.exclude == 1])
+
+    if args.smoke_test:
+        n = 1000
+        gdf = gdf.sample(n=n)
+        print(f"Running in smoke test mode with {n} samples.")
+    else:
+        print("Running in normal mode.")
 
     print(f"Barns before filtering: {len(gdf)}")
-
-    # Exclude barns on the coastline
-    # Source: https://catalog.data.gov/dataset/tiger-line-shapefile-2019-nation-u-s-coastline-national-shapefile
-    print("Excluding barns on the coastline...")
-    gdf = filter_on_membership(
-        gdf,
-        gpd.read_file(
-            "../data/shapefiles/tl_2019_us_coastline/tl_2019_us_coastline.shp"
-        ),
-        buffer=1000,
-    )
-    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
-    print(f"Excluded {excluded_count} barns on the coastline")
-    length = len(gdf)
+    excluded_count = len(gdf[gdf.exclude == 1])
 
     # Exclude barns in major cities
     print("Excluding barns in major cities...")
@@ -252,6 +247,7 @@ if __name__ == "__main__":
             "../data/shapefiles/Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
             buffer=400,
         ),
+        smoke_test=args.smoke_test
     )
     excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
     print(f"Excluded {excluded_count} barns in airports")
@@ -271,34 +267,51 @@ if __name__ == "__main__":
     print(f"Excluded {excluded_count} barns in parks")
     length = len(gdf)
 
+    # Exclude barns on the coastline
+    # Source: https://catalog.data.gov/dataset/tiger-line-shapefile-2019-nation-u-s-coastline-national-shapefile
+    print("Excluding barns on the coastline...")
+    gdf = filter_on_membership(
+        gdf,
+        gpd.read_file(
+            "../data/shapefiles/tl_2019_us_coastline/tl_2019_us_coastline.shp"
+        ),
+        buffer=1000,
+        smoke_test=args.smoke_test
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns on the coastline")
+    length = len(gdf)
+
     # TODO: Could maybe filter this on state to speed this step up
     # Exclude barns in bodies of water
     # Source: https://www.arcgis.com/home/item.html?id=48c77cbde9a0470fb371f8c8a8a7421a
-    if not args.smoke_test:
-        print("Excluding barns in bodies of water...")
-        gdf = filter_on_membership(
-            gdf, gpd.read_file("../data/shapefiles/USA_Detailed_Water_Bodies.geojson")
-        )
-        excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
-        print(f"Excluded {excluded_count} barns in bodies of water")
+    print("Excluding barns in bodies of water...")
+    gdf = filter_on_membership(
+        gdf, gpd.read_file("../data/shapefiles/USA_Detailed_Water_Bodies.geojson"), smoke_test=args.smoke_test
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in bodies of water")
 
     # Note: This will not match the final barn count since we only count barns in the capture areas
     print(f"There are {len(gdf[gdf.exclude == 0])} barns remaining")
 
     # Join with plant access isochrones
-    plant_access = gpd.read_file("../data/clean/isochrones_with_parent_corp.geojson")
+    plant_access = gpd.read_file("../data/all_states.geojson")
     gdf = gpd.sjoin(gdf, plant_access, how="left", predicate="within")
 
     # TODO: There's a problem somewhere where this stuff is named inconsistently
     gdf = gdf.rename(
-        columns={"Parent Corporation": "company", "Plant Access": "plant_access"}
+        columns={"Parent Corporation": "company", "Plant Access": "plant_access", "state_left": "state"}
     )
-    OUTPUT_COLS = ["state", "company", "plant_access", "geometry", "exclude"]
+    # TODO: "company" is missing from the full state final output from the isochrone pipeline
+    # OUTPUT_COLS = ["state", "company", "plant_access", "geometry", "exclude"]
+    OUTPUT_COLS = ["state", "plant_access", "geometry", "exclude"]
     gdf = gdf[OUTPUT_COLS]
 
-    filename = f"../data/clean/test_barns_filtering_{"_".join(states_list)}"
+    filename = f"../data/clean/test_barns_filtering_{'_'.join(states_list)}"
 
-    if smoke_test:
-        filename += _smoke_test
+    if args.smoke_test:
+        filename += "_smoke_test"
 
     gdf.to_file(f"{filename}.geojson", driver="GeoJSON")
+    print(f"Complete! Saved to {filename}.geojson")
