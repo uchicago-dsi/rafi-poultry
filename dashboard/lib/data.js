@@ -12,7 +12,6 @@ const PLANT_ACCESS_GEOJSON =
 // const COUNTERGLOW_FARMS = "../data/counterglow_geojson.geojson";
 // const FARMS = "../data/nc_farms_plants.geojson";
 // const FARMS = "../data/test_barns_filtering.geojson";
-const FARMS = "../data/test_barns_filtering_NC_MS_AR.geojson";
 
 const getJSON = async (dataPath) => {
   const response = await fetch(dataPath);
@@ -77,7 +76,7 @@ export const loadData = async () => {
     .map((feature) => feature.properties.state)
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
-  // TODO: Switch variable name to be non-specific to counterglow » make sure this isn't anywhere else in the code
+
   let farmsResponse = await fetch('/api/farms/');
   let rawFarms = await farmsResponse.json();
   state.stateData.farms = {
