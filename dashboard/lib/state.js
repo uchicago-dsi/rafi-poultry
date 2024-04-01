@@ -54,11 +54,9 @@ function updateFilteredStates() {
 }
 
 function updateFilteredPlants() {
-  // TODO: there's some weird async stuff going on here
-  // This throws an error since staticDataStore is not defined...but then it shows up
   state.stateData.filteredPlants =
-  // staticDataStore.allPlants.features.filter((row) => {
-  state.stateData.poultryPlants.features.filter((row) => {
+  staticDataStore.allPlants.features.filter((row) => {
+  // state.stateData.poultryPlants.features.filter((row) => {
     if (state.stateData.filteredStates.includes(row.properties.State)) {
       return true;
     } else {
@@ -123,47 +121,6 @@ function updateFilteredSales() {
   state.stateData.filteredSales = nestedSales;
 }
 
-function updateMapZoom() {
-  // default zoom state is everything (handles the case of no selection)
-  var zoomGeoJSON = state.stateData.plantAccess.features;
-
-  // update to the selected areas if they exist
-  if (state.stateData.filteredStates.length) {
-    zoomGeoJSON = state.stateData.filteredCaptureAreas;
-  }
-
-  const currentGeojson = {
-    type: "FeatureCollection",
-    features: zoomGeoJSON,
-  };
-  const boundingBox = bbox(currentGeojson);
-  const fittedViewport = new WebMercatorViewport(
-    state.stateMapSettings.containerWidth,
-    state.stateMapSettings.containerHeight
-  );
-
-  const currentLatLonZoom = fittedViewport.fitBounds(
-    [
-      [boundingBox[0], boundingBox[1]],
-      [boundingBox[2], boundingBox[3]],
-    ],
-    {
-      width: state.stateMapSettings.containerWidth,
-      height: state.stateMapSettings.containerHeight,
-      padding: { top: 20, bottom: 20, left: 20, right: 20 },
-    }
-  );
-
-  state.stateMapSettings.mapZoom = {
-    longitude: currentLatLonZoom.longitude,
-    latitude: currentLatLonZoom.latitude,
-    zoom: currentLatLonZoom.zoom,
-
-    pitch: 0,
-    bearing: 0,
-  };
-}
-
 function calculateCapturedArea() {
   let areas = {
     1: 0,
@@ -203,7 +160,8 @@ function calculateCapturedAreaByBarns() {
     },
   };
 
-  state.stateData.farms.features.reduce((accumulator, feature) => {
+  staticDataStore.allFarms.features.reduce((accumulator, feature) => {
+  // state.stateData.farms.features.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
     accumulator.totalFarms += 1
     // Only count farms in captive draw areas
@@ -224,6 +182,47 @@ function calculateCapturedAreaByBarns() {
 
   state.stateData.totalFarms = counts.totalFarms;
   state.stateData.capturedAreas = percentCaptured;
+}
+
+function updateMapZoom() {
+  // default zoom state is everything (handles the case of no selection)
+  var zoomGeoJSON = state.stateData.plantAccess.features;
+
+  // update to the selected areas if they exist
+  if (state.stateData.filteredStates.length) {
+    zoomGeoJSON = state.stateData.filteredCaptureAreas;
+  }
+
+  const currentGeojson = {
+    type: "FeatureCollection",
+    features: zoomGeoJSON,
+  };
+  const boundingBox = bbox(currentGeojson);
+  const fittedViewport = new WebMercatorViewport(
+    state.stateMapSettings.containerWidth,
+    state.stateMapSettings.containerHeight
+  );
+
+  const currentLatLonZoom = fittedViewport.fitBounds(
+    [
+      [boundingBox[0], boundingBox[1]],
+      [boundingBox[2], boundingBox[3]],
+    ],
+    {
+      width: state.stateMapSettings.containerWidth,
+      height: state.stateMapSettings.containerHeight,
+      padding: { top: 20, bottom: 20, left: 20, right: 20 },
+    }
+  );
+
+  state.stateMapSettings.mapZoom = {
+    longitude: currentLatLonZoom.longitude,
+    latitude: currentLatLonZoom.latitude,
+    zoom: currentLatLonZoom.zoom,
+
+    pitch: 0,
+    bearing: 0,
+  };
 }
 
 export function updateFilteredData() {
