@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { proxy, useSnapshot } from "valtio";
 
-import { loadData } from "../lib/data";
+import { loadData, updateStaticDataStore } from "../lib/data";
 import { state } from "../lib/state";
 
 import { DeckGLMap } from "../components/DeckGLMap";
@@ -19,6 +19,7 @@ export default function Home() {
   // load JSON and CSV data
   useEffect(() => {
     loadData();
+    // updateStaticDataStore();
   }, []);
 
   const snapshot = useSnapshot(state);

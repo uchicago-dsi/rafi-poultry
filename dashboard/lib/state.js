@@ -2,7 +2,8 @@
 import { proxy, useSnapshot } from "valtio";
 import bbox from "@turf/bbox";
 import { WebMercatorViewport } from "@deck.gl/core";
-import booleanWithin from "@turf/boolean-point-in-polygon";
+
+import { staticDataStore } from "./data";
 
 // Create a proxy state
 export const state = proxy({
@@ -40,6 +41,7 @@ export const state = proxy({
 });
 
 function updateFilteredStates() {
+  // TODO: Wait...what is this doing? Update this to use the staticDataStore also
   // choose the filtered areas to display
   state.stateData.filteredCaptureAreas =
     state.stateData.plantAccess.features.filter((row) => {
@@ -52,14 +54,17 @@ function updateFilteredStates() {
 }
 
 function updateFilteredPlants() {
+  // TODO: there's some weird async stuff going on here
+  // This throws an error since staticDataStore is not defined...but then it shows up
   state.stateData.filteredPlants =
-    state.stateData.poultryPlants.features.filter((row) => {
-      if (state.stateData.filteredStates.includes(row.properties.State)) {
-        return true;
-      } else {
-        return false;
-      }
-    });
+  // staticDataStore.allPlants.features.filter((row) => {
+  state.stateData.poultryPlants.features.filter((row) => {
+    if (state.stateData.filteredStates.includes(row.properties.State)) {
+      return true;
+    } else {
+      return false;
+    }
+  });
 }
 
 function updateFilteredCompanies() {
