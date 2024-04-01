@@ -18,8 +18,8 @@ import "../styles/styles.css";
 export default function Home() {
   // load JSON and CSV data
   useEffect(() => {
-    loadData();
-    // updateStaticDataStore();
+    // loadData();
+    updateStaticDataStore();
   }, []);
 
   const snapshot = useSnapshot(state);

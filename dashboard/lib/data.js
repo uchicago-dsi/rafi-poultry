@@ -167,7 +167,7 @@ export const updateStaticDataStore = async () => {
 
     state.stateData.poultryPlants = processedPlantsJSON;
     // TODO: Had to comment this out to keep this from breaking
-    // staticDataStore.allPlants = processedPlantsJSON;
+    staticDataStore.allPlants = processedPlantsJSON;
 
     // TODO: Move filtering logic to the filteredDataStore
     // Filter farms data
@@ -180,7 +180,7 @@ export const updateStaticDataStore = async () => {
 
     state.stateData.farms = farmsJSON;
     // TODO: Commented out to fix this
-    // staticDataStore.allFarms = farmsJSON;
+    staticDataStore.allFarms = farmsJSON;
 
     // TODO: Maybe set this up as API also?
     state.stateData.plantAccess = await getJSON(PLANT_ACCESS_GEOJSON);
