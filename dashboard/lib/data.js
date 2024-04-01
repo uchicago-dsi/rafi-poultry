@@ -89,6 +89,8 @@ export const loadData = async () => {
   // Filter FSIS plant data
   // TODO: Rewrite pipeline to save the plants as GeoJSON
   // TODO: Change geojson so it has better feature names?
+
+  
   // TODO: Question — how much of this processing should be done in the API call?
   let plantsResponse = await fetch('/api/plants/');
   let rawPlants = await plantsResponse.json();
@@ -103,6 +105,94 @@ export const loadData = async () => {
     type: "FeatureCollection",
     features: rawPoultryPlants
   };
+
+  // Initialize display data
+  state.stateData.filteredStates = [...state.stateData.allStates]; // Start with all states selected
+  updateFilteredData();
+  state.stateData.isDataLoaded = true;
+};
+
+export const staticDataStore = {
+  allPlants: [],
+  allFarms: [],
+  allSales: [],
+  allIsochrones: [],
+}
+
+const fetchData = async (url) => {
+  const response = await fetch(url);
+  return await response.json();
+}
+
+export const updateStaticDataStore = async () => {
+  try {
+    // TODO: this is the eventual API structure
+    // const [plants, farms, sales, isochrones] = await Promise.all([
+    //   fetchData('/api/plants/plants'),
+    //   fetchData('/api/farms'),
+    //   fetchData('/api/plants/sales'),
+    //   fetchData('/api/isochrones'),
+    // ]);
+
+    // staticDataStore.allPlants = plants;
+    // staticDataStore.allFarms = farms;
+    // staticDataStore.allSales = sales;
+    // staticDataStore.allIsochrones = isochrones;
+
+    const [rawPlants, rawFarms,] = await Promise.all([
+      fetchData('/api/plants'),
+      fetchData('/api/farms'),
+    ]);
+
+    console.log("rawPlants")
+    console.log(rawPlants)
+
+    // TODO: Move filtering logic to the filteredDataStore
+    // Filter FSIS plant data
+    const processedPlants = rawPlants.features.filter((plant) => {
+      if (plant.properties["Animals Processed"] === "Chicken" && plant.properties.Size === "Large") {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    console.log("processedPlants")
+    console.log(processedPlants)
+
+    let processedPlantsJSON = {
+      type: "FeatureCollection",
+      features: processedPlants
+    };
+
+    state.stateData.poultryPlants = processedPlantsJSON;
+    // TODO: Had to comment this out to keep this from breaking
+    // staticDataStore.allPlants = processedPlantsJSON;
+
+    // TODO: Move filtering logic to the filteredDataStore
+    // Filter farms data
+    let farmsJSON = {
+      type: 'FeatureCollection',
+      features: rawFarms.features.filter(feature => 
+        feature.properties.exclude === 0 && feature.properties.plant_access !== null
+      )
+    };
+
+    state.stateData.farms = farmsJSON;
+    // TODO: Commented out to fix this
+    // staticDataStore.allFarms = farmsJSON;
+
+    // TODO: Maybe set this up as API also?
+    state.stateData.plantAccess = await getJSON(PLANT_ACCESS_GEOJSON);
+    state.stateData.allStates = state.stateData.plantAccess.features
+      .map((feature) => feature.properties.state)
+      .filter((value, index, array) => array.indexOf(value) === index)
+      .sort();
+
+  }
+  catch (error) {
+    console.error(error);
+  }
 
   // Initialize display data
   state.stateData.filteredStates = [...state.stateData.allStates]; // Start with all states selected
