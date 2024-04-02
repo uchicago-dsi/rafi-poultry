@@ -225,6 +225,7 @@ function updateMapZoom(filteredStates) {
     type: "FeatureCollection",
     features: zoomGeoJSON,
   };
+  // TODO: Handle null selection here since this breaks
   const boundingBox = bbox(currentGeojson);
   const fittedViewport = new WebMercatorViewport(
     state.stateMapSettings.containerWidth,
