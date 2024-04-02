@@ -2,7 +2,6 @@
 import { proxy, useSnapshot } from "valtio";
 import bbox from "@turf/bbox";
 import { WebMercatorViewport } from "@deck.gl/core";
-
 import { staticDataStore, filteredDataStore } from "./data";
 
 // Create a proxy state
@@ -55,14 +54,14 @@ function updateFilteredStates() {
 
 // TODO: Can prob get rid of this now that filteredDataStore is being used
 function updateFilteredPlants() {
-  state.stateData.filteredPlants = filteredDataStore.filteredPlantsData;
+  // state.stateData.filteredPlants = filteredDataStore.filteredPlantsData;
 }
 
 // TODO: Should this be kept in state? And separate from the filteredDataStore?
 function updateFilteredCompanies() {
-  state.stateData.filteredCompanies = filteredDataStore.filteredPlantsData
-    .map((plant) => plant.properties["Parent Corporation"])
-    .filter((value, index, array) => array.indexOf(value) === index);
+  // state.stateData.filteredCompanies = filteredDataStore.filteredPlantsData
+  //   .map((plant) => plant.properties["Parent Corporation"])
+  //   .filter((value, index, array) => array.indexOf(value) === index);
 }
 
 function updateFilteredSales() {
