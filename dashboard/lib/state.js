@@ -1,9 +1,28 @@
 "use client";
-import { proxy, useSnapshot } from "valtio";
+import { proxy } from "valtio";
 import bbox from "@turf/bbox";
 import { WebMercatorViewport } from "@deck.gl/core";
-import { staticDataStore, filteredDataStore } from "./data";
+import { derive } from "valtio/utils";
+import { state2abb } from "./constants";
 
+export const staticDataStore = {
+  allPlants: [],
+  allFarms: [],
+  allSales: [],
+  allIsochrones: [],
+  poultryPlants: [],
+};
+
+export const staticFilteredState = {
+  filteredFarmsData: [],
+  filteredPlantsData: [],
+  filteredCompanies: [],
+  filteredSales: [],
+  filteredCaptureAreasData: [],
+  capturedAreas: [],
+  totalFarms: [],
+  plantAccess: [],
+};
 // Create a proxy state
 export const state = proxy({
   // basic data
@@ -39,44 +58,62 @@ export const state = proxy({
   },
 });
 
-function updateFilteredStates() {
-  // TODO: Wait...what is this doing? Update this to use the staticDataStore also
+function updateFilteredStates(states) {
+  // TODO: Wait...what is this doingdata Update this to use the staticDataStore also
   // choose the filtered areas to display
-  state.stateData.filteredCaptureAreas =
-    state.stateData.plantAccess.features.filter((row) => {
-      if (state.stateData.filteredStates.includes(row.properties.state)) {
+  staticFilteredState.filteredCaptureAreas =
+    staticDataStore.allPlants.features.filter((row) => {
+      if (states.includes(row.properties.State)) {
         return true;
       } else {
         return false;
       }
     });
-}
+  const stateabbrevs = states.map((state) => state2abb[state]);
 
-// TODO: Can prob get rid of this now that filteredDataStore is being used
-function updateFilteredPlants() {
-  // state.stateData.filteredPlants = filteredDataStore.filteredPlantsData;
+  const _features = staticDataStore.allFarms.features;
+  const features = [];
+  for (let i = 0; i < _features.length; i++) {
+    const isInState = stateabbrevs.includes(_features[i].properties.state);
+    const isExcluded = _features[i].properties.exclude === 0;
+    const hasPlantAccess = _features[i].properties.plant_access !== null;
+    if (isInState && isExcluded && hasPlantAccess) {
+      features.push(_features[i]);
+    }
+  }
+  staticFilteredState.filteredFarmsData = features;
+
+  staticFilteredState.filteredPlantsData = staticDataStore.allPlants.features
+    ? staticDataStore.allPlants.features.filter((row) =>
+        states.includes(row.properties.State)
+      )
+    : [];
 }
 
 // TODO: Should this be kept in state? And separate from the filteredDataStore?
 function updateFilteredCompanies() {
-  // state.stateData.filteredCompanies = filteredDataStore.filteredPlantsData
-  //   .map((plant) => plant.properties["Parent Corporation"])
-  //   .filter((value, index, array) => array.indexOf(value) === index);
+  staticFilteredState.filteredCompanies = staticFilteredState.filteredPlantsData
+    .map((plant) => plant.properties["Parent Corporation"])
+    .filter((value, index, array) => array.indexOf(value) === index);
 }
 
 function updateFilteredSales() {
   // build dictionary for each company in the area
   let companySales = {};
-  for (let i = 0; i < state.stateData.filteredCompanies.length; i++) {
-    companySales[state.stateData.filteredCompanies[i]] = 0;
+  for (let i = 0; i < staticFilteredState.filteredCompanies.length; i++) {
+    companySales[staticFilteredState.filteredCompanies[i]] = 0;
   }
 
-  for (let i = 0; i < state.stateData.filteredPlants.length; i++) {
+  for (let i = 0; i < staticFilteredState.filteredPlantsData.length; i++) {
     let salesVolume =
-      state.stateData.filteredPlants[i].properties["Sales Volume (Location)"];
+      staticFilteredState.filteredPlantsData[i].properties[
+        "Sales Volume (Location)"
+      ];
     if (!Number.isNaN(salesVolume)) {
       companySales[
-        state.stateData.filteredPlants[i].properties["Parent Corporation"]
+        staticFilteredState.filteredPlantsData[i].properties[
+          "Parent Corporation"
+        ]
       ] += salesVolume;
     }
   }
@@ -111,7 +148,7 @@ function updateFilteredSales() {
       percent: unnestedSales[key] / totalSales,
     };
   }
-  state.stateData.filteredSales = nestedSales;
+  staticFilteredState.filteredSales = nestedSales;
 }
 
 function calculateCapturedArea() {
@@ -123,10 +160,10 @@ function calculateCapturedArea() {
   };
 
   // TODO: Need to add area to GeoJSON
-  for (let i = 0; i < state.stateData.filteredCaptureAreas.length; i++) {
+  for (let i = 0; i < staticFilteredState.filteredCaptureAreas.length; i++) {
     areas[
-      state.stateData.filteredCaptureAreas[i].properties.corporate_access
-    ] += state.stateData.filteredCaptureAreas[i].properties.area;
+      staticFilteredState.filteredCaptureAreas[i].properties.corporate_access
+    ] += staticFilteredState.filteredCaptureAreas[i].properties.area;
   }
 
   let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
@@ -137,7 +174,7 @@ function calculateCapturedArea() {
   });
 
   // return percentArea;
-  state.stateData.capturedAreas = percentArea;
+  staticFilteredState.capturedAreas = percentArea;
 }
 
 function calculateCapturedAreaByBarns() {
@@ -156,7 +193,7 @@ function calculateCapturedAreaByBarns() {
   // filteredDataStore.filteredFarmsData.features.reduce((accumulator, feature) => {
   staticDataStore.allFarms.features.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
-    accumulator.totalFarms += 1
+    accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
     if (plantAccess != "0") {
       accumulator.totalCapturedFarms += 1;
@@ -169,23 +206,23 @@ function calculateCapturedAreaByBarns() {
   let percentCaptured = {};
   Object.keys(counts.plantAccessCounts).forEach((key) => {
     if (key != "0") {
-      percentCaptured[key] = counts.plantAccessCounts[key] / counts.totalCapturedFarms;
+      percentCaptured[key] =
+        counts.plantAccessCounts[key] / counts.totalCapturedFarms;
     }
   });
 
-  state.stateData.totalFarms = counts.totalFarms;
-  state.stateData.capturedAreas = percentCaptured;
+  staticDataStore.totalFarms = counts.totalFarms;
+  staticDataStore.capturedAreas = percentCaptured;
 }
 
-function updateMapZoom() {
+function updateMapZoom(filteredStates) {
   // default zoom state is everything (handles the case of no selection)
-  var zoomGeoJSON = state.stateData.plantAccess.features;
+  var zoomGeoJSON = staticFilteredState.filteredCaptureAreas.features;
 
   // update to the selected areas if they exist
-  if (state.stateData.filteredStates.length) {
-    zoomGeoJSON = state.stateData.filteredCaptureAreas;
+  if (filteredStates.length) {
+    zoomGeoJSON = staticFilteredState.filteredCaptureAreas;
   }
-
   const currentGeojson = {
     type: "FeatureCollection",
     features: zoomGeoJSON,
@@ -218,12 +255,19 @@ function updateMapZoom() {
   };
 }
 
-export function updateFilteredData() {
-  updateFilteredStates();
-  updateFilteredPlants();
+export function updateFilteredData(stateData) {
+  if (!stateData?.isDataLoaded) {
+    return;
+  }
+  updateFilteredStates(stateData.filteredStates);
   updateFilteredCompanies();
   updateFilteredSales();
   calculateCapturedArea();
   calculateCapturedAreaByBarns();
-  updateMapZoom();
+  updateMapZoom(stateData.filteredStates);
+  return performance.now();
 }
+
+export const filterTimestampStore = derive({
+  timestamp: (get) => updateFilteredData(get(state).stateData),
+});

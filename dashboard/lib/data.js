@@ -1,6 +1,6 @@
 "use client";
 import Papa from "papaparse";
-import { state, updateFilteredData } from "../lib/state";
+import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
 // const POULTRY_PLANTS_CSV = "../data/poultry_plants_with_sales.csv";
 const POULTRY_PLANTS_CSV = "../data/location_match_fullest.csv";
@@ -69,22 +69,22 @@ const parsePlantCSV = async (response) => {
 // Function to load data
 export const loadData = async () => {
   // Read raw files
-  state.stateData.plantAccess = await getJSON(PLANT_ACCESS_GEOJSON);
-  state.stateData.allStates = state.stateData.plantAccess.features
-    .map((feature) => feature.properties.state)
-    .filter((value, index, array) => array.indexOf(value) === index)
-    .sort();
+  // // staticDataStore.plantAccess = await getJSON(PLANT_ACCESS_GEOJSON);
+  // staticDataStore.allStates = staticDataStore.plantAccess.features
+  //   .map((feature) => feature.properties.state)
+  //   .filter((value, index, array) => array.indexOf(value) === index)
+  //   .sort();
 
-  let farmsResponse = await fetch("/api/farms/");
-  let rawFarms = await farmsResponse.json();
-  state.stateData.farms = {
-    type: "FeatureCollection",
-    features: rawFarms.features.filter(
-      (feature) =>
-        feature.properties.exclude === 0 &&
-        feature.properties.plant_access !== null
-    ),
-  };
+  // let farmsResponse = await fetch("/api/farms/");
+  // let rawFarms = await farmsResponse.json();
+  // staticDataStore.farms = {
+  //   type: "FeatureCollection",
+  //   features: rawFarms.features.filter(
+  //     (feature) =>
+  //       feature.properties.exclude === 0 &&
+  //       feature.properties.plant_access !== null
+  //   ),
+  // };
 
   // Filter FSIS plant data
   // TODO: Rewrite pipeline to save the plants as GeoJSON
@@ -114,14 +114,6 @@ export const loadData = async () => {
   state.stateData.isDataLoaded = true;
 };
 
-export const staticDataStore = {
-  allPlants: [],
-  allFarms: [],
-  allSales: [],
-  allIsochrones: [],
-  poultryPlants: [],
-};
-
 const fetchData = async (url) => {
   const response = await fetch(url);
   return await response.json();
@@ -142,13 +134,16 @@ export const updateStaticDataStore = async () => {
     // staticDataStore.allSales = sales;
     // staticDataStore.allIsochrones = isochrones;
 
-    const [rawPlants, rawFarms] = await Promise.all([
+    const [rawPlants, rawFarms, plantAccess,] = await Promise.all([
       fetchData("/api/plants"),
       fetchData("/api/farms"),
+      getJSON(PLANT_ACCESS_GEOJSON),
     ]);
 
-    // console.log("rawPlants")
-    // console.log(rawPlants)
+    staticDataStore.allStates = plantAccess.features
+    .map((feature) => feature.properties.state)
+    .filter((value, index, array) => array.indexOf(value) === index)
+    .sort();
 
     // TODO: Move filtering logic to the filteredDataStore
     // Filter FSIS plant data
@@ -172,7 +167,7 @@ export const updateStaticDataStore = async () => {
     };
 
     // TODO: Still updating state directly so display doesn't break
-    // state.stateData.poultryPlants = processedPlantsJSON;
+    staticDataStore.poultryPlants = processedPlantsJSON;
     staticDataStore.allPlants = processedPlantsJSON;
 
     // TODO: Move filtering logic to the filteredDataStore
