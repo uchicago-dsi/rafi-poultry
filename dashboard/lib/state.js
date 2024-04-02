@@ -3,7 +3,7 @@ import { proxy, useSnapshot } from "valtio";
 import bbox from "@turf/bbox";
 import { WebMercatorViewport } from "@deck.gl/core";
 
-import { staticDataStore } from "./data";
+import { staticDataStore, filteredDataStore } from "./data";
 
 // Create a proxy state
 export const state = proxy({
@@ -53,16 +53,17 @@ function updateFilteredStates() {
     });
 }
 
+// TODO: Can prob get rid of this now that filteredDataStore is being used
 function updateFilteredPlants() {
-  state.stateData.filteredPlants =
-  staticDataStore.allPlants.features.filter((row) => {
-  // state.stateData.poultryPlants.features.filter((row) => {
-    if (state.stateData.filteredStates.includes(row.properties.State)) {
-      return true;
-    } else {
-      return false;
-    }
-  });
+  state.stateData.filteredPlants = filteredDataStore.filteredPlantsData;
+  // staticDataStore.allPlants.features.filter((row) => {
+  // // state.stateData.poultryPlants.features.filter((row) => {
+  //   if (state.stateData.filteredStates.includes(row.properties.State)) {
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // });
 }
 
 function updateFilteredCompanies() {

@@ -1,7 +1,6 @@
 "use client";
-import { coords2geo } from "geotoolbox";
 import Papa from "papaparse";
-
+import { derive } from "valtio/utils";
 import { state, updateFilteredData } from "../lib/state";
 
 // const POULTRY_PLANTS_CSV = "../data/poultry_plants_with_sales.csv";
@@ -165,8 +164,8 @@ export const updateStaticDataStore = async () => {
       features: processedPlants
     };
 
+    // TODO: Still updating state directly so display doesn't break
     state.stateData.poultryPlants = processedPlantsJSON;
-    // TODO: Had to comment this out to keep this from breaking
     staticDataStore.allPlants = processedPlantsJSON;
 
     // TODO: Move filtering logic to the filteredDataStore
@@ -178,8 +177,8 @@ export const updateStaticDataStore = async () => {
       )
     };
 
+    // TODO: Still updating state directly so display doesn't break
     state.stateData.farms = farmsJSON;
-    // TODO: Commented out to fix this
     staticDataStore.allFarms = farmsJSON;
 
     // TODO: Maybe set this up as API also?
@@ -199,3 +198,25 @@ export const updateStaticDataStore = async () => {
   updateFilteredData();
   state.stateData.isDataLoaded = true;
 };
+
+
+const filterPlantsData = (states) => {
+  return staticDataStore.allPlants.features 
+  ? staticDataStore.allPlants.features.filter((row) => states.includes(row.properties.State))
+  : [];
+}
+
+const filterFarmsData = (states) => {
+  return staticDataStore.allFarms.features
+  ? staticDataStore.allFarms.features.filter((row) => {
+    states.includes(row.properties.state) && 
+    row.properties.exclude === 0 && 
+    row.properties.plant_access !== null
+  })
+  : [];
+}
+
+export const filteredDataStore = derive({
+  filteredFarmData: (get) => filterFarmsData(get(state).stateData.filteredStates),
+  filteredPlantsData: (get) => filterPlantsData(get(state).stateData.filteredStates),
+});
