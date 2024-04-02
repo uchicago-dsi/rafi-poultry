@@ -18,7 +18,7 @@ export const staticFilteredState = {
   filteredPlantsData: [],
   filteredCompanies: [],
   filteredSales: [],
-  filteredCaptureAreasData: [],
+  filteredCaptureAreas: [],
   capturedAreas: [],
   totalFarms: [],
   plantAccess: [],
@@ -62,13 +62,10 @@ function updateFilteredStates(states) {
   // TODO: Wait...what is this doingdata Update this to use the staticDataStore also
   // choose the filtered areas to display
   staticFilteredState.filteredCaptureAreas =
-    staticDataStore.allPlants.features.filter((row) => {
-      if (states.includes(row.properties.State)) {
-        return true;
-      } else {
-        return false;
-      }
-    });
+    staticDataStore.allPlants.features.filter((row) =>
+      states.includes(row.properties.State)
+    );
+
   const stateabbrevs = states.map((state) => state2abb[state]);
 
   const _features = staticDataStore.allFarms.features;
