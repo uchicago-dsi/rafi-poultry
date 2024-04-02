@@ -1,19 +1,18 @@
 "use client";
 // app.js
 import React, { useState, useEffect } from "react";
-import { proxy, useSnapshot } from "valtio";
 
 import { state } from "../lib/state";
 
 import DeckGL from "@deck.gl/react";
 import { LineLayer, IconLayer, GeoJsonLayer } from "@deck.gl/layers";
 import { COORDINATE_SYSTEM } from "@deck.gl/core";
-
 import { Map } from "react-map-gl";
 
 import colorbrewer from "colorbrewer";
 import tinycolor from "tinycolor2";
 import { ScatterplotLayer } from "deck.gl";
+import { useMapData } from "@/lib/useMapData";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -72,15 +71,23 @@ const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 // console.log(colorPalette);
 
 export function DeckGLMap() {
-  const { stateData, stateMapSettings } = useSnapshot(state);
+  const {
+    isDataLoaded,
+    stateMapSettings,
+    timestampState,
+    filteredFarmsData,
+    filteredPlantsData,
+    filteredCaptureAreas,
+    poultryPlants
+  } = useMapData();
 
   // Don't render the component until the data is loaded
-  if (!stateData.isDataLoaded) {
+  if (!isDataLoaded) {
     return "";
   }
 
   const plantAccessLayer = new GeoJsonLayer({
-    data: stateData.filteredCaptureAreas,
+    data:filteredCaptureAreas,
 
     pickable: true,
     onHover: ({ x, y, object }) => {
@@ -118,7 +125,7 @@ export function DeckGLMap() {
 
   const farmLayer = new IconLayer({
     id: "icon-layer",
-    data: stateData.farms.features,
+    data: filteredFarmsData,
     pickable: true,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
@@ -136,7 +143,7 @@ export function DeckGLMap() {
   const plantLayer = new IconLayer({
     id: "icon-layer",
     stroked: true,
-    data: stateData.poultryPlants.features,
+    data: filteredPlantsData,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
     iconMapping: {
@@ -159,7 +166,7 @@ export function DeckGLMap() {
 
   const plantInteractiveLayer = new ScatterplotLayer({
     id: "scatterplot-layer",
-    data: stateData.poultryPlants.features,
+    data: poultryPlants,
     pickable: true,
     // stroked: true,
     filled: true, // will be filled with empty
