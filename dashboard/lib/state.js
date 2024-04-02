@@ -66,8 +66,9 @@ function updateFilteredPlants() {
   // });
 }
 
+// TODO: Should this be kept in state? And separate from the filteredDataStore?
 function updateFilteredCompanies() {
-  state.stateData.filteredCompanies = state.stateData.filteredPlants
+  state.stateData.filteredCompanies = filteredDataStore.filteredPlantsData
     .map((plant) => plant.properties["Parent Corporation"])
     .filter((value, index, array) => array.indexOf(value) === index);
 }
