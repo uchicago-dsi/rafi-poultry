@@ -91,7 +91,7 @@ export const loadData = async () => {
   // TODO: Change geojson so it has better feature names?
 
   // TODO: Question — how much of this processing should be done in the API call?
-  let plantsResponse = await fetch("/api/plants/");
+  let plantsResponse = await fetch("/api/plants/plants");
   let rawPlants = await plantsResponse.json();
   const rawPoultryPlants = rawPlants.features.filter((plant) => {
     if (
@@ -122,7 +122,7 @@ const fetchData = async (url) => {
 export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawFarms, plantAccess,] = await Promise.all([
-      fetchData("/api/plants"),
+      fetchData("/api/plants/plants"),
       fetchData("/api/farms"),
       getJSON(PLANT_ACCESS_GEOJSON),
       // TODO: set up sales to come from API

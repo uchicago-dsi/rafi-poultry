@@ -85,7 +85,7 @@ export function DeckGLMap() {
   if (!isDataLoaded) {
     return "";
   }
-  
+
   const plantAccessLayer = new GeoJsonLayer({
     data:filteredCaptureAreas,
 
@@ -144,6 +144,7 @@ export function DeckGLMap() {
     getTooltip: (d) => `Address: ${d.properties["Full Address"]}`,
 
     pickable: true,
+    // TODO: tooltip should probably be split out for performance eventually
     onHover: ({ x, y, object }) => {
       state.stateMapSettings.x = x;
       state.stateMapSettings.y = y;
