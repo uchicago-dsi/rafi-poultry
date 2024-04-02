@@ -74,7 +74,7 @@ export function DeckGLMap() {
   const {
     isDataLoaded,
     stateMapSettings,
-    timestampState,
+    timestamp,
     filteredFarmsData,
     filteredPlantsData,
     filteredCaptureAreas,
@@ -85,7 +85,6 @@ export function DeckGLMap() {
   if (!isDataLoaded) {
     return "";
   }
-
   const plantAccessLayer = new GeoJsonLayer({
     data:filteredCaptureAreas,
 
