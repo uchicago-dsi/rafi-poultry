@@ -217,6 +217,6 @@ const filterFarmsData = (states) => {
 }
 
 export const filteredDataStore = derive({
-  filteredFarmData: (get) => filterFarmsData(get(state).stateData.filteredStates),
+  filteredFarmsData: (get) => filterFarmsData(get(state).stateData.filteredStates),
   filteredPlantsData: (get) => filterPlantsData(get(state).stateData.filteredStates),
 });

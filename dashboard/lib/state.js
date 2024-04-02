@@ -56,14 +56,6 @@ function updateFilteredStates() {
 // TODO: Can prob get rid of this now that filteredDataStore is being used
 function updateFilteredPlants() {
   state.stateData.filteredPlants = filteredDataStore.filteredPlantsData;
-  // staticDataStore.allPlants.features.filter((row) => {
-  // // state.stateData.poultryPlants.features.filter((row) => {
-  //   if (state.stateData.filteredStates.includes(row.properties.State)) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // });
 }
 
 // TODO: Should this be kept in state? And separate from the filteredDataStore?
@@ -162,8 +154,8 @@ function calculateCapturedAreaByBarns() {
     },
   };
 
+  // filteredDataStore.filteredFarmsData.features.reduce((accumulator, feature) => {
   staticDataStore.allFarms.features.reduce((accumulator, feature) => {
-  // state.stateData.farms.features.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
     accumulator.totalFarms += 1
     // Only count farms in captive draw areas
