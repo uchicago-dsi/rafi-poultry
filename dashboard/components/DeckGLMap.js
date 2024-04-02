@@ -85,6 +85,7 @@ export function DeckGLMap() {
   if (!isDataLoaded) {
     return "";
   }
+  
   const plantAccessLayer = new GeoJsonLayer({
     data:filteredCaptureAreas,
 
@@ -96,19 +97,6 @@ export function DeckGLMap() {
     },
 
     getFillColor: function (dataRow) {
-      // TODO: available if we want to switch back to plants
-      // switch (dataRow.properties.plant_access) {
-      //   switch (dataRow.properties.corporate_access) {
-      //     case 1:
-      //       return colorPalette["One Plant"];
-      //     case 2:
-      //       return colorPalette["Two Plants"];
-      //     case 3:
-      //       return colorPalette["Three Plants"];
-      //     case 4:
-      //       return colorPalette["4+ Plants"];
-      //   }
-      // },
       switch (dataRow.properties.corporate_access) {
         case 1:
           return colorPalette["One Integrator"];

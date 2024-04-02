@@ -121,23 +121,11 @@ const fetchData = async (url) => {
 
 export const updateStaticDataStore = async () => {
   try {
-    // TODO: this is the eventual API structure
-    // const [plants, farms, sales, isochrones] = await Promise.all([
-    //   fetchData('/api/plants/plants'),
-    //   fetchData('/api/farms'),
-    //   fetchData('/api/plants/sales'),
-    //   fetchData('/api/isochrones'),
-    // ]);
-
-    // staticDataStore.allPlants = plants;
-    // staticDataStore.allFarms = farms;
-    // staticDataStore.allSales = sales;
-    // staticDataStore.allIsochrones = isochrones;
-
     const [rawPlants, rawFarms, plantAccess,] = await Promise.all([
       fetchData("/api/plants"),
       fetchData("/api/farms"),
       getJSON(PLANT_ACCESS_GEOJSON),
+      // TODO: set up sales to come from API
     ]);
 
     staticDataStore.allStates = plantAccess.features
@@ -158,15 +146,11 @@ export const updateStaticDataStore = async () => {
       }
     });
 
-    // console.log("processedPlants")
-    // console.log(processedPlants)
-
     let processedPlantsJSON = {
       type: "FeatureCollection",
       features: processedPlants,
     };
 
-    // TODO: Still updating state directly so display doesn't break
     staticDataStore.poultryPlants = processedPlantsJSON;
     staticDataStore.allPlants = processedPlantsJSON;
 
@@ -181,12 +165,11 @@ export const updateStaticDataStore = async () => {
       ),
     };
 
-    // TODO: Still updating state directly so display doesn't break
-    // state.stateData.farms = farmsJSON;
     staticDataStore.allFarms = farmsJSON;
 
-    // TODO: Maybe set this up as API also?
-    state.stateData.plantAccess = await getJSON(PLANT_ACCESS_GEOJSON);
+    // TODO: I don't think I actually want this in state...
+    state.stateData.plantAccess = plantAccess
+    // TODO: But maybe the list of possible states should be in state?
     state.stateData.allStates = state.stateData.plantAccess.features
       .map((feature) => feature.properties.state)
       .filter((value, index, array) => array.indexOf(value) === index)
