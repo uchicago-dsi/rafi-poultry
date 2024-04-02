@@ -1,6 +1,5 @@
 "use client";
 import Papa from "papaparse";
-import { derive } from "valtio/utils";
 import { state, updateFilteredData } from "../lib/state";
 
 // const POULTRY_PLANTS_CSV = "../data/poultry_plants_with_sales.csv";
@@ -76,33 +75,37 @@ export const loadData = async () => {
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
 
-  let farmsResponse = await fetch('/api/farms/');
+  let farmsResponse = await fetch("/api/farms/");
   let rawFarms = await farmsResponse.json();
   state.stateData.farms = {
-    type: 'FeatureCollection',
-    features: rawFarms.features.filter(feature => 
-      feature.properties.exclude === 0 && feature.properties.plant_access !== null
-    )
+    type: "FeatureCollection",
+    features: rawFarms.features.filter(
+      (feature) =>
+        feature.properties.exclude === 0 &&
+        feature.properties.plant_access !== null
+    ),
   };
 
   // Filter FSIS plant data
   // TODO: Rewrite pipeline to save the plants as GeoJSON
   // TODO: Change geojson so it has better feature names?
 
-  
   // TODO: Question — how much of this processing should be done in the API call?
-  let plantsResponse = await fetch('/api/plants/');
+  let plantsResponse = await fetch("/api/plants/");
   let rawPlants = await plantsResponse.json();
   const rawPoultryPlants = rawPlants.features.filter((plant) => {
-    if (plant.properties["Animals Processed"] === "Chicken" && plant.properties.Size === "Large") {
+    if (
+      plant.properties["Animals Processed"] === "Chicken" &&
+      plant.properties.Size === "Large"
+    ) {
       return true;
     } else {
       return false;
     }
   });
-  state.stateData.poultryPlants = {
+  staticDataStore.poultryPlants = {
     type: "FeatureCollection",
-    features: rawPoultryPlants
+    features: rawPoultryPlants,
   };
 
   // Initialize display data
@@ -116,12 +119,13 @@ export const staticDataStore = {
   allFarms: [],
   allSales: [],
   allIsochrones: [],
-}
+  poultryPlants: [],
+};
 
 const fetchData = async (url) => {
   const response = await fetch(url);
   return await response.json();
-}
+};
 
 export const updateStaticDataStore = async () => {
   try {
@@ -138,47 +142,52 @@ export const updateStaticDataStore = async () => {
     // staticDataStore.allSales = sales;
     // staticDataStore.allIsochrones = isochrones;
 
-    const [rawPlants, rawFarms,] = await Promise.all([
-      fetchData('/api/plants'),
-      fetchData('/api/farms'),
+    const [rawPlants, rawFarms] = await Promise.all([
+      fetchData("/api/plants"),
+      fetchData("/api/farms"),
     ]);
 
-    console.log("rawPlants")
-    console.log(rawPlants)
+    // console.log("rawPlants")
+    // console.log(rawPlants)
 
     // TODO: Move filtering logic to the filteredDataStore
     // Filter FSIS plant data
     const processedPlants = rawPlants.features.filter((plant) => {
-      if (plant.properties["Animals Processed"] === "Chicken" && plant.properties.Size === "Large") {
+      if (
+        plant.properties["Animals Processed"] === "Chicken" &&
+        plant.properties.Size === "Large"
+      ) {
         return true;
       } else {
         return false;
       }
     });
 
-    console.log("processedPlants")
-    console.log(processedPlants)
+    // console.log("processedPlants")
+    // console.log(processedPlants)
 
     let processedPlantsJSON = {
       type: "FeatureCollection",
-      features: processedPlants
+      features: processedPlants,
     };
 
     // TODO: Still updating state directly so display doesn't break
-    state.stateData.poultryPlants = processedPlantsJSON;
+    // state.stateData.poultryPlants = processedPlantsJSON;
     staticDataStore.allPlants = processedPlantsJSON;
 
     // TODO: Move filtering logic to the filteredDataStore
     // Filter farms data
     let farmsJSON = {
-      type: 'FeatureCollection',
-      features: rawFarms.features.filter(feature => 
-        feature.properties.exclude === 0 && feature.properties.plant_access !== null
-      )
+      type: "FeatureCollection",
+      features: rawFarms.features.filter(
+        (feature) =>
+          feature.properties.exclude === 0 &&
+          feature.properties.plant_access !== null
+      ),
     };
 
     // TODO: Still updating state directly so display doesn't break
-    state.stateData.farms = farmsJSON;
+    // state.stateData.farms = farmsJSON;
     staticDataStore.allFarms = farmsJSON;
 
     // TODO: Maybe set this up as API also?
@@ -187,9 +196,7 @@ export const updateStaticDataStore = async () => {
       .map((feature) => feature.properties.state)
       .filter((value, index, array) => array.indexOf(value) === index)
       .sort();
-
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
   }
 
@@ -198,25 +205,3 @@ export const updateStaticDataStore = async () => {
   updateFilteredData();
   state.stateData.isDataLoaded = true;
 };
-
-
-const filterPlantsData = (states) => {
-  return staticDataStore.allPlants.features 
-  ? staticDataStore.allPlants.features.filter((row) => states.includes(row.properties.State))
-  : [];
-}
-
-const filterFarmsData = (states) => {
-  return staticDataStore.allFarms.features
-  ? staticDataStore.allFarms.features.filter((row) => {
-    states.includes(row.properties.state) && 
-    row.properties.exclude === 0 && 
-    row.properties.plant_access !== null
-  })
-  : [];
-}
-
-export const filteredDataStore = derive({
-  filteredFarmsData: (get) => filterFarmsData(get(state).stateData.filteredStates),
-  filteredPlantsData: (get) => filterPlantsData(get(state).stateData.filteredStates),
-});
