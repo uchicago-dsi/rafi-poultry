@@ -19,6 +19,7 @@ export const staticFilteredState = {
   filteredCompanies: [],
   filteredSales: [],
   filteredCaptureAreas: [],
+  // TODO: These names are confusing. What is capturedAreas?
   capturedAreas: [],
   totalFarms: [],
   plantAccess: [],
@@ -59,12 +60,12 @@ export const state = proxy({
 });
 
 function updateFilteredStates(states) {
-  // TODO: Wait...what is this doingdata Update this to use the staticDataStore also
-  // choose the filtered areas to display
-  staticFilteredState.filteredCaptureAreas =
-    staticDataStore.allPlants.features.filter((row) =>
-      states.includes(row.properties.State)
-    );
+  // TODO: I don't like this function and I think it's doing too much
+  // TODO: standardize the column names so they are all lower case (something else is State)
+    staticFilteredState.filteredCaptureAreas =
+      state.stateData.plantAccess.features.filter((row) =>
+        states.includes(row.properties.state)
+      );
 
   const stateabbrevs = states.map((state) => state2abb[state]);
 

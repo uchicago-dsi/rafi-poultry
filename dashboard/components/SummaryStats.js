@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSnapshot } from "valtio";
-
+import { useMapData } from "@/lib/useMapData";
 import { state } from "../lib/state";
 
 function calculateHHI(filteredSales) {
@@ -23,46 +23,19 @@ function calculateHHI(filteredSales) {
   }
 }
 
-// TODO: This was moved to the global state
-// function calculateCapturedArea(filteredAreas) {
-//   let areas = {
-//     1: 0,
-//     2: 0,
-//     3: 0,
-//     // 4: 0,
-//   };
-
-//   // TODO: Need to add area to GeoJSON
-//   for (let i = 0; i < filteredAreas.length; i++) {
-//     areas[filteredAreas[i].properties.corporate_access] +=
-//       filteredAreas[i].properties.area;
-//   }
-
-//   let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
-
-//   let percentArea = {};
-//   Object.keys(areas).forEach((key) => {
-//     percentArea[key] = areas[key] / totalArea;
-//   });
-
-//   // return percentArea;
-//   state.stateData.capturedAreas = percentArea;
-// }
-
 export function SummaryStats() {
-  const snapshot = useSnapshot(state.stateData);
+  const {
+    isDataLoaded,
+    filteredSales,
+    capturedAreas,
+    totalFarms
+  } = useMapData();
 
-  if (!snapshot.isDataLoaded) {
+  if (!isDataLoaded) {
     return "";
   }
 
-  const calculatedHHI = calculateHHI(snapshot.filteredSales);
-  // TODO: This was moved to the global state
-  // calculateCapturedArea(snapshot.filteredCaptureAreas);
-  // state.stateData.capturedAreas = calculateCapturedArea(
-  //   snapshot.filteredCaptureAreas
-  // );
-  // const capturedAreas = calculateCapturedArea(snapshot.filteredCaptureAreas);
+  const calculatedHHI = calculateHHI(filteredSales);
 
   return (
     <div>
@@ -76,8 +49,8 @@ export function SummaryStats() {
       ) : (
         <p className="text-center">No data available</p>
       )}
-      {snapshot.filteredCaptureAreas &&
-      Object.keys(snapshot.filteredCaptureAreas).length > 0 ? (
+      {capturedAreas &&
+      Object.keys(capturedAreas).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
           <div className="flex justify-center m-10 ">
             <div>
@@ -86,7 +59,7 @@ export function SummaryStats() {
                   <th>% of Barns with Access to Integrators in Selected Area</th>
                 </thead>
                 <tbody>
-                  {Object.entries(snapshot.capturedAreas).map(([key, item]) => (
+                  {Object.entries(capturedAreas).map(([key, item]) => (
                     <tr key={key}>
                       <td>{key} Integrator(s)</td>
                       <td>{(item * 100).toFixed(1) + "%"}</td>
@@ -94,7 +67,7 @@ export function SummaryStats() {
                   ))}
                 </tbody>
               </table>
-              <p>Total Barns: {snapshot.totalFarms}</p>
+              <p>Total Barns: {totalFarms}</p>
             </div>
           </div>
         </div>
@@ -102,8 +75,8 @@ export function SummaryStats() {
         ""
       )}
       <div className="max-h-[50vh] overflow-y-auto">
-        {snapshot.filteredSales &&
-        Object.keys(snapshot.filteredSales).length > 0 ? (
+        {filteredSales &&
+        Object.keys(filteredSales).length > 0 ? (
           <table className="table table-sm">
             <thead className="sticky">
               <tr>
@@ -113,7 +86,7 @@ export function SummaryStats() {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(snapshot.filteredSales).map(([key, item]) => (
+              {Object.entries(filteredSales).map(([key, item]) => (
                 <tr key={key}>
                   <td>{key}</td>
                   <td>
