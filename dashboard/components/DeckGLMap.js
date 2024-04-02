@@ -7,7 +7,7 @@ import { state } from "../lib/state";
 import DeckGL from "@deck.gl/react";
 import { LineLayer, IconLayer, GeoJsonLayer } from "@deck.gl/layers";
 import { COORDINATE_SYSTEM } from "@deck.gl/core";
-import { Map } from "react-map-gl";
+import { Map, ScaleControl } from "react-map-gl";
 
 import colorbrewer from "colorbrewer";
 import tinycolor from "tinycolor2";
@@ -187,8 +187,11 @@ export function DeckGLMap() {
     >
       <Map
         mapStyle="mapbox://styles/mapbox/satellite-v9"
-        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
-      />
+        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}>
+          {/* TODO: add scalecontrol options */}
+          <ScaleControl />
+      </Map>
+
       <div id="legend">
         {Object.entries(plantColorPalette).map(([key, color]) => (
           <div key={key} className="flex items-center">
