@@ -1,9 +1,9 @@
 "use client";
 // app.js
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSnapshot } from "valtio";
 
-import { state, updateFilteredData } from "../lib/state";
+import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
 
 export default function ControlPanel() {
@@ -78,7 +78,7 @@ export default function ControlPanel() {
             None
           </button>
         </div>
-        {snapshot.allStates.map((option, index) => (
+        {staticDataStore.allStates.map((option, index) => (
           <label key={index} className="label cursor-pointer py-1">
             <span className="block label-text">{option}</span>
             <input
@@ -90,12 +90,6 @@ export default function ControlPanel() {
             />
           </label>
         ))}
-      </div>
-      <div>
-        <button>Select All</button>
-      </div>
-      <div>
-        <button>Select None</button>
       </div>
       <div>
         <button onClick={updateFarmDisplay}>Change Farm Display</button>

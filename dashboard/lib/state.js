@@ -10,6 +10,7 @@ export const staticDataStore = {
   allBarns: [],
   allSales: [],
   allIsochrones: [],
+  allStates: [],
 };
 
 // TODO: change the name
@@ -55,10 +56,15 @@ export const state = proxy({
 function updateFilteredStates(states) {
   // TODO: I don't like this function and I think it's doing too much
   // TODO: standardize the column names so they are all lower case (something else is State)
+    // filteredDataStore.filteredCaptureAreas =
+    //   state.data.plantAccess.features.filter((row) =>
+    //     states.includes(row.properties.state)
+    //   );
+
     filteredDataStore.filteredCaptureAreas =
-      state.data.plantAccess.features.filter((row) =>
-        states.includes(row.properties.state)
-      );
+    staticDataStore.allIsochrones.features.filter((row) =>
+      states.includes(row.properties.state)
+    );
 
   const stateabbrevs = states.map((state) => state2abb[state]);
 

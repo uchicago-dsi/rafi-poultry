@@ -1,7 +1,8 @@
 "use client";
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
-const PLANT_ACCESS_GEOJSON =
+// TODO: This file needs to be regenerated with better column names
+const ISOCHRONES =
   "../data/new_all_states_with_parent_corp_by_corp.geojson";
 
 const getJSON = async (dataPath) => {
@@ -16,66 +17,48 @@ const fetchData = async (url) => {
 
 export const updateStaticDataStore = async () => {
   try {
-    const [rawPlants, rawFarms, plantAccess, salesJSON] = await Promise.all([
+    const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
       fetchData("/api/barns"),
-      getJSON(PLANT_ACCESS_GEOJSON),
+      getJSON(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
 
-    staticDataStore.allStates = plantAccess.features
-    .map((feature) => feature.properties.state)
+    // Filter FSIS plant data to only include large chicken processing plants
+    const processedPlants = {
+      type: "FeatureCollection",
+      features: rawPlants.features.filter(plant => 
+        plant.properties["Animals Processed"] === "Chicken" &&
+        plant.properties.Size === "Large")
+    };
+    staticDataStore.allPlants = processedPlants;
+
+    // Get list of all states that have plants and update staticDataStore
+    staticDataStore.allStates = processedPlants.features
+    .map((feature) => feature.properties.State)
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
 
-    // TODO: Maybe move filtering logic to the filteredDataStore
-    // Filter FSIS plant data
-    const processedPlants = rawPlants.features.filter((plant) => {
-      if (
-        plant.properties["Animals Processed"] === "Chicken" &&
-        plant.properties.Size === "Large"
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    });
-
-    let processedPlantsJSON = {
+    // Filter barns data to only include farms that are not excluded and have plant access
+    const processedBarns = {
       type: "FeatureCollection",
-      features: processedPlants,
-    };
-
-    // TODO: Wait which is which...
-    staticDataStore.allPlants = processedPlantsJSON;
-
-    // TODO: Maybe move filtering logic to the filteredDataStore
-    // Filter farms data
-    let barnsJSON = {
-      type: "FeatureCollection",
-      features: rawFarms.features.filter(
+      features: rawBarns.features.filter(
         (feature) =>
           feature.properties.exclude === 0 &&
           feature.properties.plant_access !== null
       ),
     };
+    staticDataStore.allBarns = processedBarns;
 
-    staticDataStore.allBarns = barnsJSON;
-    staticDataStore.allSales = salesJSON;
-
-    // TODO: I don't think I actually want this in state...
-    state.data.plantAccess = plantAccess
-    // TODO: But maybe the list of possible states should be in state?
-    state.data.allStates = state.data.plantAccess.features
-      .map((feature) => feature.properties.state)
-      .filter((value, index, array) => array.indexOf(value) === index)
-      .sort();
+    // Sales and isochrones can be used directly from the API call
+    staticDataStore.allSales = rawSales;
+    staticDataStore.allIsochrones = rawIsochrones
   } catch (error) {
     console.error(error);
   }
 
   // Initialize display data
-  state.data.selectedStates = [...state.data.allStates]; // Start with all states selected
+  state.data.selectedStates = [...staticDataStore.allStates]; // Start with all states selected
   updateFilteredData();
   state.data.isDataLoaded = true;
 };
