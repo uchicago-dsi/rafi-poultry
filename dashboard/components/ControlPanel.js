@@ -32,14 +32,14 @@ export default function ControlPanel() {
   };
 
   const selectAll = () => {
-    state.data.selectedStates = [...state.data.allStates];
-    // TODO: I don't think this needs to be here
+    state.data.selectedStates = [...staticDataStore.allStates];
+    // TODO: Is this the right way to do this?
     updateFilteredData();
   };
 
   const selectNone = () => {
     state.data.selectedStates.length = 0;
-    // TODO: I don't think this needs to be here
+    // TODO: Is this the right way to do this?
     updateFilteredData();
   };
 

@@ -27,7 +27,6 @@ export const filteredDataStore = {
   totalFarms: [],
 };
 
-// Create a proxy state
 export const state = proxy({
   data: {
     isDataLoaded: false,
@@ -65,6 +64,7 @@ function updateFilteredIsochrones(states) {
   );
 }
 
+// const updateFilteredBarns = async (states) => {
 function updateFilteredBarns(states) {
   // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
   const stateabbrevs = states.map((state) => state2abb[state]);
@@ -74,7 +74,6 @@ function updateFilteredBarns(states) {
   );
 }
 
-// TODO: Should this be kept in state? And separate from the filteredDataStore?
 function updateFilteredCompanies() {
   filteredDataStore.filteredCompanies = filteredDataStore.filteredPlants
     .map((plant) => plant.properties["Parent Corporation"])
@@ -184,8 +183,7 @@ function calculateCapturedArea() {
   filteredDataStore.capturedAreas = percentArea;
 }
 
-function calculateCapturedAreaByBarns() {
-  // initialize object for reduce operation
+function calculateCapturedBarns() {
   const counts = {
     totalFarms: 0,
     totalCapturedFarms: 0,
@@ -197,8 +195,9 @@ function calculateCapturedAreaByBarns() {
     },
   };
 
-  // filteredDataStore.filteredFarms.features.reduce((accumulator, feature) => {
+  // TODO: Fix this to use the filtered barns — getting async issues
   staticDataStore.allBarns.features.reduce((accumulator, feature) => {
+  // filteredDataStore.filteredBarns.features.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
     accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
@@ -218,16 +217,15 @@ function calculateCapturedAreaByBarns() {
     }
   });
 
-  staticDataStore.totalFarms = counts.totalFarms;
-  staticDataStore.capturedAreas = percentCaptured;
+  filteredDataStore.totalFarms = counts.totalFarms;
+  filteredDataStore.capturedAreas = percentCaptured;
 }
 
 function updateMapZoom(filteredStates) {
   // default zoom state is everything (handles the case of no selection)
-  var zoomGeoJSON = filteredDataStore.filteredIsochrones.features;
+  var zoomGeoJSON = staticDataStore.allIsochrones.features;
 
-  // console.log("staticFilteredState.filteredCaptureArea", filteredDataStore.filteredCaptureArea);
-
+  // TODO: allIsochrones and filteredIsochrones should be the same format
   // update to the selected areas if they exist
   if (filteredStates.length) {
     zoomGeoJSON = filteredDataStore.filteredIsochrones;
@@ -237,7 +235,6 @@ function updateMapZoom(filteredStates) {
     features: zoomGeoJSON,
   };
 
-  // TODO: Handle null selection here since this breaks
   const boundingBox = bbox(currentGeojson);
   const fittedViewport = new WebMercatorViewport(
     state.map.containerWidth,
@@ -266,18 +263,21 @@ function updateMapZoom(filteredStates) {
   };
 }
 
-export function updateFilteredData(stateData) {
+// export const updateFilteredData = async (stateData) => {
+  export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
   updateFilteredPlants(stateData.selectedStates);
   updateFilteredIsochrones(stateData.selectedStates);
-  updateFilteredBarns(stateData.selectedStates);
   updateFilteredSales(stateData.selectedStates);
   updateFilteredCompanies();
+  updateFilteredBarns(stateData.selectedStates);
+
+  
   // TODO: Change names of these functions
   calculateCapturedArea();
-  calculateCapturedAreaByBarns();
+  calculateCapturedBarns();
   updateMapZoom(stateData.selectedStates);
   return performance.now();
 }

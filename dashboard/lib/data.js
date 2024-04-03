@@ -59,6 +59,6 @@ export const updateStaticDataStore = async () => {
 
   // Initialize display data
   state.data.selectedStates = [...staticDataStore.allStates]; // Start with all states selected
-  updateFilteredData();
+  updateFilteredData(); // TODO: should we trigger this another way
   state.data.isDataLoaded = true;
 };
