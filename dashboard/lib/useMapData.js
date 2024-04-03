@@ -1,19 +1,19 @@
 import { useSnapshot } from "valtio";
-import { state, filterTimestampStore, staticFilteredState, staticDataStore } from "./state";
+import { state, filterTimestampStore, filteredDataStore, staticDataStore } from "./state";
 
 export const useMapData = () => {
   const { stateData, stateMapSettings } = useSnapshot(state);
   const { timestamp } = useSnapshot(filterTimestampStore);
   const { 
     filteredBarns, 
-    filteredPlantsData,
+    filteredPlants,
     filteredCompanies,
     filteredSales,
     filteredCaptureAreas,
     capturedAreas,
     totalFarms,
     plantAccess,
-  } = staticFilteredState;
+  } = filteredDataStore;
 
   const { 
     allPlants 
@@ -30,7 +30,7 @@ export const useMapData = () => {
     plantAccess,
     timestamp,
     filteredBarns,
-    filteredPlantsData,
+    filteredPlants,
     allPlants,
   };
 };

@@ -13,8 +13,8 @@ export const staticDataStore = {
 };
 
 // TODO: change the name
-export const staticFilteredState = {
-  filteredPlantsData: [], // TODO: change the name
+export const filteredDataStore = {
+  filteredPlants: [],
   filteredBarns: [],
   filteredSales: [],
   filteredIsochrones: [],
@@ -22,8 +22,6 @@ export const staticFilteredState = {
   // TODO: do I want this in this or should I save in state?
   filteredCompanies: [],
   filteredCaptureAreas: [],
-
-
 
   // TODO: These names are confusing. What is capturedAreas?
   capturedAreas: [],
@@ -69,7 +67,7 @@ export const state = proxy({
 function updateFilteredStates(states) {
   // TODO: I don't like this function and I think it's doing too much
   // TODO: standardize the column names so they are all lower case (something else is State)
-    staticFilteredState.filteredCaptureAreas =
+    filteredDataStore.filteredCaptureAreas =
       state.stateData.plantAccess.features.filter((row) =>
         states.includes(row.properties.state)
       );
@@ -86,9 +84,9 @@ function updateFilteredStates(states) {
       features.push(_features[i]);
     }
   }
-  staticFilteredState.filteredBarns = features;
+  filteredDataStore.filteredBarns = features;
 
-  staticFilteredState.filteredPlantsData = staticDataStore.allPlants.features
+  filteredDataStore.filteredPlants = staticDataStore.allPlants.features
     ? staticDataStore.allPlants.features.filter((row) =>
         states.includes(row.properties.State)
       )
@@ -97,7 +95,7 @@ function updateFilteredStates(states) {
 
 // TODO: Should this be kept in state? And separate from the filteredDataStore?
 function updateFilteredCompanies() {
-  staticFilteredState.filteredCompanies = staticFilteredState.filteredPlantsData
+  filteredDataStore.filteredCompanies = filteredDataStore.filteredPlants
     .map((plant) => plant.properties["Parent Corporation"])
     .filter((value, index, array) => array.indexOf(value) === index);
 }
@@ -177,7 +175,7 @@ function updateFilteredSales(states) {
       corporationTotals[corporation].percent = (corporationTotals[corporation].sales / totalSales) * 100;
     });
 
-    staticFilteredState.filteredSales = corporationTotals;
+    filteredDataStore.filteredSales = corporationTotals;
   }
 
 function calculateCapturedArea() {
@@ -189,10 +187,10 @@ function calculateCapturedArea() {
   };
 
   // TODO: Need to add area to GeoJSON
-  for (let i = 0; i < staticFilteredState.filteredCaptureAreas.length; i++) {
+  for (let i = 0; i < filteredDataStore.filteredCaptureAreas.length; i++) {
     areas[
-      staticFilteredState.filteredCaptureAreas[i].properties.corporate_access
-    ] += staticFilteredState.filteredCaptureAreas[i].properties.area;
+      filteredDataStore.filteredCaptureAreas[i].properties.corporate_access
+    ] += filteredDataStore.filteredCaptureAreas[i].properties.area;
   }
 
   let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
@@ -203,7 +201,7 @@ function calculateCapturedArea() {
   });
 
   // return percentArea;
-  staticFilteredState.capturedAreas = percentArea;
+  filteredDataStore.capturedAreas = percentArea;
 }
 
 function calculateCapturedAreaByBarns() {
@@ -246,13 +244,13 @@ function calculateCapturedAreaByBarns() {
 
 function updateMapZoom(filteredStates) {
   // default zoom state is everything (handles the case of no selection)
-  var zoomGeoJSON = staticFilteredState.filteredCaptureAreas.features;
+  var zoomGeoJSON = filteredDataStore.filteredCaptureAreas.features;
 
-  console.log("staticFilteredState.filteredCaptureArea", staticFilteredState.filteredCaptureArea);
+  console.log("staticFilteredState.filteredCaptureArea", filteredDataStore.filteredCaptureArea);
 
   // update to the selected areas if they exist
   if (filteredStates.length) {
-    zoomGeoJSON = staticFilteredState.filteredCaptureAreas;
+    zoomGeoJSON = filteredDataStore.filteredCaptureAreas;
   }
   const currentGeojson = {
     type: "FeatureCollection",
