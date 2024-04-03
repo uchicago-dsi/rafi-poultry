@@ -1,17 +1,14 @@
 "use client";
 // app.js
-import React, { useState, useEffect } from "react";
-
-import { state } from "../lib/state";
+import React from "react";
 
 import DeckGL from "@deck.gl/react";
-import { LineLayer, IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import { COORDINATE_SYSTEM } from "@deck.gl/core";
+import { ScatterplotLayer } from "deck.gl";
+import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
 import { Map, ScaleControl } from "react-map-gl";
 
-import colorbrewer from "colorbrewer";
-import tinycolor from "tinycolor2";
-import { ScatterplotLayer } from "deck.gl";
+// TODO: fix the imports here so they make sense - should I use @/lib/state??
+import { state } from "../lib/state";
 import { useMapData } from "@/lib/useMapData";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
@@ -75,10 +72,10 @@ export function DeckGLMap() {
     isDataLoaded,
     stateMapSettings,
     timestamp,
-    filteredFarmsData,
+    filteredBarns,
     filteredPlantsData,
     filteredCaptureAreas,
-    poultryPlants
+    allPlants
   } = useMapData();
 
   // Don't render the component until the data is loaded
@@ -112,7 +109,7 @@ export function DeckGLMap() {
 
   const farmLayer = new IconLayer({
     id: "icon-layer",
-    data: filteredFarmsData,
+    data: filteredBarns,
     pickable: true,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
@@ -154,7 +151,7 @@ export function DeckGLMap() {
 
   const plantInteractiveLayer = new ScatterplotLayer({
     id: "scatterplot-layer",
-    data: poultryPlants,
+    data: allPlants,
     pickable: true,
     // stroked: true,
     filled: true, // will be filled with empty
