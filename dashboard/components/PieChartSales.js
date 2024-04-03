@@ -11,7 +11,7 @@ Chart.register(ArcElement, Legend, Tooltip);
 // TODO: This can maybe go away?
 
 export default function PieChart() {
-  const snapshot = useSnapshot(state.stateData);
+  const snapshot = useSnapshot(state.data);
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
     if (!snapshot.isDataLoaded) {

@@ -31,24 +31,12 @@ export const filteredDataStore = {
 
 // Create a proxy state
 export const state = proxy({
-  // basic data
-  stateData: {
-    // plantAccess: [],
-    // allStates: [],
-
-    // TODO: This is still getting used here somehow
-    // filtered data
-    filteredStates: [],
-    filteredPlants: [],
-    filteredCaptureAreas: [],
-    filteredCompanies: [],
-    filteredSales: [],
-    capturedAreas: {},
+  data: {
     isDataLoaded: false,
+    selectedStates: [],
   },
 
-  //TODO: Unsure about the best practices for how to load and manage these nested states
-  stateMapSettings: {
+  map: {
     // cursor state
     x: undefined,
     y: undefined,
@@ -68,7 +56,7 @@ function updateFilteredStates(states) {
   // TODO: I don't like this function and I think it's doing too much
   // TODO: standardize the column names so they are all lower case (something else is State)
     filteredDataStore.filteredCaptureAreas =
-      state.stateData.plantAccess.features.filter((row) =>
+      state.data.plantAccess.features.filter((row) =>
         states.includes(row.properties.state)
       );
 
@@ -260,8 +248,8 @@ function updateMapZoom(filteredStates) {
   // TODO: Handle null selection here since this breaks
   const boundingBox = bbox(currentGeojson);
   const fittedViewport = new WebMercatorViewport(
-    state.stateMapSettings.containerWidth,
-    state.stateMapSettings.containerHeight
+    state.map.containerWidth,
+    state.map.containerHeight
   );
 
   const currentLatLonZoom = fittedViewport.fitBounds(
@@ -270,13 +258,13 @@ function updateMapZoom(filteredStates) {
       [boundingBox[2], boundingBox[3]],
     ],
     {
-      width: state.stateMapSettings.containerWidth,
-      height: state.stateMapSettings.containerHeight,
+      width: state.map.containerWidth,
+      height: state.map.containerHeight,
       padding: { top: 20, bottom: 20, left: 20, right: 20 },
     }
   );
 
-  state.stateMapSettings.mapZoom = {
+  state.map.mapZoom = {
     longitude: currentLatLonZoom.longitude,
     latitude: currentLatLonZoom.latitude,
     zoom: currentLatLonZoom.zoom,
@@ -290,16 +278,16 @@ export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
-  updateFilteredStates(stateData.filteredStates);
+  updateFilteredStates(stateData.selectedStates);
   updateFilteredCompanies();
-  updateFilteredSales(stateData.filteredStates);
+  updateFilteredSales(stateData.selectedStates);
   calculateCapturedArea();
   calculateCapturedAreaByBarns();
-  updateMapZoom(stateData.filteredStates);
+  updateMapZoom(stateData.selectedStates);
   return performance.now();
 }
 
 // use this to trigger refresh
 export const filterTimestampStore = derive({
-  timestamp: (get) => updateFilteredData(get(state).stateData),
+  timestamp: (get) => updateFilteredData(get(state).data),
 });

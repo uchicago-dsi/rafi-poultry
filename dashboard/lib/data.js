@@ -18,7 +18,7 @@ export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawFarms, plantAccess, salesJSON] = await Promise.all([
       fetchData("/api/plants/plants"),
-      fetchData("/api/farms"),
+      fetchData("/api/barns"),
       getJSON(PLANT_ACCESS_GEOJSON),
       fetchData("/api/plants/sales")
     ]);
@@ -51,7 +51,7 @@ export const updateStaticDataStore = async () => {
 
     // TODO: Maybe move filtering logic to the filteredDataStore
     // Filter farms data
-    let farmsJSON = {
+    let barnsJSON = {
       type: "FeatureCollection",
       features: rawFarms.features.filter(
         (feature) =>
@@ -60,13 +60,13 @@ export const updateStaticDataStore = async () => {
       ),
     };
 
-    staticDataStore.allBarns = farmsJSON;
+    staticDataStore.allBarns = barnsJSON;
     staticDataStore.allSales = salesJSON;
 
     // TODO: I don't think I actually want this in state...
-    state.stateData.plantAccess = plantAccess
+    state.data.plantAccess = plantAccess
     // TODO: But maybe the list of possible states should be in state?
-    state.stateData.allStates = state.stateData.plantAccess.features
+    state.data.allStates = state.data.plantAccess.features
       .map((feature) => feature.properties.state)
       .filter((value, index, array) => array.indexOf(value) === index)
       .sort();
@@ -75,7 +75,7 @@ export const updateStaticDataStore = async () => {
   }
 
   // Initialize display data
-  state.stateData.filteredStates = [...state.stateData.allStates]; // Start with all states selected
+  state.data.selectedStates = [...state.data.allStates]; // Start with all states selected
   updateFilteredData();
-  state.stateData.isDataLoaded = true;
+  state.data.isDataLoaded = true;
 };

@@ -32,8 +32,8 @@ export default function Home() {
       if (containerRef.current) {
         const width = containerRef.current.getBoundingClientRect().width;
         const height = containerRef.current.getBoundingClientRect().height;
-        state.stateMapSettings.containerWidth = width;
-        state.stateMapSettings.containerHeight = height;
+        state.map.containerWidth = width;
+        state.map.containerHeight = height;
       }
     };
 

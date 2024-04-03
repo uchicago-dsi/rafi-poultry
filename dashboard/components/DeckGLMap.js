@@ -88,9 +88,9 @@ export function DeckGLMap() {
 
     pickable: true,
     onHover: ({ x, y, object }) => {
-      state.stateMapSettings.x = x;
-      state.stateMapSettings.y = y;
-      state.stateMapSettings.hoveredObject = object;
+      state.map.x = x;
+      state.map.y = y;
+      state.map.hoveredObject = object;
     },
 
     getFillColor: function (dataRow) {
@@ -143,9 +143,9 @@ export function DeckGLMap() {
     pickable: true,
     // TODO: tooltip should probably be split out for performance eventually
     onHover: ({ x, y, object }) => {
-      state.stateMapSettings.x = x;
-      state.stateMapSettings.y = y;
-      state.stateMapSettings.hoveredObject = object;
+      state.map.x = x;
+      state.map.y = y;
+      state.map.hoveredObject = object;
     },
   });
 
@@ -163,9 +163,9 @@ export function DeckGLMap() {
     getRadius: (d) => 100,
     getFillColor: [0, 0, 0, 0],
     onHover: ({ x, y, object }) => {
-      state.stateMapSettings.x = x;
-      state.stateMapSettings.y = y;
-      state.stateMapSettings.hoveredObject = object;
+      state.map.x = x;
+      state.map.y = y;
+      state.map.hoveredObject = object;
     },
   });
 
