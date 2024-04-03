@@ -2,7 +2,7 @@ import { useSnapshot } from "valtio";
 import { state, filterTimestampStore, filteredDataStore, staticDataStore } from "./state";
 
 export const useMapData = () => {
-  const { stateData, stateMapSettings } = useSnapshot(state);
+  const { data: stateData, map: stateMapSettings } = useSnapshot(state);
   const { timestamp } = useSnapshot(filterTimestampStore);
   const { 
     filteredBarns, 

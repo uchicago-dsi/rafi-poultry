@@ -5,14 +5,10 @@ import { useSnapshot } from "valtio";
 
 import { state, updateFilteredData } from "../lib/state";
 
-// import "tailwindcss/tailwind.css";
-// import "../styles/styles.css";
 
 export default function ControlPanel() {
-  const snapshot = useSnapshot(state.stateData);
+  const snapshot = useSnapshot(state.data);
   const [expanded, setExpanded] = useState(true);
-
-  //TODO: still not totally confident on when to use state vs snapshot and what triggers a reload
 
   if (!snapshot.isDataLoaded) {
     return <div>Loading...</div>;
@@ -23,29 +19,32 @@ export default function ControlPanel() {
 
     // adjust filtered states
     if (checked) {
-      state.stateData.filteredStates.push(value);
+      state.data.selectedStates.push(value);
     } else {
-      const index = state.stateData.filteredStates.indexOf(value);
+      const index = state.data.selectedStates.indexOf(value);
       if (index !== -1) {
-        state.stateData.filteredStates.splice(index, 1);
+        state.data.selectedStates.splice(index, 1);
       }
     }
 
+    // TODO: does this need to be here also? Shouldn't this get triggered elsewhere?
     updateFilteredData();
   };
 
   const selectAll = () => {
-    state.stateData.filteredStates = [...state.stateData.allStates];
+    state.data.selectedStates = [...state.data.allStates];
+    // TODO: I don't think this needs to be here
     updateFilteredData();
   };
 
   const selectNone = () => {
-    state.stateData.filteredStates.length = 0;
+    state.data.selectedStates.length = 0;
+    // TODO: I don't think this needs to be here
     updateFilteredData();
   };
 
   const updateFarmDisplay = () => {
-    state.stateMapSettings.displayFarms = !state.stateMapSettings.displayFarms;
+    state.map.displayFarms = !state.map.displayFarms;
   };
 
   return (
@@ -86,7 +85,7 @@ export default function ControlPanel() {
               className="checkbox checkbox-xs block"
               value={option}
               type="checkbox"
-              checked={snapshot.filteredStates.includes(option)}
+              checked={snapshot.selectedStates.includes(option)}
               onChange={handleCheckboxChange}
             />
           </label>

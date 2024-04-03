@@ -17,7 +17,7 @@ export default function PieChart() {
     filteredCaptureAreas
   } = useMapData();
 
-  const snapshot = useSnapshot(state.stateData);
+  const snapshot = useSnapshot(state.data);
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
     if (!isDataLoaded) {
