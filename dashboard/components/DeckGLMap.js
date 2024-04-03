@@ -75,7 +75,7 @@ export function DeckGLMap() {
     filteredBarns,
     filteredPlants,
     // TODO: change this to isochrones
-    filteredCaptureAreas,
+    filteredIsochrones,
     allPlants
   } = useMapData();
 
@@ -85,7 +85,7 @@ export function DeckGLMap() {
   }
 
   const plantAccessLayer = new GeoJsonLayer({
-    data:filteredCaptureAreas,
+    data:filteredIsochrones,
 
     pickable: true,
     onHover: ({ x, y, object }) => {
@@ -108,7 +108,7 @@ export function DeckGLMap() {
     },
   });
 
-  const farmLayer = new IconLayer({
+  const barnsLayer = new IconLayer({
     id: "icon-layer",
     data: filteredBarns,
     pickable: true,
@@ -174,7 +174,7 @@ export function DeckGLMap() {
   var displayLayers = [plantAccessLayer, plantInteractiveLayer, plantLayer];
 
   if (stateMapSettings.displayFarms) {
-    displayLayers.push(farmLayer);
+    displayLayers.push(barnsLayer);
   }
 
   const deck = (

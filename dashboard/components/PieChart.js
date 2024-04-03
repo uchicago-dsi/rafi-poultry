@@ -14,7 +14,7 @@ export default function PieChart() {
     filteredSales,
     capturedAreas,
     totalFarms,
-    filteredCaptureAreas
+    filteredIsochrones
   } = useMapData();
 
   const snapshot = useSnapshot(state.data);
@@ -68,7 +68,7 @@ export default function PieChart() {
     ],
   };
 
-  return filteredCaptureAreas.length ? (
+  return filteredIsochrones.length ? (
     <Pie
       data={chartData}
       options={{
