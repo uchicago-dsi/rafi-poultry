@@ -73,7 +73,7 @@ export function DeckGLMap() {
     stateMapSettings,
     timestamp,
     filteredBarns,
-    filteredPlantsData,
+    filteredPlants,
     filteredCaptureAreas,
     allPlants
   } = useMapData();
@@ -127,7 +127,7 @@ export function DeckGLMap() {
   const plantLayer = new IconLayer({
     id: "icon-layer",
     stroked: true,
-    data: filteredPlantsData,
+    data: filteredPlants,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
     iconMapping: {
