@@ -74,6 +74,7 @@ export function DeckGLMap() {
     timestamp,
     filteredBarns,
     filteredPlants,
+    // TODO: change this to isochrones
     filteredCaptureAreas,
     allPlants
   } = useMapData();
@@ -127,7 +128,7 @@ export function DeckGLMap() {
   const plantLayer = new IconLayer({
     id: "icon-layer",
     stroked: true,
-    data: filteredPlants,
+    data: allPlants.features,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
     iconMapping: {
@@ -149,9 +150,12 @@ export function DeckGLMap() {
     },
   });
 
+  console.log("allPlants", allPlants)
+
   const plantInteractiveLayer = new ScatterplotLayer({
     id: "scatterplot-layer",
-    data: allPlants,
+    // TODO: we should always display all plants — need to update
+    data: allPlants.features,
     pickable: true,
     // stroked: true,
     filled: true, // will be filled with empty
