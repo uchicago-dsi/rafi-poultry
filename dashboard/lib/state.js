@@ -158,6 +158,7 @@ function updateFilteredSales(states) {
     filteredDataStore.filteredSales = corporationTotals;
   }
 
+// TODO: I think this is unnecessary and can be deleted
 function calculateCapturedArea() {
   let areas = {
     1: 0,
@@ -195,9 +196,8 @@ function calculateCapturedBarns() {
     },
   };
 
-  // TODO: Fix this to use the filtered barns — getting async issues
-  staticDataStore.allBarns.features.reduce((accumulator, feature) => {
-  // filteredDataStore.filteredBarns.features.reduce((accumulator, feature) => {
+  // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
+  filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
     accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
@@ -273,12 +273,11 @@ function updateMapZoom(filteredStates) {
   updateFilteredSales(stateData.selectedStates);
   updateFilteredCompanies();
   updateFilteredBarns(stateData.selectedStates);
-
-  
-  // TODO: Change names of these functions
-  calculateCapturedArea();
-  calculateCapturedBarns();
   updateMapZoom(stateData.selectedStates);
+
+  calculateCapturedBarns();
+  // TODO: Should probably put HHI calculation here
+
   return performance.now();
 }
 
