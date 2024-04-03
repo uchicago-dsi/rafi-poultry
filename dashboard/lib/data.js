@@ -2,68 +2,12 @@
 import Papa from "papaparse";
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
-// const POULTRY_PLANTS_CSV = "../data/poultry_plants_with_sales.csv";
-const POULTRY_PLANTS_CSV = "../data/location_match_fullest.csv";
-// const PLANT_ACCESS_GEOJSON = "../data/all_states.geojson";
 const PLANT_ACCESS_GEOJSON =
   "../data/new_all_states_with_parent_corp_by_corp.geojson";
-// const COUNTERGLOW_FARMS = "../data/counterglow_geojson.geojson";
-// const FARMS = "../data/nc_farms_plants.geojson";
-// const FARMS = "../data/test_barns_filtering.geojson";
 
 const getJSON = async (dataPath) => {
   const response = await fetch(dataPath);
   return await response.json();
-};
-
-const getPoultryCSV = async (dataPath) => {
-  const response = await fetch(dataPath);
-  const reader = response.body.getReader();
-  const result = await reader.read(); // raw array
-  const decoder = new TextDecoder("utf-8");
-  const csv = decoder.decode(result.value);
-
-  return new Promise((resolve, reject) => {
-    Papa.parse(csv, {
-      header: true,
-      complete: (results) => {
-        const data = results.data.map((row) => ({
-          ...row,
-          "Sales Volume (Location)": parseFloat(row["Sales Volume (Location)"]),
-        }));
-
-        resolve(data);
-      },
-      error: (error) => {
-        reject(error);
-      },
-    });
-  });
-};
-
-const parsePlantCSV = async (response) => {
-  // const response = await fetch(dataPath);
-  const reader = response.body.getReader();
-  const result = await reader.read(); // raw array
-  const decoder = new TextDecoder("utf-8");
-  const csv = decoder.decode(result.value);
-
-  return new Promise((resolve, reject) => {
-    Papa.parse(csv, {
-      header: true,
-      complete: (results) => {
-        const data = results.data.map((row) => ({
-          ...row,
-          "Sales Volume (Location)": parseFloat(row["Sales Volume (Location)"]),
-        }));
-
-        resolve(data);
-      },
-      error: (error) => {
-        reject(error);
-      },
-    });
-  });
 };
 
 // Function to load data
@@ -121,11 +65,11 @@ const fetchData = async (url) => {
 
 export const updateStaticDataStore = async () => {
   try {
-    const [rawPlants, rawFarms, plantAccess,] = await Promise.all([
+    const [rawPlants, rawFarms, plantAccess, salesJSON] = await Promise.all([
       fetchData("/api/plants/plants"),
       fetchData("/api/farms"),
       getJSON(PLANT_ACCESS_GEOJSON),
-      // TODO: set up sales to come from API
+      fetchData("/api/plants/sales")
     ]);
 
     staticDataStore.allStates = plantAccess.features
@@ -151,6 +95,7 @@ export const updateStaticDataStore = async () => {
       features: processedPlants,
     };
 
+    // TODO: Wait which is which...
     staticDataStore.poultryPlants = processedPlantsJSON;
     staticDataStore.allPlants = processedPlantsJSON;
 
@@ -166,6 +111,7 @@ export const updateStaticDataStore = async () => {
     };
 
     staticDataStore.allFarms = farmsJSON;
+    staticDataStore.allSales = salesJSON;
 
     // TODO: I don't think I actually want this in state...
     state.stateData.plantAccess = plantAccess

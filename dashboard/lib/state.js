@@ -95,59 +95,83 @@ function updateFilteredCompanies() {
     .filter((value, index, array) => array.indexOf(value) === index);
 }
 
-function updateFilteredSales() {
-  // build dictionary for each company in the area
-  let companySales = {};
-  for (let i = 0; i < staticFilteredState.filteredCompanies.length; i++) {
-    companySales[staticFilteredState.filteredCompanies[i]] = 0;
-  }
+function updateFilteredSales(states) {
+  // // build dictionary for each company in the area
+  // let companySales = {};
+  // for (let i = 0; i < staticFilteredState.filteredCompanies.length; i++) {
+  //   companySales[staticFilteredState.filteredCompanies[i]] = 0;
+  // }
 
-  for (let i = 0; i < staticFilteredState.filteredPlantsData.length; i++) {
-    let salesVolume =
-      staticFilteredState.filteredPlantsData[i].properties[
-        "Sales Volume (Location)"
-      ];
-    if (!Number.isNaN(salesVolume)) {
-      companySales[
-        staticFilteredState.filteredPlantsData[i].properties[
-          "Parent Corporation"
-        ]
-      ] += salesVolume;
-    }
-  }
+  // for (let i = 0; i < staticFilteredState.filteredPlantsData.length; i++) {
+  //   let salesVolume =
+  //     staticFilteredState.filteredPlantsData[i].properties[
+  //       "Sales Volume (Location)"
+  //     ];
+  //   if (!Number.isNaN(salesVolume)) {
+  //     companySales[
+  //       staticFilteredState.filteredPlantsData[i].properties[
+  //         "Parent Corporation"
+  //       ]
+  //     ] += salesVolume;
+  //   }
+  // }
 
-  // filter NaN values and return dictionary
-  let filtered = Object.entries(companySales).reduce(
-    (filtered, [key, value]) => {
-      if (!Number.isNaN(value)) {
-        filtered[key] = value;
+  // // filter NaN values and return dictionary
+  // let filtered = Object.entries(companySales).reduce(
+  //   (filtered, [key, value]) => {
+  //     if (!Number.isNaN(value)) {
+  //       filtered[key] = value;
+  //     }
+  //     return filtered;
+  //   },
+  //   {}
+  // );
+
+  // // sort on value and convert to object
+  // let sorted = Object.entries(filtered).sort((a, b) => b[1] - a[1]);
+  // let unnestedSales = Object.fromEntries(sorted);
+
+  // const totalSales = Object.values(unnestedSales).reduce(
+  //   (accumulator, value) => {
+  //     return accumulator + value;
+  //   },
+  //   0
+  // );
+
+  // // create nested object for each corporation
+  // let nestedSales = {};
+  // for (let key in unnestedSales) {
+  //   nestedSales[key] = {
+  //     sales: unnestedSales[key],
+  //     percent: unnestedSales[key] / totalSales,
+  //   };
+  // }
+
+    // TODO: Check the math here...something is not quite right
+    // TODO: It may be in how this is loaded in the first place
+    let corporationTotals = {};
+
+    states.forEach(state => {
+      const stateData = staticDataStore.allSales[state];
+      if (stateData) {
+        Object.entries(stateData).forEach(([corporation, data]) => {
+          if (!corporationTotals[corporation]) {
+            corporationTotals[corporation] = { sales: 0 }; // Initialize if not already present
+          }
+          corporationTotals[corporation].sales += data.sales; // Sum sales for each corporation
+        });
       }
-      return filtered;
-    },
-    {}
-  );
+    });
 
-  // sort on value and convert to object
-  let sorted = Object.entries(filtered).sort((a, b) => b[1] - a[1]);
-  let unnestedSales = Object.fromEntries(sorted);
+    // Optionally calculate percent total for each corporation across the selected states
+    const totalSales = Object.values(corporationTotals).reduce((sum, { sales }) => sum + sales, 0);
 
-  const totalSales = Object.values(unnestedSales).reduce(
-    (accumulator, value) => {
-      return accumulator + value;
-    },
-    0
-  );
+    Object.keys(corporationTotals).forEach(corporation => {
+      corporationTotals[corporation].percent = (corporationTotals[corporation].sales / totalSales) * 100;
+    });
 
-  // create nested object for each corporation
-  let nestedSales = {};
-  for (let key in unnestedSales) {
-    nestedSales[key] = {
-      sales: unnestedSales[key],
-      percent: unnestedSales[key] / totalSales,
-    };
+    staticFilteredState.filteredSales = corporationTotals;
   }
-  staticFilteredState.filteredSales = nestedSales;
-}
 
 function calculateCapturedArea() {
   let areas = {
@@ -260,13 +284,14 @@ export function updateFilteredData(stateData) {
   }
   updateFilteredStates(stateData.filteredStates);
   updateFilteredCompanies();
-  updateFilteredSales();
+  updateFilteredSales(stateData.filteredStates);
   calculateCapturedArea();
   calculateCapturedAreaByBarns();
   updateMapZoom(stateData.filteredStates);
   return performance.now();
 }
 
+// use this to trigger refresh
 export const filterTimestampStore = derive({
   timestamp: (get) => updateFilteredData(get(state).stateData),
 });
