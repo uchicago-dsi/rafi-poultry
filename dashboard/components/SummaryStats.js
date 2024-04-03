@@ -55,9 +55,11 @@ export function SummaryStats() {
           <div className="flex justify-center m-10 ">
             <div>
               <table className="table table-sm">
-                <thead>
-                  <th>% of Barns with Access to Integrators in Selected Area</th>
-                </thead>
+                <tr>
+                  <thead>
+                    <th>% of Barns with Access to Integrators in Selected Area</th>
+                  </thead>
+                </tr>
                 <tbody>
                   {Object.entries(capturedAreas).map(([key, item]) => (
                     <tr key={key}>
@@ -78,13 +80,15 @@ export function SummaryStats() {
         {filteredSales &&
         Object.keys(filteredSales).length > 0 ? (
           <table className="table table-sm">
-            <thead className="sticky">
-              <tr>
-                <th>Company</th>
-                <th>Sales</th>
-                <th>Percent of Sales</th>
-              </tr>
-            </thead>
+            <tr>
+              <thead className="sticky">
+                <tr>
+                  <th>Company</th>
+                  <th>Sales</th>
+                  <th>Percent of Sales</th>
+                </tr>
+              </thead>
+            </tr>
             <tbody>
               {Object.entries(filteredSales).map(([key, item]) => (
                 <tr key={key}>

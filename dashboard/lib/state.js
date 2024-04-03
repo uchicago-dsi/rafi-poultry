@@ -7,31 +7,38 @@ import { state2abb } from "./constants";
 
 export const staticDataStore = {
   allPlants: [],
-  allFarms: [],
+  allBarns: [],
   allSales: [],
   allIsochrones: [],
-  poultryPlants: [],
 };
 
+// TODO: change the name
 export const staticFilteredState = {
-  filteredFarmsData: [],
-  filteredPlantsData: [],
-  filteredCompanies: [],
+  filteredPlantsData: [], // TODO: change the name
+  filteredBarns: [],
   filteredSales: [],
+  filteredIsochrones: [],
+
+  // TODO: do I want this in this or should I save in state?
+  filteredCompanies: [],
   filteredCaptureAreas: [],
+
+
+
   // TODO: These names are confusing. What is capturedAreas?
   capturedAreas: [],
   totalFarms: [],
   plantAccess: [],
 };
+
 // Create a proxy state
 export const state = proxy({
   // basic data
   stateData: {
-    plantAccess: [],
-    poultryPlants: [],
-    allStates: [],
+    // plantAccess: [],
+    // allStates: [],
 
+    // TODO: This is still getting used here somehow
     // filtered data
     filteredStates: [],
     filteredPlants: [],
@@ -69,7 +76,7 @@ function updateFilteredStates(states) {
 
   const stateabbrevs = states.map((state) => state2abb[state]);
 
-  const _features = staticDataStore.allFarms.features;
+  const _features = staticDataStore.allBarns.features;
   const features = [];
   for (let i = 0; i < _features.length; i++) {
     const isInState = stateabbrevs.includes(_features[i].properties.state);
@@ -79,7 +86,7 @@ function updateFilteredStates(states) {
       features.push(_features[i]);
     }
   }
-  staticFilteredState.filteredFarmsData = features;
+  staticFilteredState.filteredBarns = features;
 
   staticFilteredState.filteredPlantsData = staticDataStore.allPlants.features
     ? staticDataStore.allPlants.features.filter((row) =>
@@ -212,8 +219,8 @@ function calculateCapturedAreaByBarns() {
     },
   };
 
-  // filteredDataStore.filteredFarmsData.features.reduce((accumulator, feature) => {
-  staticDataStore.allFarms.features.reduce((accumulator, feature) => {
+  // filteredDataStore.filteredFarms.features.reduce((accumulator, feature) => {
+  staticDataStore.allBarns.features.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
     accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
@@ -241,6 +248,8 @@ function updateMapZoom(filteredStates) {
   // default zoom state is everything (handles the case of no selection)
   var zoomGeoJSON = staticFilteredState.filteredCaptureAreas.features;
 
+  console.log("staticFilteredState.filteredCaptureArea", staticFilteredState.filteredCaptureArea);
+
   // update to the selected areas if they exist
   if (filteredStates.length) {
     zoomGeoJSON = staticFilteredState.filteredCaptureAreas;
@@ -249,6 +258,7 @@ function updateMapZoom(filteredStates) {
     type: "FeatureCollection",
     features: zoomGeoJSON,
   };
+
   // TODO: Handle null selection here since this breaks
   const boundingBox = bbox(currentGeojson);
   const fittedViewport = new WebMercatorViewport(

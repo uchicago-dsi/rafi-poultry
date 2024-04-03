@@ -1,7 +1,5 @@
 import { Storage } from '@google-cloud/storage';
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from 'fs';
 
 const PLANTS = "test_plants.geojson";
 const bucketName = 'rafi-poultry';
@@ -57,21 +55,16 @@ const getSalesData = (data) => {
         }
       });
       
-      // Calculate total sales for each state and percentages
       Object.keys(stateSales).forEach(state => {
         const totalSales = Object.values(stateSales[state]).reduce((sum, current) => sum + current, 0);
         
         Object.keys(stateSales[state]).forEach(corp => {
-          // Optionally, sort corporations by sales volume here if needed
-          // Convert sales volume to a nested object including percentage
           stateSales[state][corp] = {
             sales: stateSales[state][corp],
             percent: (stateSales[state][corp] / totalSales) * 100
           };
         });
         
-        // Sort corporations within each state by sales volume, if needed
-        // This step can be adjusted based on whether sorting is required and how you want to handle the sorted data
       });
       
       salesData = stateSales;

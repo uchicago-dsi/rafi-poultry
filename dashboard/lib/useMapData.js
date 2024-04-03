@@ -5,7 +5,7 @@ export const useMapData = () => {
   const { stateData, stateMapSettings } = useSnapshot(state);
   const { timestamp } = useSnapshot(filterTimestampStore);
   const { 
-    filteredFarmsData, 
+    filteredBarns, 
     filteredPlantsData,
     filteredCompanies,
     filteredSales,
@@ -16,7 +16,7 @@ export const useMapData = () => {
   } = staticFilteredState;
 
   const { 
-    poultryPlants 
+    allPlants 
   } = staticDataStore || {};
 
   return {
@@ -29,8 +29,8 @@ export const useMapData = () => {
     totalFarms,
     plantAccess,
     timestamp,
-    filteredFarmsData,
+    filteredBarns,
     filteredPlantsData,
-    poultryPlants,
+    allPlants,
   };
 };
