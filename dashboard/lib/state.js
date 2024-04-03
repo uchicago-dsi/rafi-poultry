@@ -167,7 +167,7 @@ function calculateCapturedArea() {
     // 4: 0,
   };
 
-  // TODO: Need to add area to GeoJSON
+  // TODO: Need to add area to GeoJSON in the pipeline?
   for (let i = 0; i < filteredDataStore.filteredIsochrones.length; i++) {
     areas[
       filteredDataStore.filteredIsochrones[i].properties.corporate_access
