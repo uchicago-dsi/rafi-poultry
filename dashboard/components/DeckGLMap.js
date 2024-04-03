@@ -14,30 +14,6 @@ import { useMapData } from "@/lib/useMapData";
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-// TODO: maybe functionalize this later but just hard-coding this short term
-// const plantAccessColors = colorbrewer.Set3[4].reverse();
-// const plantAccess = [
-//   "One Corporation",
-//   "Two Corporations",
-//   "Three Corporations",
-//   "4+ Corporations",
-// ];
-
-// const hexPalette = Object.fromEntries(
-//   plantAccess.map((access, i) => [access, plantAccessColors[i]])
-// );
-// const rgbPalette = Object.entries(hexPalette).map(([key, hex]) => {
-//   return [key, Object.values(tinycolor(hex).toRgb())];
-// });
-
-// for (let key in rgbPalette) {
-//   let rgb = rgbPalette[key][1];
-//   rgb[3] = 255;
-//   rgbPalette[key][1] = rgb;
-//   print(rgb);
-// }
-
-// const plantColorPalette = Object.fromEntries(rgbPalette);
 
 const plantColorPalette = {
   "One Integrator": [251, 128, 114, 150],
@@ -53,18 +29,6 @@ const markerPalette = {
 
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
-// 4+ Corporations
-// :
-// (4) [141, 211, 199, 255] // green
-// One Corporation
-// :
-// (4) [251, 128, 114, 255] //red
-// Three Corporations
-// :
-// (4) [255, 255, 179, 255]
-// Two Corporations:
-// (4) [190, 186, 218, 255] // yellow
-
 // console.log(colorPalette);
 
 export function DeckGLMap() {
@@ -73,8 +37,6 @@ export function DeckGLMap() {
     stateMapSettings,
     timestamp,
     filteredBarns,
-    filteredPlants,
-    // TODO: change this to isochrones
     filteredIsochrones,
     allPlants
   } = useMapData();
@@ -187,8 +149,7 @@ export function DeckGLMap() {
       <Map
         mapStyle="mapbox://styles/mapbox/satellite-v9"
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}>
-          {/* TODO: add scalecontrol options */}
-          <ScaleControl />
+          <ScaleControl unit="imperial" position="top-right" />
       </Map>
 
       <div id="legend">

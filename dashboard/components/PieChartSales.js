@@ -8,8 +8,6 @@ import { Pie } from "react-chartjs-2";
 import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
-// TODO: This can maybe go away?
-
 export default function PieChart() {
   const snapshot = useSnapshot(state.data);
 

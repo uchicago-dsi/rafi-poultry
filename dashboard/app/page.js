@@ -16,13 +16,10 @@ import "../styles/styles.css";
 // import styles from "./page.module.css"; //TODO: unsure about styles import
 
 export default function Home() {
-  // load JSON and CSV data
+  // load staticDataStore on page load
   useEffect(() => {
-    // loadData();
     updateStaticDataStore();
   }, []);
-
-  const snapshot = useSnapshot(state);
 
   // Handling resizing of container to dynamically update map bounding box
   const containerRef = useRef(null);
