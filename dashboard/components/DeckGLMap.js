@@ -150,8 +150,6 @@ export function DeckGLMap() {
     },
   });
 
-  console.log("allPlants", allPlants)
-
   const plantInteractiveLayer = new ScatterplotLayer({
     id: "scatterplot-layer",
     // TODO: we should always display all plants — need to update

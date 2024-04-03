@@ -53,9 +53,6 @@ export const state = proxy({
 });
 
 function updateFilteredPlants(states) {
-
-  // console.log("states", states)
-  // console.log("staticDataStore.allPlants", staticDataStore.allPlants);
   filteredDataStore.filteredPlants = staticDataStore.allPlants.features
   ? staticDataStore.allPlants.features.filter((row) =>
       states.includes(row.properties.State)
@@ -63,35 +60,21 @@ function updateFilteredPlants(states) {
   : [];
 }
 
+function updateFilteredIsochrones(states) {
+  filteredDataStore.filteredIsochrones =
+  staticDataStore.allIsochrones.features.filter((row) =>
+    states.includes(row.properties.state)
+  );
+}
 
-function updateFilteredStates(states) {
-  // TODO: I don't like this function and I think it's doing too much
-    filteredDataStore.filteredIsochrones =
-    staticDataStore.allIsochrones.features.filter((row) =>
-      states.includes(row.properties.state)
-    );
 
+function updateFilteredBarns(states) {
+  // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
   const stateabbrevs = states.map((state) => state2abb[state]);
-
-  // TODO: review this — I think we can simplify this
-  const _features = staticDataStore.allBarns.features;
-  const features = [];
-  for (let i = 0; i < _features.length; i++) {
-    const isInState = stateabbrevs.includes(_features[i].properties.state);
-    const isExcluded = _features[i].properties.exclude === 0;
-    const hasPlantAccess = _features[i].properties.plant_access !== null;
-    if (isInState && isExcluded && hasPlantAccess) {
-      features.push(_features[i]);
-    }
-  }
-  filteredDataStore.filteredBarns = features;
-
-  filteredDataStore.filteredPlants = staticDataStore.allPlants.features
-  ? staticDataStore.allPlants.features.filter((row) =>
-      states.includes(row.properties.State)
-    )
-  : [];
-
+  filteredDataStore.filteredBarns =
+  staticDataStore.allBarns.features.filter((row) =>
+    stateabbrevs.includes(row.properties.state)
+  );
 
 
 }
@@ -293,8 +276,9 @@ export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
-  // updateFilteredPlants(stateData.selectedStates);
-  updateFilteredStates(stateData.selectedStates);
+  updateFilteredPlants(stateData.selectedStates);
+  updateFilteredIsochrones(stateData.selectedStates);
+  updateFilteredBarns(stateData.selectedStates);
   updateFilteredCompanies();
   updateFilteredSales(stateData.selectedStates);
   calculateCapturedArea();
