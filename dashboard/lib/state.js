@@ -22,7 +22,6 @@ export const filteredDataStore = {
 
   // TODO: do I want this in this or should I save in state?
   filteredCompanies: [],
-  filteredCaptureAreas: [],
 
   // TODO: These names are confusing. What is capturedAreas?
   capturedAreas: [],
@@ -53,21 +52,28 @@ export const state = proxy({
   },
 });
 
+function updateFilteredPlants(states) {
+
+  // console.log("states", states)
+  // console.log("staticDataStore.allPlants", staticDataStore.allPlants);
+  filteredDataStore.filteredPlants = staticDataStore.allPlants.features
+  ? staticDataStore.allPlants.features.filter((row) =>
+      states.includes(row.properties.State)
+    )
+  : [];
+}
+
+
 function updateFilteredStates(states) {
   // TODO: I don't like this function and I think it's doing too much
-  // TODO: standardize the column names so they are all lower case (something else is State)
-    // filteredDataStore.filteredCaptureAreas =
-    //   state.data.plantAccess.features.filter((row) =>
-    //     states.includes(row.properties.state)
-    //   );
-
-    filteredDataStore.filteredCaptureAreas =
+    filteredDataStore.filteredIsochrones =
     staticDataStore.allIsochrones.features.filter((row) =>
       states.includes(row.properties.state)
     );
 
   const stateabbrevs = states.map((state) => state2abb[state]);
 
+  // TODO: review this — I think we can simplify this
   const _features = staticDataStore.allBarns.features;
   const features = [];
   for (let i = 0; i < _features.length; i++) {
@@ -81,10 +87,13 @@ function updateFilteredStates(states) {
   filteredDataStore.filteredBarns = features;
 
   filteredDataStore.filteredPlants = staticDataStore.allPlants.features
-    ? staticDataStore.allPlants.features.filter((row) =>
-        states.includes(row.properties.State)
-      )
-    : [];
+  ? staticDataStore.allPlants.features.filter((row) =>
+      states.includes(row.properties.State)
+    )
+  : [];
+
+
+
 }
 
 // TODO: Should this be kept in state? And separate from the filteredDataStore?
@@ -181,10 +190,10 @@ function calculateCapturedArea() {
   };
 
   // TODO: Need to add area to GeoJSON
-  for (let i = 0; i < filteredDataStore.filteredCaptureAreas.length; i++) {
+  for (let i = 0; i < filteredDataStore.filteredIsochrones.length; i++) {
     areas[
-      filteredDataStore.filteredCaptureAreas[i].properties.corporate_access
-    ] += filteredDataStore.filteredCaptureAreas[i].properties.area;
+      filteredDataStore.filteredIsochrones[i].properties.corporate_access
+    ] += filteredDataStore.filteredIsochrones[i].properties.area;
   }
 
   let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
@@ -238,13 +247,13 @@ function calculateCapturedAreaByBarns() {
 
 function updateMapZoom(filteredStates) {
   // default zoom state is everything (handles the case of no selection)
-  var zoomGeoJSON = filteredDataStore.filteredCaptureAreas.features;
+  var zoomGeoJSON = filteredDataStore.filteredIsochrones.features;
 
-  console.log("staticFilteredState.filteredCaptureArea", filteredDataStore.filteredCaptureArea);
+  // console.log("staticFilteredState.filteredCaptureArea", filteredDataStore.filteredCaptureArea);
 
   // update to the selected areas if they exist
   if (filteredStates.length) {
-    zoomGeoJSON = filteredDataStore.filteredCaptureAreas;
+    zoomGeoJSON = filteredDataStore.filteredIsochrones;
   }
   const currentGeojson = {
     type: "FeatureCollection",
@@ -284,6 +293,7 @@ export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
+  // updateFilteredPlants(stateData.selectedStates);
   updateFilteredStates(stateData.selectedStates);
   updateFilteredCompanies();
   updateFilteredSales(stateData.selectedStates);

@@ -9,7 +9,7 @@ export const useMapData = () => {
     filteredPlants,
     filteredCompanies,
     filteredSales,
-    filteredCaptureAreas,
+    filteredIsochrones: filteredCaptureAreas,
     capturedAreas,
     totalFarms,
     plantAccess,
