@@ -13,7 +13,6 @@ export const staticDataStore = {
   allStates: [],
 };
 
-// TODO: change the name
 export const filteredDataStore = {
   filteredPlants: [],
   filteredBarns: [],
@@ -23,10 +22,9 @@ export const filteredDataStore = {
   // TODO: do I want this in this or should I save in state?
   filteredCompanies: [],
 
-  // TODO: These names are confusing. What is capturedAreas?
-  capturedAreas: [],
+  // TODO: These names are confusing
+  capturedAreas: [], // Refers to the percentage of area with access to integrators
   totalFarms: [],
-  plantAccess: [],
 };
 
 // Create a proxy state
@@ -67,7 +65,6 @@ function updateFilteredIsochrones(states) {
   );
 }
 
-
 function updateFilteredBarns(states) {
   // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
   const stateabbrevs = states.map((state) => state2abb[state]);
@@ -75,8 +72,6 @@ function updateFilteredBarns(states) {
   staticDataStore.allBarns.features.filter((row) =>
     stateabbrevs.includes(row.properties.state)
   );
-
-
 }
 
 // TODO: Should this be kept in state? And separate from the filteredDataStore?
@@ -186,7 +181,6 @@ function calculateCapturedArea() {
     percentArea[key] = areas[key] / totalArea;
   });
 
-  // return percentArea;
   filteredDataStore.capturedAreas = percentArea;
 }
 
@@ -279,8 +273,9 @@ export function updateFilteredData(stateData) {
   updateFilteredPlants(stateData.selectedStates);
   updateFilteredIsochrones(stateData.selectedStates);
   updateFilteredBarns(stateData.selectedStates);
-  updateFilteredCompanies();
   updateFilteredSales(stateData.selectedStates);
+  updateFilteredCompanies();
+  // TODO: Change names of these functions
   calculateCapturedArea();
   calculateCapturedAreaByBarns();
   updateMapZoom(stateData.selectedStates);
