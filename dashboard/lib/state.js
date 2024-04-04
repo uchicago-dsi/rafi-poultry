@@ -19,9 +19,6 @@ export const filteredDataStore = {
   filteredSales: [],
   filteredIsochrones: [],
 
-  // TODO: do I want this in this or should I save in state?
-  filteredCompanies: [],
-
   // TODO: These names are confusing
   percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
   totalCapturedBarns: [],
@@ -64,7 +61,6 @@ function updateFilteredIsochrones(states) {
   );
 }
 
-// const updateFilteredBarns = async (states) => {
 function updateFilteredBarns(states) {
   // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
   const stateabbrevs = states.map((state) => state2abb[state]);
@@ -72,12 +68,6 @@ function updateFilteredBarns(states) {
   staticDataStore.allBarns.features.filter((row) =>
     stateabbrevs.includes(row.properties.state)
   );
-}
-
-function updateFilteredCompanies() {
-  filteredDataStore.filteredCompanies = filteredDataStore.filteredPlants
-    .map((plant) => plant.properties["Parent Corporation"])
-    .filter((value, index, array) => array.indexOf(value) === index);
 }
 
 function updateFilteredSales(states) {
@@ -143,7 +133,7 @@ function updateFilteredSales(states) {
           if (!corporationTotals[corporation]) {
             corporationTotals[corporation] = { sales: 0 }; // Initialize if not already present
           }
-          corporationTotals[corporation].sales += data.sales; // Sum sales for each corporation
+          corporationTotals[corporation].sales += data.sales;
         });
       }
     });
@@ -157,32 +147,6 @@ function updateFilteredSales(states) {
 
     filteredDataStore.filteredSales = corporationTotals;
   }
-
-// TODO: I think this is unnecessary and can be deleted
-function calculateCapturedArea() {
-  let areas = {
-    1: 0,
-    2: 0,
-    3: 0,
-    // 4: 0,
-  };
-
-  // TODO: Need to add area to GeoJSON in the pipeline?
-  for (let i = 0; i < filteredDataStore.filteredIsochrones.length; i++) {
-    areas[
-      filteredDataStore.filteredIsochrones[i].properties.corporate_access
-    ] += filteredDataStore.filteredIsochrones[i].properties.area;
-  }
-
-  let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
-
-  let percentArea = {};
-  Object.keys(areas).forEach((key) => {
-    percentArea[key] = areas[key] / totalArea;
-  });
-
-  filteredDataStore.percentCapturedBarns = percentArea;
-}
 
 function calculateCapturedBarns() {
   const counts = {
@@ -270,7 +234,6 @@ function updateMapZoom(filteredStates) {
   updateFilteredPlants(stateData.selectedStates);
   updateFilteredIsochrones(stateData.selectedStates);
   updateFilteredSales(stateData.selectedStates);
-  updateFilteredCompanies();
   updateFilteredBarns(stateData.selectedStates);
   updateMapZoom(stateData.selectedStates);
 

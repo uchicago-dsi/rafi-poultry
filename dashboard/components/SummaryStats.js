@@ -1,8 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useSnapshot } from "valtio";
 import { useMapData } from "@/lib/useMapData";
-import { state } from "../lib/state";
 
 function calculateHHI(filteredSales) {
   // TODO: should probably make total sales part of the state
