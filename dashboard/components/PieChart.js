@@ -1,44 +1,33 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { useSnapshot } from "valtio";
-
-import { state } from "../lib/state";
+import React, { useMemo } from "react";
+import { useMapData } from "@/lib/useMapData";
 
 import { Pie } from "react-chartjs-2";
 import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
 export default function PieChart() {
-  const snapshot = useSnapshot(state.stateData);
+  const {
+    isDataLoaded,
+    percentCapturedBarns,
+    totalCapturedBarns
+  } = useMapData();
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
-    if (!snapshot.isDataLoaded) {
+    if (!isDataLoaded) {
       return {
         cleanedChartData: [],
         cleanedChartLabels: [],
       };
     }
-
-    // const data = Object.entries(snapshot.filteredSales);
-    const data = Object.entries(snapshot.capturedAreas);
-    const top4 = data.slice(0, 3);
-    const labels = top4.map(([key, value]) => key);
-    const values = top4.map(([key, value]) => value * 100);
-
-    const remaining = data
-      .slice(3)
-      .map(([key, value]) => value)
-      .reduce((a, b) => a + b, 0);
-
+    const values = Object.entries(percentCapturedBarns).map(([key, value]) => value * 100);
     return {
-      cleanedChartData: [...values, remaining],
+      cleanedChartData: values,
       cleanedChartLabels: ["1 Integrator", "2 Integrators", "3+ Integrators"],
-      //   cleanedChartLabels: [...labels],
-      //   cleanedChartLabels: [...labels, "Other"],
     };
-  }, [snapshot.filteredSales]);
+  }, [percentCapturedBarns]);
 
-  if (!snapshot.isDataLoaded) {
+  if (!isDataLoaded) {
     return "";
   }
 
@@ -60,7 +49,7 @@ export default function PieChart() {
     ],
   };
 
-  return snapshot.filteredCaptureAreas.length ? (
+  return totalCapturedBarns ? (
     <Pie
       data={chartData}
       options={{
@@ -76,7 +65,7 @@ export default function PieChart() {
               label: function (context) {
                 console.log(context);
                 const value = context.dataset.data[context.dataIndex];
-                console.log("Tooltip value:", value); // this will log the value
+                console.log("Tooltip value:", value);
                 return context.label + ": " + value.toFixed(1) + "%";
               },
             },

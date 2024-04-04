@@ -1,8 +1,7 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { proxy, useSnapshot } from "valtio";
+import React, { useEffect, useRef } from "react";
 
-import { loadData } from "../lib/data";
+import { updateStaticDataStore } from "../lib/data";
 import { state } from "../lib/state";
 
 import { DeckGLMap } from "../components/DeckGLMap";
@@ -16,12 +15,10 @@ import "../styles/styles.css";
 // import styles from "./page.module.css"; //TODO: unsure about styles import
 
 export default function Home() {
-  // load JSON and CSV data
+  // load staticDataStore on page load
   useEffect(() => {
-    loadData();
+    updateStaticDataStore();
   }, []);
-
-  const snapshot = useSnapshot(state);
 
   // Handling resizing of container to dynamically update map bounding box
   const containerRef = useRef(null);
@@ -31,8 +28,8 @@ export default function Home() {
       if (containerRef.current) {
         const width = containerRef.current.getBoundingClientRect().width;
         const height = containerRef.current.getBoundingClientRect().height;
-        state.stateMapSettings.containerWidth = width;
-        state.stateMapSettings.containerHeight = height;
+        state.map.containerWidth = width;
+        state.map.containerHeight = height;
       }
     };
 
@@ -47,9 +44,6 @@ export default function Home() {
   return (
     <div>
       <main className="flex w-full h-[100vh] relative flex">
-        {/* <h1>Please Show a Map</h1> */}
-        {/* <div className={styles["map-container"]}> */}
-        {/* <div style={{ position: "relative", flex: "3" }} ref={containerRef}> */}
         <div className="relative w-3/4" ref={containerRef}>
           <Tooltip />
           <DeckGLMap />
@@ -58,9 +52,6 @@ export default function Home() {
           <ControlPanel />
         </div>
         <div className="flex flex-col w-1/4 h-[100vh] overflow-hidden">
-          <div className="flex flex-row justify-center h-[25vh]">
-            <PieChart />
-          </div>
           <div>
             <SummaryStats />
           </div>

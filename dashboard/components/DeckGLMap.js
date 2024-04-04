@@ -1,47 +1,19 @@
 "use client";
 // app.js
-import React, { useState, useEffect } from "react";
-import { proxy, useSnapshot } from "valtio";
-
-import { state } from "../lib/state";
+import React from "react";
 
 import DeckGL from "@deck.gl/react";
-import { LineLayer, IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import { COORDINATE_SYSTEM } from "@deck.gl/core";
-
-import { Map } from "react-map-gl";
-
-import colorbrewer from "colorbrewer";
-import tinycolor from "tinycolor2";
 import { ScatterplotLayer } from "deck.gl";
+import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
+import { Map, ScaleControl } from "react-map-gl";
+
+// TODO: fix the imports here so they make sense - should I use @/lib/state??
+import { state } from "../lib/state";
+import { useMapData } from "@/lib/useMapData";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-// TODO: maybe functionalize this later but just hard-coding this short term
-// const plantAccessColors = colorbrewer.Set3[4].reverse();
-// const plantAccess = [
-//   "One Corporation",
-//   "Two Corporations",
-//   "Three Corporations",
-//   "4+ Corporations",
-// ];
-
-// const hexPalette = Object.fromEntries(
-//   plantAccess.map((access, i) => [access, plantAccessColors[i]])
-// );
-// const rgbPalette = Object.entries(hexPalette).map(([key, hex]) => {
-//   return [key, Object.values(tinycolor(hex).toRgb())];
-// });
-
-// for (let key in rgbPalette) {
-//   let rgb = rgbPalette[key][1];
-//   rgb[3] = 255;
-//   rgbPalette[key][1] = rgb;
-//   print(rgb);
-// }
-
-// const plantColorPalette = Object.fromEntries(rgbPalette);
 
 const plantColorPalette = {
   "One Integrator": [251, 128, 114, 150],
@@ -57,52 +29,34 @@ const markerPalette = {
 
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
-// 4+ Corporations
-// :
-// (4) [141, 211, 199, 255] // green
-// One Corporation
-// :
-// (4) [251, 128, 114, 255] //red
-// Three Corporations
-// :
-// (4) [255, 255, 179, 255]
-// Two Corporations:
-// (4) [190, 186, 218, 255] // yellow
-
 // console.log(colorPalette);
 
 export function DeckGLMap() {
-  const { stateData, stateMapSettings } = useSnapshot(state);
+  const {
+    isDataLoaded,
+    stateMapSettings,
+    timestamp,
+    filteredBarns,
+    filteredIsochrones,
+    allPlants
+  } = useMapData();
 
   // Don't render the component until the data is loaded
-  if (!stateData.isDataLoaded) {
+  if (!isDataLoaded) {
     return "";
   }
 
   const plantAccessLayer = new GeoJsonLayer({
-    data: stateData.filteredCaptureAreas,
+    data:filteredIsochrones,
 
     pickable: true,
     onHover: ({ x, y, object }) => {
-      state.stateMapSettings.x = x;
-      state.stateMapSettings.y = y;
-      state.stateMapSettings.hoveredObject = object;
+      state.map.x = x;
+      state.map.y = y;
+      state.map.hoveredObject = object;
     },
 
     getFillColor: function (dataRow) {
-      // TODO: available if we want to switch back to plants
-      // switch (dataRow.properties.plant_access) {
-      //   switch (dataRow.properties.corporate_access) {
-      //     case 1:
-      //       return colorPalette["One Plant"];
-      //     case 2:
-      //       return colorPalette["Two Plants"];
-      //     case 3:
-      //       return colorPalette["Three Plants"];
-      //     case 4:
-      //       return colorPalette["4+ Plants"];
-      //   }
-      // },
       switch (dataRow.properties.corporate_access) {
         case 1:
           return colorPalette["One Integrator"];
@@ -116,9 +70,9 @@ export function DeckGLMap() {
     },
   });
 
-  const farmLayer = new IconLayer({
+  const barnsLayer = new IconLayer({
     id: "icon-layer",
-    data: stateData.farms.features,
+    data: filteredBarns,
     pickable: true,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
@@ -136,7 +90,7 @@ export function DeckGLMap() {
   const plantLayer = new IconLayer({
     id: "icon-layer",
     stroked: true,
-    data: stateData.poultryPlants.features,
+    data: allPlants.features,
     iconAtlas:
       "https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png",
     iconMapping: {
@@ -150,16 +104,18 @@ export function DeckGLMap() {
     getTooltip: (d) => `Address: ${d.properties["Full Address"]}`,
 
     pickable: true,
+    // TODO: tooltip should probably be split out for performance eventually
     onHover: ({ x, y, object }) => {
-      state.stateMapSettings.x = x;
-      state.stateMapSettings.y = y;
-      state.stateMapSettings.hoveredObject = object;
+      state.map.x = x;
+      state.map.y = y;
+      state.map.hoveredObject = object;
     },
   });
 
   const plantInteractiveLayer = new ScatterplotLayer({
     id: "scatterplot-layer",
-    data: stateData.poultryPlants.features,
+    // TODO: we should always display all plants — need to update
+    data: allPlants.features,
     pickable: true,
     // stroked: true,
     filled: true, // will be filled with empty
@@ -171,16 +127,16 @@ export function DeckGLMap() {
     getRadius: (d) => 100,
     getFillColor: [0, 0, 0, 0],
     onHover: ({ x, y, object }) => {
-      state.stateMapSettings.x = x;
-      state.stateMapSettings.y = y;
-      state.stateMapSettings.hoveredObject = object;
+      state.map.x = x;
+      state.map.y = y;
+      state.map.hoveredObject = object;
     },
   });
 
   var displayLayers = [plantAccessLayer, plantInteractiveLayer, plantLayer];
 
   if (stateMapSettings.displayFarms) {
-    displayLayers.push(farmLayer);
+    displayLayers.push(barnsLayer);
   }
 
   const deck = (
@@ -192,8 +148,10 @@ export function DeckGLMap() {
     >
       <Map
         mapStyle="mapbox://styles/mapbox/satellite-v9"
-        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
-      />
+        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}>
+          <ScaleControl unit="imperial" position="top-right" />
+      </Map>
+
       <div id="legend">
         {Object.entries(plantColorPalette).map(([key, color]) => (
           <div key={key} className="flex items-center">

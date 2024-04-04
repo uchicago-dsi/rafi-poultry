@@ -1,18 +1,14 @@
 "use client";
 // app.js
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSnapshot } from "valtio";
 
-import { state, updateFilteredData } from "../lib/state";
+import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
-// import "tailwindcss/tailwind.css";
-// import "../styles/styles.css";
 
 export default function ControlPanel() {
-  const snapshot = useSnapshot(state.stateData);
+  const snapshot = useSnapshot(state.data);
   const [expanded, setExpanded] = useState(true);
-
-  //TODO: still not totally confident on when to use state vs snapshot and what triggers a reload
 
   if (!snapshot.isDataLoaded) {
     return <div>Loading...</div>;
@@ -23,29 +19,32 @@ export default function ControlPanel() {
 
     // adjust filtered states
     if (checked) {
-      state.stateData.filteredStates.push(value);
+      state.data.selectedStates.push(value);
     } else {
-      const index = state.stateData.filteredStates.indexOf(value);
+      const index = state.data.selectedStates.indexOf(value);
       if (index !== -1) {
-        state.stateData.filteredStates.splice(index, 1);
+        state.data.selectedStates.splice(index, 1);
       }
     }
 
+    // TODO: does this need to be here also? Shouldn't this get triggered elsewhere?
     updateFilteredData();
   };
 
   const selectAll = () => {
-    state.stateData.filteredStates = [...state.stateData.allStates];
+    state.data.selectedStates = [...staticDataStore.allStates];
+    // TODO: Is this the right way to do this?
     updateFilteredData();
   };
 
   const selectNone = () => {
-    state.stateData.filteredStates.length = 0;
+    state.data.selectedStates.length = 0;
+    // TODO: Is this the right way to do this?
     updateFilteredData();
   };
 
   const updateFarmDisplay = () => {
-    state.stateMapSettings.displayFarms = !state.stateMapSettings.displayFarms;
+    state.map.displayFarms = !state.map.displayFarms;
   };
 
   return (
@@ -79,24 +78,18 @@ export default function ControlPanel() {
             None
           </button>
         </div>
-        {snapshot.allStates.map((option, index) => (
+        {staticDataStore.allStates.map((option, index) => (
           <label key={index} className="label cursor-pointer py-1">
             <span className="block label-text">{option}</span>
             <input
               className="checkbox checkbox-xs block"
               value={option}
               type="checkbox"
-              checked={snapshot.filteredStates.includes(option)}
+              checked={snapshot.selectedStates.includes(option)}
               onChange={handleCheckboxChange}
             />
           </label>
         ))}
-      </div>
-      <div>
-        <button>Select All</button>
-      </div>
-      <div>
-        <button>Select None</button>
       </div>
       <div>
         <button onClick={updateFarmDisplay}>Change Farm Display</button>
