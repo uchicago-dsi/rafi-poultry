@@ -71,59 +71,6 @@ function updateFilteredBarns(states) {
 }
 
 function updateFilteredSales(states) {
-  // // build dictionary for each company in the area
-  // let companySales = {};
-  // for (let i = 0; i < staticFilteredState.filteredCompanies.length; i++) {
-  //   companySales[staticFilteredState.filteredCompanies[i]] = 0;
-  // }
-
-  // for (let i = 0; i < staticFilteredState.filteredPlantsData.length; i++) {
-  //   let salesVolume =
-  //     staticFilteredState.filteredPlantsData[i].properties[
-  //       "Sales Volume (Location)"
-  //     ];
-  //   if (!Number.isNaN(salesVolume)) {
-  //     companySales[
-  //       staticFilteredState.filteredPlantsData[i].properties[
-  //         "Parent Corporation"
-  //       ]
-  //     ] += salesVolume;
-  //   }
-  // }
-
-  // // filter NaN values and return dictionary
-  // let filtered = Object.entries(companySales).reduce(
-  //   (filtered, [key, value]) => {
-  //     if (!Number.isNaN(value)) {
-  //       filtered[key] = value;
-  //     }
-  //     return filtered;
-  //   },
-  //   {}
-  // );
-
-  // // sort on value and convert to object
-  // let sorted = Object.entries(filtered).sort((a, b) => b[1] - a[1]);
-  // let unnestedSales = Object.fromEntries(sorted);
-
-  // const totalSales = Object.values(unnestedSales).reduce(
-  //   (accumulator, value) => {
-  //     return accumulator + value;
-  //   },
-  //   0
-  // );
-
-  // // create nested object for each corporation
-  // let nestedSales = {};
-  // for (let key in unnestedSales) {
-  //   nestedSales[key] = {
-  //     sales: unnestedSales[key],
-  //     percent: unnestedSales[key] / totalSales,
-  //   };
-  // }
-
-    // TODO: Check the math here...something is not quite right
-    // TODO: It may be in how this is loaded in the first place
     let corporationTotals = {};
 
     states.forEach(state => {
@@ -138,14 +85,22 @@ function updateFilteredSales(states) {
       }
     });
 
-    // Optionally calculate percent total for each corporation across the selected states
-    const totalSales = Object.values(corporationTotals).reduce((sum, { sales }) => sum + sales, 0);
+    const totalSales = Object.values(corporationTotals).reduce((sum, corp) => sum + corp.sales, 0);
 
-    Object.keys(corporationTotals).forEach(corporation => {
-      corporationTotals[corporation].percent = (corporationTotals[corporation].sales / totalSales) * 100;
-    });
+    // Object.keys(corporationTotals).forEach(corporation => {
+    //   corporationTotals[corporation].percent = (corporationTotals[corporation].sales / totalSales);
+    // });
+    const sortedArray = Object.entries(corporationTotals).sort((a, b) => b[1].sales - a[1].sales);
 
-    filteredDataStore.filteredSales = corporationTotals;
+  // Update each corporation's percent value based on total sales
+  sortedArray.forEach(([corporation, data]) => {
+    data.percent = (data.sales / totalSales); 
+  });
+
+  // Optionally, convert it back to an object if needed
+  const sortedCorporationTotals = Object.fromEntries(sortedArray);
+
+    filteredDataStore.filteredSales = sortedCorporationTotals;
   }
 
 function calculateCapturedBarns() {
