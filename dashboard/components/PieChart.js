@@ -20,20 +20,9 @@ export default function PieChart() {
         cleanedChartLabels: [],
       };
     }
-
-    console.log("percentCapturedBarns", percentCapturedBarns)
-    const data = Object.entries(percentCapturedBarns);
-    console.log("data", data)
-    const top4 = data.slice(0, 3);
-    const values = top4.map(([key, value]) => value * 100);
-
-    const remaining = data
-      .slice(3)
-      .map(([key, value]) => value)
-      .reduce((a, b) => a + b, 0);
-
+    const values = Object.entries(percentCapturedBarns).map(([key, value]) => value * 100);
     return {
-      cleanedChartData: [...values, remaining],
+      cleanedChartData: values,
       cleanedChartLabels: ["1 Integrator", "2 Integrators", "3+ Integrators"],
     };
   }, [percentCapturedBarns]);
