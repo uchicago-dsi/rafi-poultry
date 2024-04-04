@@ -10,7 +10,7 @@ export default function PieChart() {
   const {
     isDataLoaded,
     percentCapturedBarns,
-    filteredIsochrones
+    totalCapturedBarns
   } = useMapData();
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
@@ -49,7 +49,7 @@ export default function PieChart() {
     ],
   };
 
-  return filteredIsochrones.length ? (
+  return totalCapturedBarns ? (
     <Pie
       data={chartData}
       options={{
