@@ -1,47 +1,29 @@
 "use client";
 import { useMapData } from "@/lib/useMapData";
 
-function calculateHHI(filteredSales) {
-  // TODO: should probably make total sales part of the state
-  // calculate total sales in selected area
-  if (Object.keys(filteredSales).length) {
-    let totalSales = Object.values(filteredSales).reduce(
-      (acc, item) => acc + item.sales,
-      0
-    );
-
-    // calculate HHI
-    return Object.values(filteredSales).reduce(
-      (acc, item) => acc + Math.pow((item.sales * 100) / totalSales, 2),
-      0
-    );
-  } else {
-    return 0;
-  }
-}
-
 export function SummaryStats() {
   const {
     isDataLoaded,
     filteredSales,
     percentCapturedBarns,
-    totalCapturedBarns
+    totalCapturedBarns,
+    HHI
   } = useMapData();
 
   if (!isDataLoaded) {
     return "";
   }
 
-  const calculatedHHI = calculateHHI(filteredSales);
+  // const HHI = calculateHHI(filteredSales);
 
   return (
     <div>
-      {calculatedHHI ? (
+      {HHI ? (
         <div className="m-2">
           <h2 className="text-2xl font-bold text-center">
             HHI for Selected States
           </h2>
-          <p className="text-center text-xl">{calculatedHHI.toFixed(0)}</p>
+          <p className="text-center text-xl">{HHI.toFixed(0)}</p>
         </div>
       ) : (
         <p className="text-center">No data available</p>

@@ -13,6 +13,7 @@ export const useMapData = () => {
     percentCapturedBarns,
     totalCapturedBarns,
     plantAccess,
+    HHI,
   } = filteredDataStore;
 
   const { 
@@ -32,5 +33,6 @@ export const useMapData = () => {
     filteredBarns,
     filteredPlants,
     allPlants,
+    HHI
   };
 };
