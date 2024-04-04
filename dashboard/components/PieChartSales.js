@@ -9,7 +9,7 @@ import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
 export default function PieChart() {
-  const snapshot = useSnapshot(state.stateData);
+  const snapshot = useSnapshot(state.data);
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
     if (!snapshot.isDataLoaded) {

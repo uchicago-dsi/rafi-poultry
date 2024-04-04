@@ -1,29 +1,38 @@
 "use client";
-import { proxy, useSnapshot } from "valtio";
+import { proxy } from "valtio";
 import bbox from "@turf/bbox";
 import { WebMercatorViewport } from "@deck.gl/core";
-import booleanWithin from "@turf/boolean-point-in-polygon";
+import { derive } from "valtio/utils";
+import { state2abb } from "./constants";
 
-// Create a proxy state
+export const staticDataStore = {
+  allPlants: [],
+  allBarns: [],
+  allSales: [],
+  allIsochrones: [],
+  allStates: [],
+};
+
+export const filteredDataStore = {
+  filteredPlants: [],
+  filteredBarns: [],
+  filteredSales: [],
+  filteredIsochrones: [],
+
+  // TODO: These names are confusing
+  percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
+  totalCapturedBarns: [],
+  totalSales: 0,
+  HHI: 0
+};
+
 export const state = proxy({
-  // basic data
-  stateData: {
-    plantAccess: [],
-    poultryPlants: [],
-    allStates: [],
-
-    // filtered data
-    filteredStates: [],
-    filteredPlants: [],
-    filteredCaptureAreas: [],
-    filteredCompanies: [],
-    filteredSales: [],
-    capturedAreas: {},
+  data: {
     isDataLoaded: false,
+    selectedStates: [],
   },
 
-  //TODO: Unsure about the best practices for how to load and manage these nested states
-  stateMapSettings: {
+  map: {
     // cursor state
     x: undefined,
     y: undefined,
@@ -39,102 +48,130 @@ export const state = proxy({
   },
 });
 
-function updateFilteredStates() {
-  // choose the filtered areas to display
-  state.stateData.filteredCaptureAreas =
-    state.stateData.plantAccess.features.filter((row) => {
-      if (state.stateData.filteredStates.includes(row.properties.state)) {
-        return true;
-      } else {
-        return false;
+function updateFilteredPlants(states) {
+  filteredDataStore.filteredPlants = staticDataStore.allPlants.features
+  ? staticDataStore.allPlants.features.filter((row) =>
+      states.includes(row.properties.State)
+    )
+  : [];
+}
+
+function updateFilteredIsochrones(states) {
+  filteredDataStore.filteredIsochrones =
+  staticDataStore.allIsochrones.features.filter((row) =>
+    states.includes(row.properties.state)
+  );
+}
+
+function updateFilteredBarns(states) {
+  // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
+  const stateabbrevs = states.map((state) => state2abb[state]);
+  filteredDataStore.filteredBarns =
+  staticDataStore.allBarns.features.filter((row) =>
+    stateabbrevs.includes(row.properties.state)
+  );
+}
+
+function updateFilteredSales(states) {
+    let corporationTotals = {};
+
+    states.forEach(state => {
+      const stateData = staticDataStore.allSales[state];
+      if (stateData) {
+        Object.entries(stateData).forEach(([corporation, data]) => {
+          if (!corporationTotals[corporation]) {
+            corporationTotals[corporation] = { sales: 0 }; // Initialize if not already present
+          }
+          corporationTotals[corporation].sales += data.sales;
+        });
       }
     });
-}
 
-function updateFilteredPlants() {
-  state.stateData.filteredPlants =
-    state.stateData.poultryPlants.features.filter((row) => {
-      if (state.stateData.filteredStates.includes(row.properties.State)) {
-        return true;
-      } else {
-        return false;
-      }
+    const totalSales = Object.values(corporationTotals).reduce((sum, corp) => sum + corp.sales, 0);
+
+    const sortedArray = Object.entries(corporationTotals).sort((a, b) => b[1].sales - a[1].sales);
+    sortedArray.forEach(([corporation, data]) => {
+      data.percent = (data.sales / totalSales); 
     });
-}
+    const sortedCorporationTotals = Object.fromEntries(sortedArray);
 
-function updateFilteredCompanies() {
-  state.stateData.filteredCompanies = state.stateData.filteredPlants
-    .map((plant) => plant.properties["Parent Corporation"])
-    .filter((value, index, array) => array.indexOf(value) === index);
-}
-
-function updateFilteredSales() {
-  // build dictionary for each company in the area
-  let companySales = {};
-  for (let i = 0; i < state.stateData.filteredCompanies.length; i++) {
-    companySales[state.stateData.filteredCompanies[i]] = 0;
+    filteredDataStore.filteredSales = sortedCorporationTotals;
+    filteredDataStore.totalSales = totalSales;
   }
 
-  for (let i = 0; i < state.stateData.filteredPlants.length; i++) {
-    let salesVolume =
-      state.stateData.filteredPlants[i].properties["Sales Volume (Location)"];
-    if (!Number.isNaN(salesVolume)) {
-      companySales[
-        state.stateData.filteredPlants[i].properties["Parent Corporation"]
-      ] += salesVolume;
+function calculateCapturedBarns() {
+  const counts = {
+    totalFarms: 0,
+    totalCapturedBarns: 0,
+    plantAccessCounts: {
+      0: 0, // '0' represents NaN or no access
+      1: 0,
+      2: 0,
+      3: 0,
+    },
+  };
+
+  // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
+  filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
+    const plantAccess = feature.properties.plant_access === 4 ? 3 : (feature.properties.plant_access || 0); // convert 4 to 3, default to 0 if null
+    accumulator.totalFarms += 1;
+    // Only count farms in captive draw areas
+    if (plantAccess != 0) {
+      accumulator.totalCapturedBarns += 1;
     }
-  }
+    accumulator.plantAccessCounts[plantAccess] += 1;
+    return accumulator;
+  }, counts);
 
-  // filter NaN values and return dictionary
-  let filtered = Object.entries(companySales).reduce(
-    (filtered, [key, value]) => {
-      if (!Number.isNaN(value)) {
-        filtered[key] = value;
-      }
-      return filtered;
-    },
-    {}
-  );
+  let percentCapturedBarns = {};
+  Object.keys(counts.plantAccessCounts).forEach((key) => {
+    if (key != "0") {
+      percentCapturedBarns[key] =
+        counts.plantAccessCounts[key] / counts.totalCapturedBarns;
+    }
+  });
 
-  // sort on value and convert to object
-  let sorted = Object.entries(filtered).sort((a, b) => b[1] - a[1]);
-  let unnestedSales = Object.fromEntries(sorted);
-
-  const totalSales = Object.values(unnestedSales).reduce(
-    (accumulator, value) => {
-      return accumulator + value;
-    },
-    0
-  );
-
-  // create nested object for each corporation
-  let nestedSales = {};
-  for (let key in unnestedSales) {
-    nestedSales[key] = {
-      sales: unnestedSales[key],
-      percent: unnestedSales[key] / totalSales,
-    };
-  }
-  state.stateData.filteredSales = nestedSales;
+  filteredDataStore.totalCapturedBarns = counts.totalCapturedBarns;
+  filteredDataStore.percentCapturedBarns = percentCapturedBarns;
 }
 
-function updateMapZoom() {
-  // default zoom state is everything (handles the case of no selection)
-  var zoomGeoJSON = state.stateData.plantAccess.features;
+function calculateHHI() {
+  // TODO: should probably make total sales part of the state
+  // calculate total sales in selected area
+  if (Object.keys(filteredDataStore.filteredSales).length) {
+    // let totalSales = Object.values(filteredDataStore.filteredSales).reduce(
+    //   (acc, item) => acc + item.sales,
+    //   0
+    // );
 
-  // update to the selected areas if they exist
-  if (state.stateData.filteredStates.length) {
-    zoomGeoJSON = state.stateData.filteredCaptureAreas;
+    // calculate HHI
+    return Object.values(filteredDataStore.filteredSales).reduce(
+      (acc, item) => acc + Math.pow((item.sales * 100) / filteredDataStore.totalSales, 2),
+      0
+    );
+  } else {
+    return 0;
   }
+}
 
+function updateMapZoom(filteredStates) {
+  // default zoom state is everything (handles the case of no selection)
+  var zoomGeoJSON = staticDataStore.allIsochrones.features;
+
+  // TODO: allIsochrones and filteredIsochrones should be the same format
+  // update to the selected areas if they exist
+  if (filteredStates.length) {
+    zoomGeoJSON = filteredDataStore.filteredIsochrones;
+  }
   const currentGeojson = {
     type: "FeatureCollection",
     features: zoomGeoJSON,
   };
+
   const boundingBox = bbox(currentGeojson);
   const fittedViewport = new WebMercatorViewport(
-    state.stateMapSettings.containerWidth,
-    state.stateMapSettings.containerHeight
+    state.map.containerWidth,
+    state.map.containerHeight
   );
 
   const currentLatLonZoom = fittedViewport.fitBounds(
@@ -143,13 +180,13 @@ function updateMapZoom() {
       [boundingBox[2], boundingBox[3]],
     ],
     {
-      width: state.stateMapSettings.containerWidth,
-      height: state.stateMapSettings.containerHeight,
+      width: state.map.containerWidth,
+      height: state.map.containerHeight,
       padding: { top: 20, bottom: 20, left: 20, right: 20 },
     }
   );
 
-  state.stateMapSettings.mapZoom = {
+  state.map.mapZoom = {
     longitude: currentLatLonZoom.longitude,
     latitude: currentLatLonZoom.latitude,
     zoom: currentLatLonZoom.zoom,
@@ -159,74 +196,25 @@ function updateMapZoom() {
   };
 }
 
-function calculateCapturedArea() {
-  let areas = {
-    1: 0,
-    2: 0,
-    3: 0,
-    // 4: 0,
-  };
-
-  // TODO: Need to add area to GeoJSON
-  for (let i = 0; i < state.stateData.filteredCaptureAreas.length; i++) {
-    areas[
-      state.stateData.filteredCaptureAreas[i].properties.corporate_access
-    ] += state.stateData.filteredCaptureAreas[i].properties.area;
+// export const updateFilteredData = async (stateData) => {
+  export function updateFilteredData(stateData) {
+  if (!stateData?.isDataLoaded) {
+    return;
   }
+  updateFilteredPlants(stateData.selectedStates);
+  updateFilteredIsochrones(stateData.selectedStates);
+  updateFilteredSales(stateData.selectedStates);
+  updateFilteredBarns(stateData.selectedStates);
+  updateMapZoom(stateData.selectedStates);
 
-  let totalArea = Object.values(areas).reduce((acc, val) => acc + val, 0);
+  // TODO: What's the right way to do this? Should these return things or update in place?
+  calculateCapturedBarns();
+  filteredDataStore.HHI = calculateHHI();
 
-  let percentArea = {};
-  Object.keys(areas).forEach((key) => {
-    percentArea[key] = areas[key] / totalArea;
-  });
-
-  // return percentArea;
-  state.stateData.capturedAreas = percentArea;
+  return performance.now();
 }
 
-function calculateCapturedAreaByBarns() {
-  // initialize object for reduce operation
-  const counts = {
-    totalFarms: 0,
-    totalCapturedFarms: 0,
-    plantAccessCounts: {
-      0: 0, // '0' represents NaN or no access
-      1: 0,
-      2: 0,
-      3: 0,
-    },
-  };
-
-  state.stateData.farms.features.reduce((accumulator, feature) => {
-    const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
-    accumulator.totalFarms += 1
-    // Only count farms in captive draw areas
-    if (plantAccess != "0") {
-      accumulator.totalCapturedFarms += 1;
-    }
-    accumulator.plantAccessCounts[plantAccess] += 1;
-
-    return accumulator;
-  }, counts);
-
-  let percentCaptured = {};
-  Object.keys(counts.plantAccessCounts).forEach((key) => {
-    if (key != "0") {
-      percentCaptured[key] = counts.plantAccessCounts[key] / counts.totalCapturedFarms;
-    }
-  });
-
-  state.stateData.totalFarms = counts.totalFarms;
-  state.stateData.capturedAreas = percentCaptured;
-}
-
-export function updateFilteredData() {
-  updateFilteredStates();
-  updateFilteredPlants();
-  updateFilteredCompanies();
-  updateFilteredSales();
-  calculateCapturedArea();
-  calculateCapturedAreaByBarns();
-  updateMapZoom();
-}
+// use this to trigger refresh
+export const filterTimestampStore = derive({
+  timestamp: (get) => updateFilteredData(get(state).data),
+});
