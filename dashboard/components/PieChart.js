@@ -1,8 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { useSnapshot } from "valtio";
+import React, { useMemo } from "react";
 import { useMapData } from "@/lib/useMapData";
-import { state } from "../lib/state";
 
 import { Pie } from "react-chartjs-2";
 import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
@@ -11,13 +9,9 @@ Chart.register(ArcElement, Legend, Tooltip);
 export default function PieChart() {
   const {
     isDataLoaded,
-    filteredSales,
-    capturedAreas,
-    totalFarms,
+    percentCapturedBarns,
     filteredIsochrones
   } = useMapData();
-
-  const snapshot = useSnapshot(state.data);
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
     if (!isDataLoaded) {
@@ -27,10 +21,10 @@ export default function PieChart() {
       };
     }
 
-    // const data = Object.entries(snapshot.filteredSales);
-    const data = Object.entries(capturedAreas);
+    console.log("percentCapturedBarns", percentCapturedBarns)
+    const data = Object.entries(percentCapturedBarns);
+    console.log("data", data)
     const top4 = data.slice(0, 3);
-    const labels = top4.map(([key, value]) => key);
     const values = top4.map(([key, value]) => value * 100);
 
     const remaining = data
@@ -41,10 +35,8 @@ export default function PieChart() {
     return {
       cleanedChartData: [...values, remaining],
       cleanedChartLabels: ["1 Integrator", "2 Integrators", "3+ Integrators"],
-      //   cleanedChartLabels: [...labels],
-      //   cleanedChartLabels: [...labels, "Other"],
     };
-  }, [filteredSales]);
+  }, [percentCapturedBarns]);
 
   if (!isDataLoaded) {
     return "";
@@ -84,7 +76,7 @@ export default function PieChart() {
               label: function (context) {
                 console.log(context);
                 const value = context.dataset.data[context.dataIndex];
-                console.log("Tooltip value:", value); // this will log the value
+                console.log("Tooltip value:", value);
                 return context.label + ": " + value.toFixed(1) + "%";
               },
             },
