@@ -23,8 +23,8 @@ export const filteredDataStore = {
   filteredCompanies: [],
 
   // TODO: These names are confusing
-  capturedAreas: [], // Refers to the percentage of area with access to integrators
-  totalFarms: [],
+  percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
+  totalCapturedBarns: [],
 };
 
 export const state = proxy({
@@ -181,13 +181,13 @@ function calculateCapturedArea() {
     percentArea[key] = areas[key] / totalArea;
   });
 
-  filteredDataStore.capturedAreas = percentArea;
+  filteredDataStore.percentCapturedBarns = percentArea;
 }
 
 function calculateCapturedBarns() {
   const counts = {
     totalFarms: 0,
-    totalCapturedFarms: 0,
+    totalCapturedBarns: 0,
     plantAccessCounts: {
       0: 0, // '0' represents NaN or no access
       1: 0,
@@ -199,28 +199,25 @@ function calculateCapturedBarns() {
   // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
   filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
     const plantAccess = feature.properties.plant_access === 4 ? 3 : (feature.properties.plant_access || 0); // convert 4 to 3, default to 0 if null
-    // const plantAccess = feature.properties.plant_access || "0"; // Default to '0' if null
     accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
     if (plantAccess != 0) {
-      accumulator.totalCapturedFarms += 1;
+      accumulator.totalCapturedBarns += 1;
     }
     accumulator.plantAccessCounts[plantAccess] += 1;
     return accumulator;
   }, counts);
 
-  let percentCaptured = {};
+  let percentCapturedBarns = {};
   Object.keys(counts.plantAccessCounts).forEach((key) => {
     if (key != "0") {
-      percentCaptured[key] =
-        counts.plantAccessCounts[key] / counts.totalCapturedFarms;
+      percentCapturedBarns[key] =
+        counts.plantAccessCounts[key] / counts.totalCapturedBarns;
     }
   });
 
-  console.log("counts", counts);
-
-  filteredDataStore.totalFarms = counts.totalFarms;
-  filteredDataStore.capturedAreas = percentCaptured;
+  filteredDataStore.totalCapturedBarns = counts.totalCapturedBarns;
+  filteredDataStore.percentCapturedBarns = percentCapturedBarns;
 }
 
 function updateMapZoom(filteredStates) {

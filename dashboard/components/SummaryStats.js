@@ -27,8 +27,8 @@ export function SummaryStats() {
   const {
     isDataLoaded,
     filteredSales,
-    capturedAreas,
-    totalFarms
+    percentCapturedBarns,
+    totalCapturedBarns
   } = useMapData();
 
   if (!isDataLoaded) {
@@ -49,8 +49,8 @@ export function SummaryStats() {
       ) : (
         <p className="text-center">No data available</p>
       )}
-      {capturedAreas &&
-      Object.keys(capturedAreas).length > 0 ? (
+      {percentCapturedBarns &&
+      Object.keys(percentCapturedBarns).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
           <div className="flex justify-center m-10 ">
             <div>
@@ -61,7 +61,7 @@ export function SummaryStats() {
                   </thead>
                 </tr>
                 <tbody>
-                  {Object.entries(capturedAreas).map(([key, item]) => (
+                  {Object.entries(percentCapturedBarns).map(([key, item]) => (
                     <tr key={key}>
                       <td>{key} Integrator(s)</td>
                       <td>{(item * 100).toFixed(1) + "%"}</td>
@@ -69,7 +69,7 @@ export function SummaryStats() {
                   ))}
                 </tbody>
               </table>
-              <p>Total Barns: {totalFarms}</p>
+              <p>Total Barns: {totalCapturedBarns}</p>
             </div>
           </div>
         </div>

@@ -10,8 +10,8 @@ export const useMapData = () => {
     filteredCompanies,
     filteredSales,
     filteredIsochrones,
-    capturedAreas,
-    totalFarms,
+    percentCapturedBarns,
+    totalCapturedBarns,
     plantAccess,
   } = filteredDataStore;
 
@@ -25,8 +25,8 @@ export const useMapData = () => {
     filteredCompanies,
     filteredSales,
     filteredIsochrones, 
-    capturedAreas,
-    totalFarms,
+    percentCapturedBarns,
+    totalCapturedBarns,
     plantAccess,
     timestamp,
     filteredBarns,
