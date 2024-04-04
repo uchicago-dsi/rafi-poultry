@@ -16,21 +16,17 @@ export function SummaryStats() {
   }
 
   return (
-    <div>
+    <div className="overflow-y-auto">
       <div className="flex flex-row justify-center h-[25vh]">
           <PieChart />
       </div>
       {totalCapturedBarns > 0 &&
       Object.keys(percentCapturedBarns).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
-          <div className="flex justify-center m-10 ">
-            <div>
+          <div className="flex justify-center m-10">
+            <div className="w-full">
+            <h5 className="text-center">% of Barns with Access to Integrators in Selected Area</h5>
               <table className="table table-sm">
-                <tr>
-                  <thead>
-                    <th>% of Barns with Access to Integrators in Selected Area</th>
-                  </thead>
-                </tr>
                 <tbody>
                   {Object.entries(percentCapturedBarns).map(([key, item]) => (
                     <tr key={key}>
@@ -61,7 +57,7 @@ export function SummaryStats() {
         {filteredSales &&
         Object.keys(filteredSales).length > 0 ? (
           <table className="table table-sm">
-            <tr>
+
               <thead className="sticky">
                 <tr>
                   <th>Company</th>
@@ -69,7 +65,6 @@ export function SummaryStats() {
                   <th>Percent of Sales</th>
                 </tr>
               </thead>
-            </tr>
             <tbody>
               {Object.entries(filteredSales).map(([key, item]) => (
                 <tr key={key}>
