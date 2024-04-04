@@ -14,8 +14,6 @@ export function SummaryStats() {
     return "";
   }
 
-  // const HHI = calculateHHI(filteredSales);
-
   return (
     <div>
       {HHI ? (
@@ -28,7 +26,7 @@ export function SummaryStats() {
       ) : (
         <p className="text-center">No data available</p>
       )}
-      {percentCapturedBarns &&
+      {totalCapturedBarns > 0 &&
       Object.keys(percentCapturedBarns).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
           <div className="flex justify-center m-10 ">
