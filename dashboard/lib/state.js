@@ -22,6 +22,8 @@ export const filteredDataStore = {
   // TODO: These names are confusing
   percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
   totalCapturedBarns: [],
+  totalSales: 0,
+  HHI: 0
 };
 
 export const state = proxy({
@@ -87,20 +89,14 @@ function updateFilteredSales(states) {
 
     const totalSales = Object.values(corporationTotals).reduce((sum, corp) => sum + corp.sales, 0);
 
-    // Object.keys(corporationTotals).forEach(corporation => {
-    //   corporationTotals[corporation].percent = (corporationTotals[corporation].sales / totalSales);
-    // });
     const sortedArray = Object.entries(corporationTotals).sort((a, b) => b[1].sales - a[1].sales);
-
-  // Update each corporation's percent value based on total sales
-  sortedArray.forEach(([corporation, data]) => {
-    data.percent = (data.sales / totalSales); 
-  });
-
-  // Optionally, convert it back to an object if needed
-  const sortedCorporationTotals = Object.fromEntries(sortedArray);
+    sortedArray.forEach(([corporation, data]) => {
+      data.percent = (data.sales / totalSales); 
+    });
+    const sortedCorporationTotals = Object.fromEntries(sortedArray);
 
     filteredDataStore.filteredSales = sortedCorporationTotals;
+    filteredDataStore.totalSales = totalSales;
   }
 
 function calculateCapturedBarns() {
@@ -137,6 +133,25 @@ function calculateCapturedBarns() {
 
   filteredDataStore.totalCapturedBarns = counts.totalCapturedBarns;
   filteredDataStore.percentCapturedBarns = percentCapturedBarns;
+}
+
+function calculateHHI() {
+  // TODO: should probably make total sales part of the state
+  // calculate total sales in selected area
+  if (Object.keys(filteredDataStore.filteredSales).length) {
+    // let totalSales = Object.values(filteredDataStore.filteredSales).reduce(
+    //   (acc, item) => acc + item.sales,
+    //   0
+    // );
+
+    // calculate HHI
+    return Object.values(filteredDataStore.filteredSales).reduce(
+      (acc, item) => acc + Math.pow((item.sales * 100) / filteredDataStore.totalSales, 2),
+      0
+    );
+  } else {
+    return 0;
+  }
 }
 
 function updateMapZoom(filteredStates) {
@@ -192,8 +207,9 @@ function updateMapZoom(filteredStates) {
   updateFilteredBarns(stateData.selectedStates);
   updateMapZoom(stateData.selectedStates);
 
+  // TODO: What's the right way to do this? Should these return things or update in place?
   calculateCapturedBarns();
-  // TODO: Should probably put HHI calculation here
+  filteredDataStore.HHI = calculateHHI();
 
   return performance.now();
 }
