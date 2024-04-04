@@ -1,5 +1,6 @@
 "use client";
 import { useMapData } from "@/lib/useMapData";
+import PieChart from "./PieChart";
 
 export function SummaryStats() {
   const {
@@ -16,16 +17,9 @@ export function SummaryStats() {
 
   return (
     <div>
-      {HHI ? (
-        <div className="m-2">
-          <h2 className="text-2xl font-bold text-center">
-            HHI for Selected States
-          </h2>
-          <p className="text-center text-xl">{HHI.toFixed(0)}</p>
-        </div>
-      ) : (
-        <p className="text-center">No data available</p>
-      )}
+      <div className="flex flex-row justify-center h-[25vh]">
+          <PieChart />
+      </div>
       {totalCapturedBarns > 0 &&
       Object.keys(percentCapturedBarns).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
@@ -52,6 +46,16 @@ export function SummaryStats() {
         </div>
       ) : (
         ""
+      )}
+      {HHI ? (
+        <div className="m-2">
+          <h2 className="text-2xl font-bold text-center">
+            HHI for Selected States
+          </h2>
+          <p className="text-center text-xl">{HHI.toFixed(0)}</p>
+        </div>
+      ) : (
+        <p className="text-center">No data available</p>
       )}
       <div className="max-h-[50vh] overflow-y-auto">
         {filteredSales &&
