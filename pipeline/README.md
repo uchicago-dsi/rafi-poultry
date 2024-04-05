@@ -1,6 +1,6 @@
 # RAFI-USA Poultry Pipeline README.md file
 
-This README contains information on the structure of the pipeline for the project and a description of the files and folder structure necessary to run it. 
+This README contains information on the structure of the pipeline for the project and a description of the files and folder structure necessary to run it.
 
 # List of Files
 
@@ -9,6 +9,7 @@ This README contains information on the structure of the pipeline for the projec
 - counterglow_matches.py
 - distances.py
 - match_plants.py
+- match_plants_nets.py
 - sic_matcher.py
 
 # File Descriptions
@@ -18,28 +19,34 @@ This README contains information on the structure of the pipeline for the projec
 - **counterglow_matches.py** file contained the functionality neccessary to match Infogroup data against Counterglow data. The goal is to see if any business listed in the Infogroup dataset matches will a suspects farm in the Counterglow dataset.
 - **distances.py** contains calculations used in various parts of the research
 - **match_plants.py** Reads in clean Infogroup datasets from 1997 through the present, matches plants across years using the ABI, match plants in FSIS with plants in Infogroup by location and address, to add sales volume data to plant records, writes the combined output DataFrame as a CSV file, matched_plants.csv, in the data/clean folder.
+- **match_plants_nets.py** Reads in clean NETS datasets from 1990 through the present, matches plants and sales volume information in FSIS with plants in NETS by location and address, and writes the combined output DataFrame as a CSV file, cleaned_matched_plants.csv, in the data/clean folder.
 - **match_farms.py** Reads in clean state permit datasets and Counterglow dataset to match farms across the two for the specified animal type, making matches and fuzzy matches based on name and location (if available). Outputs standardized datasets of matched and unmatched farms: matched_farms.csv and unmatched_farms.csv.
 - **sic_matcher.py** allows the user to go through an entire dataframe of Infogroup data and filter out based on SIC Code that is input by the user. In this script, there is a choice to perform this task using the dask dataframe method or the pandas dataframe method.
 - **farm_geojson_creation.py** reads in cleaned data from Counterglow, filters it for poultry only, and generates a Counterglow GeoJSON file containing plant access data based on the parent corporation information in the all_states_with_parent_corporation_by_corp.geojson file (which is created by the calculate_captured_areas script).
 
-
 # Running the Pipeline:
-1. **Establish directory structure** 
-    - pipeline
-    - notebooks
-    - data
-        - raw
-            - infogroup
-            - cafo
-        - clean
-        - html
+
+1. **Establish directory structure**
+   - pipeline
+   - notebooks
+   - data
+     - raw
+       - infogroup
+       - cafo
+       - nets
+     - clean
+     - html
+   - Note: clone the repository first and then add the data directory in the rafi-poultry directory
 2. **Set up Conda environment**
-   - conda create --name <myenv> python=3.9.16
+   - conda create --name \<myenv\> python=3.9.16
 3. **Download the files**
-   - From team RAFI google drive/Data, into data/raw add:
+   - From team RAFI google drive/Data/raw, into data/raw add:
      - fsis-processors-with-location.csv
      - fsis-processors.csv
      - Counterglow+Facility+List+Complete.csv
+     - Dataset_Establishment_Demographic_Data.xlsx
+     - gz_2010_us_040_00_500k.json
+     - MPI_Directory_by_Establishment_Number.xlsx
    - From team RAFI google drive/Data/CAFO, into data/raw/cafo add:
      - nc_cafo.csv
      - ms_cafo.csv
@@ -49,18 +56,25 @@ This README contains information on the structure of the pipeline for the projec
      - poultry_plants_x.csv
        - where "x" is every year from 1997 to 2022
      - For the smoke test, create a subfolder data/raw/infogroup/smoke_test and add the file infogroup_2022_small.csv
+   - From team RAFI google drive/Data/nets, into data/raw/infogroup add:
+     - 2022-NAICS-CODES-6-digit.csv
+     - MoveYear2022_RAFI(WithAddresses).txt
+     - NAICS2022_RAFI.csv
+     - NAICS2022_RAFI.txt
+     - NETSData2022_RAFI(WithAddresses).txt
+   - From team RAFI google drive, download .env file and place under rafi-poultry directory
+     - You will likely have to rename the file to place the "." in front
 4. **Run pip install -r pipeline/requirements.txt**
 5. **Run pip install -r notebooks/requirements.txt**
 6. **Run pip install -e .**
    - This installs the pipeline as a package.
 7. **Run main.py**
-   - Structure the command line arguments as:
-     - python main.py FILEPATH ANIMAL DISTANCE SIC_CODE FILTERING
-       - FILEPATH; str; Relative path (from cwd) to raw data folder
-       - ANIMAL; str; Keywords for animals to filter for, as a regex
-       - DISTANCE; float; Maximum distance for farm matches to be made across different datasets, in km
-       - SIC_CODE; str; SIC code to filter the dataset on, if FILTERING is False, this variable is not used
-       - FILTERING; bool; True if infogroup data is raw and needs to be filtered by SIC code
-     - i.e. python main.py "../data/raw" "poultry|chicken|broiler" 5 "2015" True
-     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually.
+     - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.
+     - The full command line argument for running the pipeline requires the specification of using either the NETS or Infogroup dataset
+     - The command is:
+        - python pipeline/main.py --use_nets
+        - python pipeline/main.py --use_infogroup
+          - Note that the main method to use is --use_nets (In other words, NETS is the preferred dataset)
+     - All functions are executed by default. Specify a function name in the command line argument following the --function flag to run that function individually
+        - In this case, you would remove the --use_nets or --use_infogroup tag as this is meant only for when running the entire pipeline
      - To enable the smoke test for cleaning Infogroup files, add the flag --smoke_test True to the command line argument.

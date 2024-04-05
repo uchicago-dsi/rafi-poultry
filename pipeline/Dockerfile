@@ -1,27 +1,34 @@
-#Use ubuntu base image with gdal installed for geopandas on M1/M2 architecture
-FROM --platform=linux/arm64 osgeo/gdal:ubuntu-full-3.6.3
+# Use ARG to specify the platform (default is amd64)
+# Note: this is set to match the machine with the Make command make build-pipeline
+ARG PLATFORM=linux/amd64
 
-#Update apt-get package
+# Dynamically choose correct base image based on platform
+FROM --platform=${PLATFORM} osgeo/gdal:ubuntu-full-3.6.3
+
+# Install Python and gdal dependencies
 RUN apt-get -y update 
-
-#Install Python and gdal dependencies
 RUN apt -y install python3-pip libspatialindex-dev \
     && apt-get install -y --no-install-recommends \
        gdal-bin \
        libgdal-dev \
+       git \
+       openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
-#Set the working directory
+# Set the working directory
 WORKDIR /app
 
-#Install any needed packages specified in requirements.txt
+# Install any needed packages specified in requirements.txt
 COPY pipeline/requirements.txt .
 RUN pip install --trusted-host pypi.python.org --no-cache-dir -r requirements.txt
 
-#Copy the pipeline, notebook, and data directory into the container
+# Copy the pipeline, notebook, and data directory into the container
 COPY setup.py .
 COPY pipeline ./pipeline
 RUN pip install -e .
 
-#Run the main.py script when the container launches
+# Set environment variable for pipeline logic
+ENV INSIDE_DOCKER=True
+
+# When running the container, additional arguments can be passed, which will be appended to this CMD.
 CMD ["python", "pipeline/main.py"]

@@ -1,0 +1,317 @@
+import argparse
+import os
+import pandas as pd
+import geopandas as gpd
+
+# FILENAME = "../data/raw/nc_only_unfiltered.geojson"
+# FILENAME = "../data/raw/chesapeake-bay-3-18-2021_filtered.gpkg"
+FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
+STATES_FILE = "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
+STATES = gpd.read_file(STATES_FILE)
+# Switch to state abbreviations so command line arguments work
+state2abbrev = {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+    "District of Columbia": "DC",
+    "American Samoa": "AS",
+    "Guam": "GU",
+    "Northern Mariana Islands": "MP",
+    "Puerto Rico": "PR",
+    "United States Minor Outlying Islands": "UM",
+    "U.S. Virgin Islands": "VI",
+}
+STATES['ABBREV'] = STATES['NAME'].map(state2abbrev)
+
+CITIES = {
+    "North Carolina": [
+        "Charlotte",
+        "Raleigh",
+        "Greensboro",
+        "Durham",
+        "Winston-Salem",
+        "Fayetteville",
+        "Cary",
+        "Wilmington",
+        "High Point",
+        "Concord",
+    ],
+    "Mississippi": [
+        "Jackson",
+        "Gulfport",
+        "Southaven",
+        "Biloxi",
+        "Hattiesburg",
+    ],
+    "Arkansas": [
+        "Little Rock",
+        "Fayetteville",
+        "Fort Smith",
+        "Springdale",
+        "Jonesboro",
+        "Rogers",
+        "Conway",
+        "North Little Rock",
+        "Bentonville",
+        "Pine Bluff",
+    ]
+}
+
+SMOKE_TEST = False
+PROJECTION = 4326
+
+
+def load_geography(filepath, state=None):
+    _, file_extension = os.path.splitext(filepath)
+    if file_extension.lower() == ".parquet":
+        gdf = gpd.read_parquet(filepath)
+    else:
+        gdf = gpd.read_file(filepath)
+    if state is not None:
+        gdf = gdf.to_crs(STATES.crs)
+        gdf = gpd.overlay(
+            gdf,
+            STATES[STATES["NAME"] == state],
+            how="intersection",
+            keep_geom_type=False,
+        )
+    return gdf
+
+
+def filter_on_road_distance(gdf):
+    # TODO: This should already be filtered but it filters only on 0 maybe? Look into this further
+    pass
+
+
+def get_state_info(gdf, states=STATES):
+    states = states.to_crs(gdf.crs)
+    gdf_with_state = gpd.sjoin(gdf, states, how="left", predicate="intersects")
+    gdf_with_state = gdf_with_state[[column for column in gdf.columns] + ["ABBREV"]]
+    gdf_with_state = gdf_with_state.rename(columns={"ABBREV": "state"})
+    return gdf_with_state
+
+
+def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0, smoke_test=False):
+    if buffer != 0:
+        gdf_exclude = gdf_exclude.to_crs(
+            epsg=5070
+        )  # convert to CRS where the buffer unit is in meters
+        gdf_exclude["geometry"] = gdf_exclude["geometry"].buffer(buffer)
+
+    gdf_exclude = gdf_exclude.to_crs(gdf.crs)
+
+    # Simplify geometries if smoke_test is passed
+    if smoke_test:
+        tolerance = 0.1
+        gdf_exclude['geometry'] = gdf_exclude['geometry'].simplify(tolerance, preserve_topology=True)
+
+    # Only check barns that aren't already excluded
+    # TODO: I think this is throwing this warning, figure out what's wrong:
+    # /Users/toddnief/miniconda3/lib/python3.10/site-packages/pandas/core/reshape/merge.py:1204: RuntimeWarning: invalid value encountered in cast
+    # if not (lk == lk.astype(rk.dtype))[~np.isnan(lk)].all():
+    joined = gpd.sjoin(gdf[gdf.exclude == 0], gdf_exclude, how="left", predicate="within")
+
+    if how == "inside":
+        joined["exclude"] = joined.apply(
+            lambda row: (1 if not pd.isna(row["index_right"]) else row["exclude"]),
+            axis=1,
+        )
+    elif how == "outside":
+        joined["exclude"] = joined.apply(
+            lambda row: (
+                1
+                if pd.isna(row["index_right"]) and row["exclude"] == 0
+                else row["exclude"]
+            ),
+            axis=1,
+        )
+
+    joined = joined.drop(columns=["index_right"])
+    return joined
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--smoke_test", action="store_true", help="Run in smoke test mode"
+    )
+    parser.add_argument(
+        "--states", nargs="+", help="List of states to filter barns on. Use the two letter abbreviation. Usage: --states NC IL NY"
+    )   
+    args = parser.parse_args()
+
+    gdf = gpd.read_file(FILENAME)
+        
+    # Project to equal area projection and get centroid for each barn
+    gdf = gdf.to_crs(epsg=2163)
+    gdf["geometry"] = gdf["geometry"].centroid
+
+    # Project to latitude and longitude
+    gdf = gdf.to_crs(epsg=PROJECTION)
+
+    # Initialize the "exclude" column
+    gdf["exclude"] = 0
+
+    # Get state membership for each barn
+    print("Getting states for all barns...")
+    gdf = get_state_info(gdf)
+
+    # Filter on selected states - actually remove the filtered barns to speed up processing
+    if args.states:
+        states_list = [state.strip() for state in args.states]
+    gdf = gdf[gdf.state.isin(states_list)]
+
+    if args.smoke_test:
+        n = 1000
+        gdf = gdf.sample(n=n)
+        print(f"Running in smoke test mode with {n} samples.")
+    else:
+        print("Running in normal mode.")
+
+    print(f"Barns before filtering: {len(gdf)}")
+    excluded_count = len(gdf[gdf.exclude == 1])
+
+    # Exclude barns in major cities
+    print("Excluding barns in major cities...")
+    # TODO: Should maybe set this up as a function and clean it up
+    cities_all = gpd.read_parquet(
+        "../data/shapefiles/municipalities___states.geoparquet"
+    )
+    matches = []
+    for state, cities in CITIES.items():
+        for city in cities:
+            match = cities_all[
+                cities_all["name"].str.contains(city, case=False, na=False)
+                & cities_all["name"].str.contains(state, case=False, na=False)
+            ]
+            matches.append(match)
+    cities_filtered = pd.concat(matches, ignore_index=True).drop_duplicates()
+    cities_filtered = gpd.GeoDataFrame(cities_filtered, geometry="geometry")
+    gdf = filter_on_membership(gdf, cities_filtered)
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in major cities")
+
+    # Exclude barns in airports
+    # Source: https://geodata.bts.gov/datasets/c3ca6a6cdcb242698f1eadb7681f6162_0/explore
+    print("Excluding barns in airports...")
+    gdf = filter_on_membership(
+        gdf,
+        gpd.read_file(
+            "../data/shapefiles/Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
+            buffer=400,
+        ),
+        smoke_test=args.smoke_test
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in airports")
+    length = len(gdf)
+
+    # Exclude barns in parks
+    # Source: https://www.arcgis.com/home/item.html?id=578968f975774d3fab79fe56c8c90941
+    print("Excluding barns in parks...")
+    parks_gdb_path = '../data/shapefiles/USA_Parks/v10/park_dtl.gdb'
+    layer_name = 'park_dtl'
+    parks_gdf = gpd.read_file(parks_gdb_path, layer=layer_name)
+    gdf = filter_on_membership(
+        gdf,
+        parks_gdf,
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in parks")
+    length = len(gdf)
+
+    # Exclude barns on the coastline
+    # Source: https://catalog.data.gov/dataset/tiger-line-shapefile-2019-nation-u-s-coastline-national-shapefile
+    print("Excluding barns on the coastline...")
+    gdf = filter_on_membership(
+        gdf,
+        gpd.read_file(
+            "../data/shapefiles/tl_2019_us_coastline/tl_2019_us_coastline.shp"
+        ),
+        buffer=1000,
+        smoke_test=args.smoke_test
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns on the coastline")
+    length = len(gdf)
+
+    # TODO: Could maybe filter this on state to speed this step up
+    # Exclude barns in bodies of water
+    # Source: https://www.arcgis.com/home/item.html?id=48c77cbde9a0470fb371f8c8a8a7421a
+    print("Excluding barns in bodies of water...")
+    gdf = filter_on_membership(
+        gdf, gpd.read_file("../data/shapefiles/USA_Detailed_Water_Bodies.geojson"), smoke_test=args.smoke_test
+    )
+    excluded_count = len(gdf[gdf.exclude == 1]) - excluded_count
+    print(f"Excluded {excluded_count} barns in bodies of water")
+
+    # Note: This will not match the final barn count since we only count barns in the capture areas
+    print(f"There are {len(gdf[gdf.exclude == 0])} barns remaining")
+
+    # Join with plant access isochrones
+    plant_access = gpd.read_file("../data/all_states.geojson")
+    gdf = gpd.sjoin(gdf, plant_access, how="left", predicate="within")
+
+    # TODO: There's a problem somewhere where this stuff is named inconsistently
+    gdf = gdf.rename(
+        columns={"Parent Corporation": "company", "Plant Access": "plant_access", "state_left": "state"}
+    )
+    # TODO: "company" is missing from the full state final output from the isochrone pipeline
+    # OUTPUT_COLS = ["state", "company", "plant_access", "geometry", "exclude"]
+    OUTPUT_COLS = ["state", "plant_access", "geometry", "exclude"]
+    gdf = gdf[OUTPUT_COLS]
+
+    filename = f"../data/clean/test_barns_filtering_{'_'.join(states_list)}"
+
+    if args.smoke_test:
+        filename += "_smoke_test"
+
+    gdf.to_file(f"{filename}.geojson", driver="GeoJSON")
+    print(f"Complete! Saved to {filename}.geojson")
