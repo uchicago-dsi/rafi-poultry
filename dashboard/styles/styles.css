@@ -1,0 +1,46 @@
+.tooltip:empty {
+    display: none;
+  }
+
+.tooltip {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    position: absolute;
+    padding: 4px;
+    margin: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    max-width: 300px;
+    font-size: 10px;
+    z-index: 9;
+    pointer-events: none;
+}
+
+#legend {
+    position:absolute;
+    right:8px;
+    bottom:8px;
+    background:white;
+    padding:4px;
+    border:1px solid white;
+    z-index:500;
+}
+
+#legend .legend-entry {
+    display:flex;
+}
+
+#legend .swatch{
+    width:1rem;
+    height:1rem;
+    margin-right:0.5rem;
+}
+
+/* .checkbox-label {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-label .mr-2 {
+    margin-right: 0.5rem;
+} */

@@ -47,7 +47,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-# lib/ # need this for Next app
+# lib/
 lib64/
 parts/
 sdist/
@@ -139,7 +139,6 @@ venv.bak/
 # data files
 *.avro
 data/*
-html/poultry-map-smoothed.html
-html/state-poultry-map-smoothed.html
-html/poultry-map-smoothed.html
-html/poultry-map-smoothed.html
+
+# Next.js files
+.next/
