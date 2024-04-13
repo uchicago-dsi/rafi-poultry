@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import path from "path";
 
 const bucketName = 'rafi-poultry';
-// const FARMS = "test_barns_filtering_NC_MS_AR.geojson";
-const BARNS = "filtered_barns.geojson";
+// const BARNS = "filtered_barns.geojson";
+const BARNS = "filtered_barns_NC_NE_AR_GA_SC_LA_MS_DE_MD_VA_WV.geojson";
 const serviceAccountKey = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, 'base64').toString('ascii'));
 
 const DATA_SOURCE = "cloud" // "local" or "cloud"
