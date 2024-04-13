@@ -3,11 +3,11 @@ import os
 import pandas as pd
 import geopandas as gpd
 
-# FILENAME = "../data/raw/nc_only_unfiltered.geojson"
-# FILENAME = "../data/raw/chesapeake-bay-3-18-2021_filtered.gpkg"
 FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
+
 STATES_FILE = "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
 STATES = gpd.read_file(STATES_FILE)
+
 # Switch to state abbreviations so command line arguments work
 state2abbrev = {
     "Alabama": "AL",
@@ -252,6 +252,7 @@ if __name__ == "__main__":
         f"Excluded {len(gdf[gdf.exclude == 1]) - previously_excluded} barns in major cities"
     )
 
+    # TODO: This seems to not be working, look into this
     # Exclude barns in airports
     # Source: https://geodata.bts.gov/datasets/c3ca6a6cdcb242698f1eadb7681f6162_0/explore
     print("Excluding barns in airports...")
