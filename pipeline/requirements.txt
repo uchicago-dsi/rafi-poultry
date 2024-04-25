@@ -13,4 +13,4 @@ tqdm==4.66.1
 geopy==2.4.0
 openpyxl==3.1.2
 pyarrow==15.0.2
-pymongo==4.7.0
+msgpack==1.0.8
