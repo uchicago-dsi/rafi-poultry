@@ -1,13 +1,16 @@
 "use client";
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
+import { unpack } from "msgpackr";
 
 // TODO: This file needs to be regenerated with better column names
 const ISOCHRONES =
   "../data/new_all_states_with_parent_corp_by_corp.geojson";
 
-const getJSON = async (dataPath) => {
+const fetchMsgpack = async (dataPath) => {
   const response = await fetch(dataPath);
-  return await response.json();
+  const arrayBuffer = await response.arrayBuffer(); 
+  const data = unpack(arrayBuffer);
+  return data;
 };
 
 const fetchData = async (url) => {
@@ -19,8 +22,9 @@ export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
-      fetchData("/api/barns"),
-      getJSON(ISOCHRONES),
+      // TODO: Just use the public version of the barns geojson in the public folder
+      fetchMsgpack("/data/all_barns.msgpack"),
+      fetchData(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
 
