@@ -1,7 +1,6 @@
 "use client";
-import { state, updateFilteredData, staticDataStore } from "../lib/state";
-import { unpack } from "msgpackr";
 import pako from 'pako';
+import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
 // TODO: This file needs to be regenerated with better column names
 const ISOCHRONES =
