@@ -2,6 +2,8 @@ import argparse
 import os
 import pandas as pd
 import geopandas as gpd
+import gzip
+import shutil
 
 FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
 
@@ -343,3 +345,9 @@ if __name__ == "__main__":
 
     gdf.to_file(f"{filename}.geojson", driver="GeoJSON")
     print(f"Complete! Saved to {filename}.geojson")
+
+    # gzip file for web
+    print("Zipping file...")
+    with open(filename, "rb") as f_in:
+        with gzip.open(filename + ".gz", "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
