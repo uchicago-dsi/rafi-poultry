@@ -7,23 +7,10 @@ import pako from 'pako';
 const ISOCHRONES =
   "../data/new_all_states_with_parent_corp_by_corp.geojson";
 
-const fetchMsgpack = async (dataPath) => {
-  const response = await fetch(dataPath);
-  const arrayBuffer = await response.arrayBuffer(); 
-  const data = unpack(arrayBuffer);
-  return data;
-};
-
 const fetchData = async (url) => {
   const response = await fetch(url);
   return await response.json();
 };
-
-// const fetchGzip = async (url) => {
-//   const response = await fetch(dataPath);
-//   const decompressed = pako.inflate(compressed, { to: 'string' });
-//   return JSON.parse(decompressed);
-// }
 
 const fetchGzip = async (url) => {
   const response = await fetch(url);
@@ -36,8 +23,6 @@ export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
-      // TODO: Just use the public version of the barns geojson in the public folder
-      // fetchMsgpack("/data/all_barns.msgpack"),
       fetchGzip("/data/filtered_barns.geojson.gz"),
       fetchData(ISOCHRONES),
       fetchData("/api/plants/sales")
