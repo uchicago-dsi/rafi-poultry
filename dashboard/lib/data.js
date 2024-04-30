@@ -1,6 +1,7 @@
 "use client";
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
 import { unpack } from "msgpackr";
+import pako from 'pako';
 
 // TODO: This file needs to be regenerated with better column names
 const ISOCHRONES =
@@ -18,12 +19,26 @@ const fetchData = async (url) => {
   return await response.json();
 };
 
+// const fetchGzip = async (url) => {
+//   const response = await fetch(dataPath);
+//   const decompressed = pako.inflate(compressed, { to: 'string' });
+//   return JSON.parse(decompressed);
+// }
+
+const fetchGzip = async (url) => {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const decompressed = pako.inflate(new Uint8Array(arrayBuffer), { to: 'string' });
+  return JSON.parse(decompressed);
+}
+
 export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
       // TODO: Just use the public version of the barns geojson in the public folder
-      fetchMsgpack("/data/all_barns.msgpack"),
+      // fetchMsgpack("/data/all_barns.msgpack"),
+      fetchGzip("/data/filtered_barns.geojson.gz"),
       fetchData(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
