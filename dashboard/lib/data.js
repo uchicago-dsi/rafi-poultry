@@ -1,26 +1,30 @@
 "use client";
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
+import { unpack } from "msgpackr";
+import pako from 'pako';
 
 // TODO: This file needs to be regenerated with better column names
 const ISOCHRONES =
   "../data/new_all_states_with_parent_corp_by_corp.geojson";
-
-const getJSON = async (dataPath) => {
-  const response = await fetch(dataPath);
-  return await response.json();
-};
 
 const fetchData = async (url) => {
   const response = await fetch(url);
   return await response.json();
 };
 
+const fetchGzip = async (url) => {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const decompressed = pako.inflate(new Uint8Array(arrayBuffer), { to: 'string' });
+  return JSON.parse(decompressed);
+}
+
 export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
-      fetchData("/api/barns"),
-      getJSON(ISOCHRONES),
+      fetchGzip("/data/filtered_barns.geojson.gz"),
+      fetchData(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
 
