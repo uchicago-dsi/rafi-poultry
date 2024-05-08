@@ -23,10 +23,7 @@ from constants import (
     USA_LAT,
     USA_LNG,
 )
-
-# single_shapely = []
-# two_shapely = []
-# three_combined = []
+import os
 
 empty_color = lambda x: {"fillColor": "00"}  # empty
 one_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
@@ -87,7 +84,7 @@ abb2state = {
 }
 
 
-def isochrones(
+def get_isochrones(
     coords: List[Tuple[float, float]], driving_dist_miles: float, token: str
 ) -> pd.DataFrame:
     """Adds plant isochrones to fsis dataframe; captures area that is within
@@ -139,79 +136,48 @@ def isochrones(
     return isochrones
 
 
-def make_geo_df(
-    df: pd.DataFrame, dist: float, token: str, simplify: float = 0.01
-) -> pd.DataFrame:
-    """Adds slightly simplified isochrones to fsis dataframe.
+# def add_plants(
+#     df_map: pd.DataFrame,
+#     # parent_dict: Dict[str, Polygon],
+# ) -> None:
+#     """Take geo_df and adds the plant isochrones to the map as well as sorts
+#         the isochrones by parent corporation.
 
-    Args:
-        df: dataframe; the cleaned df_fsis file.
-        dist: float; radius of captured area (in driving distance) to be passed
-            to isochrones function.
-        token: str; API token to access mapbox.
-        simplify: float; by what degree to simplify each isochrone,
-            default is 0.01.
+#     Args:
+#         df_map: dataframe; geo_df that contains plant isochrones.
+#         parent_dict: empty dictionary; gets filled with parent company names and
+#             geoshapes.
+#         chrones: empty list; gets filled with one isochrone for each parent
+#             company.
+#         m: folium map; base to add plants to.
 
-    Returns:
-        geo_df with added column for isochrones and cleaned/simplified
-            isochrones.
+#     Returns:
+#         n/a; updates parent_dict, chrones, and m.
 
-    """
+#     """
 
-    lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
+#     chrones = []
+#     parent_dict = {}
 
-    df["Isochrone"] = isochrones(lats_and_longs, dist, token)
-    df = gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84, inplace=True)
+#     for _, row in df_map.iterrows():
+#         isochrone = row["Isochrone Cleaned"]
+#         corp = row["Parent Corporation"]
 
-    df["Isochrone Cleaned"] = df["Isochrone"].simplify(simplify)
+#         # sorting by parent corp
+#         if corp in parent_dict:
+#             parent_dict[corp].append(isochrone)
+#         else:
+#             parent_dict[corp] = [isochrone]
 
-    return df
+#     for key in parent_dict:
+#         chrone = shapely.unary_union(parent_dict[key])
+#         chrones.append(chrone)
 
-
-def add_plants(
-    df_map: pd.DataFrame,
-    # parent_dict: Dict[str, Polygon],
-) -> None:
-    """Take geo_df and adds the plant isochrones to the map as well as sorts
-        the isochrones by parent corporation.
-
-    Args:
-        df_map: dataframe; geo_df that contains plant isochrones.
-        parent_dict: empty dictionary; gets filled with parent company names and
-            geoshapes.
-        chrones: empty list; gets filled with one isochrone for each parent
-            company.
-        m: folium map; base to add plants to.
-
-    Returns:
-        n/a; updates parent_dict, chrones, and m.
-
-    """
-
-    chrones = []
-    parent_dict = {}
-
-    for _, row in df_map.iterrows():
-        isochrone = row["Isochrone Cleaned"]
-        corp = row["Parent Corporation"]
-
-        # sorting by parent corp
-        if corp in parent_dict:
-            parent_dict[corp].append(isochrone)
-        else:
-            parent_dict[corp] = [isochrone]
-
-    for key in parent_dict:
-        chrone = shapely.unary_union(parent_dict[key])
-        chrones.append(chrone)
-
-    return chrones, parent_dict
+#     return chrones, parent_dict
 
 
-def single_plant_cap(
-    chrones: List[Polygon],
-    # parent_dict: Dict[str, Polygon],
-    # m: folium.Map,
+def get_single_plant_access(
+    isochrones: List[Polygon],
 ) -> None:
     """Adds a layer containing areas that have access to one plant to
         country-wide visualization
@@ -224,25 +190,27 @@ def single_plant_cap(
         m: folium map; base to add single-capture areas to.
 
     Returns:
+        TODO
         n/a, updates m.
 
     """
+    single_plant_access = []
 
-    # TODO: maybe rename this so it's a bit more clear?
-    single_shapely = []
+    for index, isochrone in tqdm(
+        enumerate(isochrones), desc="Calculate single plant capture..."
+    ):
+        other_plant_access = shapely.unary_union(
+            isochrones[:index] + isochrones[index + 1 :]
+        )
+        this_plant_access = shapely.difference(isochrone, other_plant_access)
+        single_plant_access.append(this_plant_access)
 
-    for index, poly in tqdm(enumerate(chrones), desc="Single plant capture"):
-        others = shapely.unary_union(chrones[:index] + chrones[index + 1 :])
-        single_plant = shapely.difference(poly, others)
-        single_shapely.append(single_plant)
-
-    return single_shapely
+    return single_plant_access
 
 
-def two_and_three_plant_cap(
-    chrones: List[Polygon],
-    single_shapely: List[Polygon],
-    # m: folium.Map,
+def get_two_and_three_plant_access(
+    isochrones: List[Polygon],
+    single_plant_access: List[Polygon],
 ) -> None:
     """Adds 2 layers to country-wide visualization
         - One containing areas that have access to two plants
@@ -268,21 +236,29 @@ def two_and_three_plant_cap(
     three_shapely = []
     three_combined = []
 
-    everything = shapely.unary_union(chrones)
-    single_plant_combined = shapely.unary_union(single_shapely)
-    competition_single_plant = shapely.difference(everything, single_plant_combined)
+    everything = shapely.unary_union(isochrones)
+    single_plant_combined = shapely.unary_union(single_plant_access)
+    two_plus_access = shapely.difference(everything, single_plant_combined)
 
-    isochrones_shapely_two_plants = []
-    for isochrone in tqdm(chrones, desc="Two plant intersections"):
-        if isochrone.intersection(competition_single_plant):
-            isochrones_shapely_two_plants.append(isochrone)
+    two_plus_access_isochrones = []
+    for isochrone in tqdm(isochrones, desc="Calculating 2+ plant intersections"):
+        if isochrone.intersection(two_plus_access):
+            two_plus_access_isochrones.append(isochrone)
 
+    breakpoint()
+
+    # TODO: Clean this up but...
+    # We are iterating through all of the individual plant isochrones that we know are part of the two_plus_access
+    # Then, we do pairwise comparisons between each plant isochrone to see if they intersect
+    # If they do intersect, then we create a new isochrone that is the union of the two intersecting isochrones
+    # We know that this area has access to two plants
+    # I think I should probaly use a spatial union to do this...
     for i in tqdm(
-        range(len(isochrones_shapely_two_plants)), desc="Two and three plant capture"
+        range(len(two_plus_access_isochrones)), desc="Two and three plant capture"
     ):
-        for j in range(i + 1, len(isochrones_shapely_two_plants)):
-            plant_1 = isochrones_shapely_two_plants[i]
-            plant_2 = isochrones_shapely_two_plants[j]
+        for j in range(i + 1, len(two_plus_access_isochrones)):
+            plant_1 = two_plus_access_isochrones[i]
+            plant_2 = two_plus_access_isochrones[j]
 
             # check if there's an intersection between the areas
             if not plant_1.intersection(plant_2):
@@ -291,10 +267,10 @@ def two_and_three_plant_cap(
                 two_plant_area = shapely.unary_union([plant_1, plant_2])
 
             # exclude first plant
-            other_plants = isochrones_shapely_two_plants[:i]
+            other_plants = two_plus_access_isochrones[:i]
             # exclude second plant
-            other_plants += isochrones_shapely_two_plants[i + 1 : j]
-            other_plants += isochrones_shapely_two_plants[j + 1 :]
+            other_plants += two_plus_access_isochrones[i + 1 : j]
+            other_plants += two_plus_access_isochrones[j + 1 :]
 
             # find the area where there's only two plants
             others_combined = shapely.unary_union(other_plants)
@@ -312,11 +288,6 @@ def two_and_three_plant_cap(
         three_shapely.buffer(0), two_plants_combined.buffer(0)
     )
     three_combined.append(three_shapely)
-
-    # folium.GeoJson(three_shapely, style_function=three_plant_color).add_to(
-    #     three_plant_layer
-    # )
-    # three_plant_layer.add_to(m)
 
     return two_shapely, three_combined
 
@@ -500,59 +471,6 @@ def state_level_geojson(
     # )
 
 
-def save_to_folium():
-    # TODO: don't need to do the folium stuff by default
-    # make base map for country-wide visualization
-    m = folium.Map(location=[USA_LAT, USA_LNG], zoom_start=4)
-
-    # TODO: this whole folium thing is maybe unnecessary
-    # plants_layer = folium.map.FeatureGroup(name="Large Poultry Plants")
-
-    # for _, row in df_map.iterrows():
-    #     lat = str(row["latitude"])
-    #     lng = str(row["longitude"])
-
-    #     set up plant tooltip
-    #     name = row["Establishment Name"]
-    #     corp = row["Parent Corporation"]
-    #     address = row["Full Address"]
-
-    #     add plant marker to map
-    #     tooltip = folium.map.Tooltip(
-    #         f"{name}<br>{address}<br>Parent Corporation: {corp}"
-    #     )
-    #     folium.Marker(location=[lat, lng], tooltip=tooltip).add_to(plants_layer)
-
-    # plants_layer.add_to(m)
-
-    # parent_names = list(parent_dict.keys())
-
-    # # TODO: probably don't need the folium stuff here
-    # for index, poly in enumerate(single_shapely):
-    #     corp = parent_names[index]
-    #     title = "Only access to " + corp
-    #     layer = folium.map.FeatureGroup(name=title)
-    #     tooltip = folium.map.Tooltip(f"Parent Corporation: {corp}")
-    #     folium.GeoJson(poly, tooltip=tooltip).add_to(layer)
-    #     layer.add_to(m)
-
-    # # TODO: Should prob ditch this also
-    # two_plant_layer = folium.map.FeatureGroup(
-    #     name="Access to 2 Parent \
-    #                                           Corporations"
-    # )
-    # folium.GeoJson(two_plants_combined, style_function=two_plant_color).add_to(
-    #     two_plant_layer
-    # )
-    # two_plant_layer.add_to(m)
-
-    # three_plant_layer = folium.map.FeatureGroup(
-    #     name="Access to 3+ Parent \
-    #                                             Corporations"
-    # )
-    return
-
-
 def full_script(
     df_matched_plants: DataFrame, token: str, distance: float = 60
 ) -> folium.Map:
@@ -591,3 +509,28 @@ def full_script(
     )
 
     return df_corp_state
+
+
+if __name__ == "__main__":
+    df = pd.read_csv("matches.csv")
+    df = df.sample(n=20)
+    lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
+    dist = 60
+    MAPBOX_KEY = os.getenv("MAPBOX_API")
+    df["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
+    gdf = gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84)
+    simplify = 0.01
+    gdf["Isochrone (Simplified)"] = gdf["Isochrone"].simplify(simplify)
+    single_plant_access = get_single_plant_access(
+        gdf["Isochrone (Simplified)"].tolist()
+    )
+    get_two_and_three_plant_access(single_plant_access)
+    breakpoint()
+
+    # TODO: Ok this is what I think we should do:
+    # Get the isochrones for each plant
+    # Get the single, two plant, and three+ plant capture areas
+    # Save both
+    # On the front end, calculate the intersection between the isochrones associated with the selected states and the single, two, and three+ plant capture areas
+    # Display only that intersection
+    # Or...we could preprocess this also? For each state, we would have the isochrone area
