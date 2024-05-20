@@ -45,9 +45,12 @@ def get_geospatial_match(
         # No NETS record within buffered geometry, FSIS plant is unmatched so return
         return row
 
-    row["spatial_match"] = True
+    # row["spatial_match"] = True
+    # row["spatial_matches"] = spatial_matches
 
     joined_spatial_matches = pd.merge(row.to_frame().T, spatial_matches, how="cross")
+    joined_spatial_matches["spatial_match"] = True
+    joined_spatial_matches["spatial_matches"] = spatial_matches
 
     joined_spatial_matches = joined_spatial_matches.apply(
         lambda row: get_string_matches(
@@ -61,6 +64,7 @@ def get_geospatial_match(
     matches = joined_spatial_matches[joined_spatial_matches.matched]
 
     if matches.empty:
+        # TODO: This is actually not clear to me what we want to do here...I'd like to save the spatial matches for unmatched plants
         return row
     else:
         # TODO: Do we really just want the first one?
@@ -152,9 +156,16 @@ if __name__ == "__main__":
     gdf_fsis["spatial_match"] = False
     gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_match(row, gdf_nets), axis=1)
 
+    # TODO: Add isochrones
+
     ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
     misc_columns = [col for col in gdf_fsis.columns if col not in ordered_columns]
     ordered_columns += misc_columns
+
+    # TODO: Redo the column order so this is easy to review:
+    # duns_number	establishment_name		street	DunsNumber	Company	Address
+    # include match columns near the front
+    # sales
 
     gdf_fsis[gdf_fsis.matched][ordered_columns].to_csv(
         RUN_DIR / "fsis_nets_matches.csv", index=False
@@ -163,5 +174,9 @@ if __name__ == "__main__":
         RUN_DIR / "fsis_nets_unmatched.csv", index=False
     )
 
+    # TODO: Get average sales values for unmatched plants
+    # TODO: Check for plants with 0 sales also
+
+    # TODO: Save as GeoJSON
     # TODO: Decide which columns to keep for web file
     KEEP_COLS = []
