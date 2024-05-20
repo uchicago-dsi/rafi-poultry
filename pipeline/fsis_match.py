@@ -2,15 +2,21 @@ import pandas as pd
 import geopandas as gpd
 from pathlib import Path
 from fuzzywuzzy import fuzz
-from tqdm import tqdm
+from datetime import datetime
+import os
 
 
 current_dir = Path(__file__).resolve().parent
-DATA_DIR = current_dir / "../data/raw/"
-# TODO: set filename in config
-FSIS_PATH = DATA_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
-NETS_PATH = DATA_DIR / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
-NETS_NAICS_PATH = DATA_DIR / "nets" / "NAICS2022_RAFI.csv"
+DATA_DIR = current_dir / "../data/"
+DATA_DIR_RAW = DATA_DIR / "raw/"
+DATA_DIR_CLEAN = DATA_DIR / "clean/"
+RUN_DIR = DATA_DIR_CLEAN / f"pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+os.makedirs(RUN_DIR, exist_ok=True)
+
+# TODO: set filename in config for data files
+FSIS_PATH = DATA_DIR_RAW / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
+NETS_PATH = DATA_DIR_RAW / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
+NETS_NAICS_PATH = DATA_DIR_RAW / "nets" / "NAICS2022_RAFI.csv"
 
 
 PARENT_CORPS = {
@@ -30,107 +36,72 @@ def clean_fsis(df):
     return df
 
 
-def get_spatial_matches(row, gdf_child):
+def get_geospatial_match(
+    row, gdf_child, address_threshold=0.7, company_threshold=0.7, buffer=1000
+):
+    spatial_matches = spatial_index_match(row, gdf_child)
+
+    if spatial_matches.empty:
+        # No NETS record within buffered geometry, FSIS plant is unmatched so return
+        return row
+
+    row["spatial_match"] = True
+
+    joined_spatial_matches = pd.merge(row.to_frame().T, spatial_matches, how="cross")
+
+    joined_spatial_matches = joined_spatial_matches.apply(
+        lambda row: get_string_matches(
+            row,
+            address_threshold=address_threshold,
+            company_threshold=company_threshold,
+        ),
+        axis=1,
+    )
+
+    matches = joined_spatial_matches[joined_spatial_matches.matched]
+
+    if matches.empty:
+        return row
+    else:
+        # TODO: Do we really just want the first one?
+        return matches.iloc[0]
+
+
+def spatial_index_match(row, gdf_child):
     # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
     # Then check whether they intersect with the buffered geometry
     possible_matches_index = list(gdf_child.sindex.intersection(row["buffered"].bounds))
     possible_matches = gdf_child.iloc[possible_matches_index]
-    return possible_matches[possible_matches.geometry.intersects(row["buffered"])]
+    spatial_matches = possible_matches[
+        possible_matches.geometry.intersects(row["buffered"])
+    ]
+    return spatial_matches
 
 
-def get_string_matches(
-    row, spatial_matches, company_threshold=0.7, address_threshold=0.7
-):
-    for _, match in spatial_matches.iterrows():
-        company_match = (
+def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
+    row["company_match"] = (
+        fuzz.token_sort_ratio(row["establishment_name"].upper(), row["Company"].upper())
+        > company_threshold
+    )
+    row["address_match"] = (
+        fuzz.token_sort_ratio(row["street"].upper(), row["Address"].upper())
+        > address_threshold
+    )
+    # Initialize since not all establishments are in PARENT_CORPS
+    alt_name_match = False
+    if row["establishment_name"] in PARENT_CORPS:
+        alt_name_match = (
             fuzz.token_sort_ratio(
-                row["establishment_name"].upper(), match["Company"].upper()
+                PARENT_CORPS.get(row["establishment_name"], "").upper(),
+                row["Company"].upper(),
             )
             > company_threshold
         )
-        address_match = (
-            fuzz.token_sort_ratio(row["street"].upper(), match["Address"].upper())
-            > address_threshold
-        )
-        if row["establishment_name"] in PARENT_CORPS:
-            alt_name_match = (
-                fuzz.token_sort_ratio(
-                    PARENT_CORPS.get(row["establishment_name"], "").upper(),
-                    match["Company"].upper(),
-                )
-                > company_threshold
-            )
-
-        if company_match or address_match or alt_name_match:
-            # print("Record matched!")
-            extended_row = row.to_dict()
-            extended_row.update(
-                {
-                    "Matched_Company": match["Company"],
-                    "Matched_Address": match["Address"],
-                    "Matched_City": match["City"],
-                    "HQDuns": match["HQDuns"],
-                    "HQ Company": match["HQCompany"],
-                    "Sales Last Year": match["SalesHere"],
-                    "Company_Match_Score": company_match,
-                    "Address_Match_Score": address_match,
-                }
-            )
-            matches.append(extended_row)
-            matched = True
-            break  # TODO: check multiple matches later
-        else:
-            spatial_matches_info.append(
-                {
-                    "DUNS": row["duns_number"],
-                    "FSIS Company": row["establishment_name"],
-                    "DBAs": row["dbas"],
-                    "Matched_Company": match["Company"],
-                    "FSIS Address": row["street"],
-                    "Matched_Address": match["Address"],
-                    "FSIS City": row["city"],
-                    "Matched_City": match["City"],
-                }
-            )
-
-
-def geospatial_match(
-    gdf_parent, gdf_child, address_threshold=0.7, company_threshold=0.7, buffer=1000
-):
-    # Note: rows are filtered geospatially so can set address and company threshold somewhat low
-
-    gdf_parent["buffered"] = gdf_parent.geometry.buffer(buffer)
-
-    gdf_unmatched = gdf_parent[not gdf_parent.matched]
-
-    matches = []
-    no_spatial_match = []
-    no_string_match = []
-    no_string_match_multiple = []  # TODO: bad name, what is this
-
-    for _, row in tqdm(
-        gdf_unmatched.iterrows(),
-        total=gdf_unmatched.shape[0],
-        desc="Spatial matches of FSIS plants and NETS data",
-    ):
-        matched = False  # TODO: Do I need this?
-
-        spatial_matches = get_spatial_matches(row, gdf_child)
-
-        if len(spatial_matches) == 0:
-            # No NETS record within buffered geometry, FSIS plant is unmatched so save for later and move to next
-            no_spatial_match.append(row)
-            continue
-
-        # TODO: What?
-        match_info = []
-        spatial_matches_info = []
-
-        if not matched:
-            no_string_match.append(row)
-            no_string_match_multiple.extend(
-                spatial_matches_info
-            )  # Append as dictionary for uniform format
+    row["alt_name_match"] = alt_name_match
+    row["matched"] = (
+        row["company_match"] or row["address_match"] or row["establishment_name"]
+    )
+    return row
 
 
 if __name__ == "__main__":
@@ -151,165 +122,46 @@ if __name__ == "__main__":
     )
     df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
 
-    # Merge FSIS and NETS data
+    # TODO: should prob just work with GDFs the whole time...
+
+    # Merge FSIS and NETS data on NETS data
     df_duns = pd.merge(
         df_fsis, df_nets, left_on="duns_number", right_on="DunsNumber", how="inner"
     )
     df_fsis["matched"] = df_fsis["duns_number"].isin(df_nets["DunsNumber"])
 
     # Convert to GDF for spatial matching
-    gdf_parent = gpd.GeoDataFrame(
+    gdf_fsis = gpd.GeoDataFrame(
         df_fsis,
         geometry=gpd.points_from_xy(df_fsis.longitude, df_fsis.latitude),
-        crs=9822,
+        crs=4326,
     )
     gdf_nets = gpd.GeoDataFrame(
         df_nets,
         geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
-        crs=9822,
+        crs=4326,
     )
 
-    gdf_parent["buffered"] = gdf_parent.geometry.buffer(1000)
+    # Note: rows are filtered geospatially so can set address and company threshold somewhat low
+    # TODO: Make sure this doesn't permanently change the CRS...
+    gdf_nets = gdf_nets.to_crs(9822)
+    gdf_fsis = gdf_fsis.to_crs(9822)
+    buffer = 1000  # TODO...
+    gdf_fsis["buffered"] = gdf_fsis.geometry.buffer(buffer)
 
-    sindex_nets = gdf_nets.sindex
+    gdf_fsis["spatial_match"] = False
+    gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_match(row, gdf_nets), axis=1)
 
-    matches = []
-    no_spatial_match = []
-    no_string_match = []
-    no_string_match_multiple = []
+    ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
+    misc_columns = [col for col in gdf_fsis.columns if col not in ordered_columns]
+    ordered_columns += misc_columns
 
-    gdf_unmatched = gdf_parent[gdf_parent.matched == False]
-
-    for index, row in tqdm(
-        gdf_unmatched.iterrows(),
-        total=gdf_unmatched.shape[0],
-        desc="Spatial matches of FSIS plants",
-    ):
-        matched = False
-        # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
-        # Then check whether they intersect with the buffered geometry
-        possible_matches_index = list(sindex_nets.intersection(row["buffered"].bounds))
-        possible_matches = gdf_nets.iloc[possible_matches_index]
-        spatial_matches = possible_matches[
-            possible_matches.geometry.intersects(row["buffered"])
-        ]
-        if len(spatial_matches) == 0:
-            no_spatial_match.append(row)
-            continue
-
-        match_info = []
-        spatial_matches_info = []
-
-        for _, match in spatial_matches.iterrows():
-            company_match = (
-                fuzz.token_sort_ratio(
-                    row["establishment_name"].upper(), match["Company"].upper()
-                )
-                > 70
-            )
-            address_match = (
-                fuzz.token_sort_ratio(row["street"].upper(), match["Address"].upper())
-                > 70
-            )
-            alt_name_match = False
-            if row["establishment_name"] in PARENT_CORPS:
-                alt_name_match = (
-                    fuzz.token_sort_ratio(
-                        PARENT_CORPS.get(row["establishment_name"], "").upper(),
-                        match["Company"].upper(),
-                    )
-                    > 70
-                )
-
-            if company_match or address_match or alt_name_match:
-                # print("Record matched!")
-                extended_row = row.to_dict()
-                extended_row.update(
-                    {
-                        "Matched_Company": match["Company"],
-                        "Matched_Address": match["Address"],
-                        "Matched_City": match["City"],
-                        "HQDuns": match["HQDuns"],
-                        "HQ Company": match["HQCompany"],
-                        "Sales Last Year": match["SalesHere"],
-                        "Company_Match_Score": company_match,
-                        "Address_Match_Score": address_match,
-                    }
-                )
-                matches.append(extended_row)
-                matched = True
-                break  # TODO: check multiple matches later
-            else:
-                spatial_matches_info.append(
-                    {
-                        "DUNS": row["duns_number"],
-                        "FSIS Company": row["establishment_name"],
-                        "DBAs": row["dbas"],
-                        "Matched_Company": match["Company"],
-                        "FSIS Address": row["street"],
-                        "Matched_Address": match["Address"],
-                        "FSIS City": row["city"],
-                        "Matched_City": match["City"],
-                    }
-                )
-
-        if not matched:
-            no_string_match.append(
-                {
-                    "DUNS": row["duns_number"],
-                    "FSIS Company": row["establishment_name"],
-                    "DBAs": row["dbas"],
-                    "FSIS Address": row["street"],
-                    "FSIS City": row["city"],
-                    "FSIS State": row["state"],
-                }
-            )
-            no_string_match_multiple.extend(
-                spatial_matches_info
-            )  # Append as dictionary for uniform format
-
-    # Convert to DataFrame for easier review and manipulation
-    df_matches = pd.DataFrame(matches)
-    df_no_spatial = pd.DataFrame(no_spatial_match)
-    df_no_string = pd.DataFrame(no_string_match)
-    df_no_string_multiple = pd.DataFrame(no_string_match_multiple)
-
-    COL_ORDER = [
-        "establishment_id",
-        "establishment_number",
-        "establishment_name",
-        "duns_number",
-        "street",
-        "city",
-        "state",
-        "zip",
-        "Matched_Company",
-        "Matched_Address",
-        "Matched_City",
-        "Company_Match_Score",
-        "Address_Match_Score",
-        "phone",
-        "grant_date",
-        "activities",
-        "dbas",
-        "district",
-        "circuit",
-        "size",
-        "latitude",
-        "longitude",
-        "county",
-        "fips_code",
-        "geometry",
-        "buffered",
-    ]
-
-    df_matches[COL_ORDER].to_csv("matches.csv", index=False)
-    df_no_spatial.to_csv("no_spatial_match.csv", index=False)
-    df_no_string.to_csv("no_string_match.csv", index=False)
-    df_no_string_multiple.to_csv("no_string_match_multiple.csv", index=False)
-
-    df_unmatched = pd.concat([df_no_spatial, df_no_string], sort=True)
-
-    df_duns = pd.merge(
-        df_unmatched, df_nets, left_on="DUNS", right_on="DunsNumber", how="inner"
+    gdf_fsis[gdf_fsis.matched][ordered_columns].to_csv(
+        RUN_DIR / "fsis_nets_matches.csv", index=False
     )
+    gdf_fsis[~gdf_fsis.matched][ordered_columns].to_csv(
+        RUN_DIR / "fsis_nets_unmatched.csv", index=False
+    )
+
+    # TODO: Decide which columns to keep for web file
+    KEEP_COLS = []
