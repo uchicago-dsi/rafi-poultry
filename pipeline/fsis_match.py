@@ -7,12 +7,11 @@ import os
 import requests
 from tqdm import tqdm
 from typing import List, Tuple
-from shapely.geometry import Polygon
-import base64
+from shapely.geometry import Polygon, Point
 import numpy as np
 import argparse
 
-# Set up tqdm with pandas
+# Enable pandas progress bars for apply functions
 tqdm.pandas()
 
 current_dir = Path(__file__).resolve().parent
@@ -27,7 +26,7 @@ FSIS_PATH = DATA_DIR_RAW / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
 NETS_PATH = DATA_DIR_RAW / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
 NETS_NAICS_PATH = DATA_DIR_RAW / "nets" / "NAICS2022_RAFI.csv"
 
-
+# This is used for string matching
 FSIS2NETS_CORPS = {
     "House of Raeford Farms of LA": "Raeford Farms Louisiana",
     "Mar-Jac Poultry-AL": "MARSHALL DURBIN FOOD CORP",
@@ -102,67 +101,58 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     return row
 
 
-def get_isochrone(row, driving_dist_miles: int, token: str):
-    """Adds plant isochrones to fsis dataframe; captures area that is within
-            an x mile radius of the plant. 90 percent of all birds were
-            produced on farms within 60 miles of the plant, according to 2011
-            ARMS data.
+# def get_isochrone(row, driving_dist_miles: int, token: str):
+#     """Adds plant isochrones to fsis dataframe; captures area that is within
+#             an x mile radius of the plant. 90 percent of all birds were
+#             produced on farms within 60 miles of the plant, according to 2011
+#             ARMS data.
 
-    Args:
-        coords: list of tuples; lat and long for all processing plants.
-        driving_dist_miles: int; radius of captured area (in driving distance).
-        token: str; API token to access mapbox.
+#     Args:
+#         coords: list of tuples; lat and long for all processing plants.
+#         driving_dist_miles: int; radius of captured area (in driving distance).
+#         token: str; API token to access mapbox.
 
-    Returns:
-        list of plant isochrones
+#     Returns:
+#         list of plant isochrones
 
-    """
+#     """
 
-    ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
-    DRIVING_DISTANCE_METERS = str(
-        int(driving_dist_miles * 1609.34)
-    )  # turns miles into meters
+#     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
+#     DRIVING_DISTANCE_METERS = str(
+#         int(driving_dist_miles * 1609.34)
+#     )  # turns miles into meters
 
-    lat = row["latitude"]
-    lng = row["longitude"]
-    url = (
-        ENDPOINT
-        + str(lng)
-        + ","
-        + str(lat)
-        + "?"
-        + "contours_meters="
-        + DRIVING_DISTANCE_METERS
-        + "&access_token="
-        + token
-    )
-    response = requests.get(url)
-    if not response.ok:
-        raise Exception(
-            f"Within the isochrone helper function, unable to \
-                            access mapbox url using API token. Response \
-                            had status code {response.status_code}. \
-                            Error message was {response.text}"
-        )
+#     lat = row["latitude"]
+#     lng = row["longitude"]
+#     url = (
+#         ENDPOINT
+#         + str(lng)
+#         + ","
+#         + str(lat)
+#         + "?"
+#         + "contours_meters="
+#         + DRIVING_DISTANCE_METERS
+#         + "&access_token="
+#         + token
+#     )
+#     response = requests.get(url)
+#     if not response.ok:
+#         raise Exception(
+#             f"Within the isochrone helper function, unable to \
+#                             access mapbox url using API token. Response \
+#                             had status code {response.status_code}. \
+#                             Error message was {response.text}"
+#         )
 
-    # Note: use buffer(0) to clean up invalid geometries
-    isochrone = Polygon(
-        response.json()["features"][0]["geometry"]["coordinates"]
-    ).buffer(0)
-    row["isochrone"] = isochrone
-    return row
+#     # Note: use buffer(0) to clean up invalid geometries
+#     isochrone = Polygon(
+#         response.json()["features"][0]["geometry"]["coordinates"]
+#     ).buffer(0)
+#     row["isochrone"] = isochrone
+#     return row
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--smoke_test", action="store_true")
-    parser.add_argument("--get_isochrones", action="store_true")
-
-    args = parser.parse_args()
-
-    GET_ISOCHRONES = args.get_isochrones
-    SMOKE_TEST = args.smoke_test
-
     print("Loading data...")
     df_nets = pd.read_csv(
         NETS_PATH,
@@ -191,16 +181,16 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    if GET_ISOCHRONES:
-        if SMOKE_TEST:
-            gdf_fsis = gdf_fsis.iloc[:10]
-        dist = 60
-        MAPBOX_KEY = os.getenv("MAPBOX_API")
+    # if GET_ISOCHRONES:
+    #     if SMOKE_TEST:
+    #         gdf_fsis = gdf_fsis.iloc[:10]
+    #     dist = 60
+    #     MAPBOX_KEY = os.getenv("MAPBOX_API")
 
-        print("Getting isochrones...")
-        gdf_fsis = gdf_fsis.progress_apply(
-            lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
-        )
+    #     print("Getting isochrones...")
+    #     gdf_fsis = gdf_fsis.progress_apply(
+    #         lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
+    #     )
 
     # Note: rows are filtered geospatially so can set address and company threshold somewhat low
     gdf_nets = gdf_nets.to_crs(9822)
@@ -265,9 +255,12 @@ if __name__ == "__main__":
         "street": "street_fsis",
         "city": "city_fsis",
         "state": "state_fsis",
+        "zip": "zip_fsis",
         "activities": "activities_fsis",
         "dbas": "dbas_fsis",
         "size": "size_fsis",
+        "latitude": "latitude_fsis",
+        "longitude": "longitude_fsis",
         # NETS columns
         "DunsNumber": "duns_number_nets",
         "Company": "company_nets",
@@ -387,11 +380,22 @@ if __name__ == "__main__":
     unmatched = output[output.match_score == 0]
     unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
 
-    # TODO: Decide which columns to keep for web file
-    if GET_ISOCHRONES:
-        output["geometry"] = output["isochrone"]
-        output = gpd.GeoDataFrame(output, geometry=output.geometry)
-        GEOJSON_COLS = KEEP_COLS + ["display_sales", "geometry"]
-        output[GEOJSON_COLS].to_file(
-            RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON"
-        )
+    output_geojson = output.copy()
+    output_geojson["geometry"] = output.apply(
+        lambda row: Point(row["longitude_fsis"], row["latitude_fsis"]), axis=1
+    )
+
+    GEOJSON_RENAME_COLS = {
+        "parent_corp_manual": "Parent Corporation",
+        "establishment_name_fsis": "Establishment Name",
+        "street_fsis": "Address",
+        "city_fsis": "City",
+        "state_fsis": "State",
+        "zip_fsis": "Zip",
+        "display_sales": "Sales",
+    }
+    output_geojson = output_geojson.rename(columns=GEOJSON_RENAME_COLS)
+
+    GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
+    output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
+    output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
