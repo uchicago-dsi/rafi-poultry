@@ -9,7 +9,7 @@ from tqdm import tqdm
 from typing import List, Tuple
 from shapely.geometry import Polygon
 import base64
-
+import numpy as np
 
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
@@ -163,8 +163,11 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
                             Error message was {response.text}"
         )
 
-    isochrone = Polygon(response.json()["features"][0]["geometry"]["coordinates"])
-    row["isochrone"] = isochrone
+    # Note: buffer(0) can clean up invalid geometries
+    isochrone = Polygon(
+        response.json()["features"][0]["geometry"]["coordinates"]
+    ).buffer(0)
+    row["geometry"] = isochrone
     return row
 
 
@@ -235,7 +238,7 @@ if __name__ == "__main__":
         )
 
         # gdf_fsis["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
-        gdf_fsis = gdf_fsis.set_geometry("isochrone")
+        # gdf_fsis = gdf_fsis.set_geometry("isochrone")
 
     ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
     misc_columns = [
@@ -265,6 +268,12 @@ if __name__ == "__main__":
     # TODO: Decide which columns to keep for web file
     KEEP_COLS = []
 
-    breakpoint()
+    # Convert numpy.bool_ columns to native Python bool
+    for col in gdf_fsis.select_dtypes(include=[np.bool_]).columns:
+        gdf_fsis[col] = gdf_fsis[col].astype(bool)
+
+    # Convert objects to strings to avoid dtype issues when saving as GeoJSON
+    for col in gdf_fsis.select_dtypes(include=[object]).columns:
+        gdf_fsis[col] = gdf_fsis[col].astype(str)
 
     gdf_fsis.to_file(RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON")
