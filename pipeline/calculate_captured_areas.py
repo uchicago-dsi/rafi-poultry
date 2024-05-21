@@ -84,56 +84,56 @@ abb2state = {
 }
 
 
-def get_isochrones(
-    coords: List[Tuple[float, float]], driving_dist_miles: float, token: str
-) -> pd.DataFrame:
-    """Adds plant isochrones to fsis dataframe; captures area that is within
-            an x mile radius of the plant. 90 percent of all birds were
-            produced on farms within 60 miles of the plant, according to 2011
-            ARMS data.
+# def get_isochrones(
+#     coords: List[Tuple[float, float]], driving_dist_miles: float, token: str
+# ) -> pd.DataFrame:
+#     """Adds plant isochrones to fsis dataframe; captures area that is within
+#             an x mile radius of the plant. 90 percent of all birds were
+#             produced on farms within 60 miles of the plant, according to 2011
+#             ARMS data.
 
-    Args:
-        coords: list of tuples; lat and long for all processing plants.
-        driving_dist_miles: int; radius of captured area (in driving distance).
-        token: str; API token to access mapbox.
+#     Args:
+#         coords: list of tuples; lat and long for all processing plants.
+#         driving_dist_miles: int; radius of captured area (in driving distance).
+#         token: str; API token to access mapbox.
 
-    Returns:
-        list of plant isochrones
+#     Returns:
+#         list of plant isochrones
 
-    """
+#     """
 
-    ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
-    DRIVING_DISTANCE_METERS = str(
-        int(driving_dist_miles * 1609.34)
-    )  # turns miles into meters
+#     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
+#     DRIVING_DISTANCE_METERS = str(
+#         int(driving_dist_miles * 1609.34)
+#     )  # turns miles into meters
 
-    isochrones = []
-    for lat, lng in tqdm(coords, desc="Mapbox Isochrones"):
-        # add driving radius isochrone to map
-        url = (
-            ENDPOINT
-            + str(lng)
-            + ","
-            + str(lat)
-            + "?"
-            + "contours_meters="
-            + DRIVING_DISTANCE_METERS
-            + "&access_token="
-            + token
-        )
-        response = requests.get(url)
-        if not response.ok:
-            raise Exception(
-                f"Within the isochrone helper function, unable to \
-                                access mapbox url using API token. Response \
-                                had status code {response.status_code}. \
-                                Error message was {response.text}"
-            )
+#     isochrones = []
+#     for lat, lng in tqdm(coords, desc="Mapbox Isochrones"):
+#         # add driving radius isochrone to map
+#         url = (
+#             ENDPOINT
+#             + str(lng)
+#             + ","
+#             + str(lat)
+#             + "?"
+#             + "contours_meters="
+#             + DRIVING_DISTANCE_METERS
+#             + "&access_token="
+#             + token
+#         )
+#         response = requests.get(url)
+#         if not response.ok:
+#             raise Exception(
+#                 f"Within the isochrone helper function, unable to \
+#                                 access mapbox url using API token. Response \
+#                                 had status code {response.status_code}. \
+#                                 Error message was {response.text}"
+#             )
 
-        isochrone = Polygon(response.json()["features"][0]["geometry"]["coordinates"])
-        isochrones.append(isochrone)
+#         isochrone = Polygon(response.json()["features"][0]["geometry"]["coordinates"])
+#         isochrones.append(isochrone)
 
-    return isochrones
+#     return isochrones
 
 
 # def add_plants(
@@ -514,14 +514,16 @@ def full_script(
 if __name__ == "__main__":
     df = pd.read_csv("matches.csv")
 
-    # TODO: This isochrone addition should be done in the FSIS processing script
-    lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
-    dist = 60
-    MAPBOX_KEY = os.getenv("MAPBOX_API")
-    df["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
+    # # TODO: This isochrone addition should be done in the FSIS processing script
+    # lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
+    # dist = 60
+    # MAPBOX_KEY = os.getenv("MAPBOX_API")
+    # df["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
     gdf = gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84)
     simplify = 0.01
     gdf["Isochrone (Simplified)"] = gdf["Isochrone"].simplify(simplify)
+
+    # TODO: All of this is going to get messed up when we rename the columns
 
     # TODO: Is "Matched_Company" what we actually want? Review the FSIS matching code
     # Dissolve by parent corporation so we are calcualting access on a corporation level
