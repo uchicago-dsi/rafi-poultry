@@ -12,6 +12,9 @@ import base64
 import numpy as np
 import argparse
 
+# Set up tqdm with pandas
+tqdm.pandas()
+
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
@@ -195,7 +198,7 @@ if __name__ == "__main__":
         MAPBOX_KEY = os.getenv("MAPBOX_API")
 
         print("Getting isochrones...")
-        gdf_fsis = gdf_fsis.apply(
+        gdf_fsis = gdf_fsis.progress_apply(
             lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
         )
 
@@ -206,7 +209,9 @@ if __name__ == "__main__":
     gdf_fsis["buffered"] = gdf_fsis.geometry.buffer(buffer)
 
     print("Getting geospatial matches...")
-    gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_matches(row, gdf_nets), axis=1)
+    gdf_fsis = gdf_fsis.progress_apply(
+        lambda row: get_geospatial_matches(row, gdf_nets), axis=1
+    )
 
     # Reset geospatial index to WGS84
     gdf_fsis = gdf_fsis.to_crs(4326)
@@ -276,9 +281,55 @@ if __name__ == "__main__":
     }
     merged = merged.rename(columns=RENAME_DICT)
 
+    CORP2PARENT = {
+        "Tyson": "Tyson",
+        "JBS": "JBS",
+        "Cargill": "Cargill",
+        "Foster Farms": "Foster Farms",
+        "Peco Foods": "Peco Foods",
+        "Sechler": "Sechler Family Foods, Inc.",
+        "Raeford": "House of Raeford",
+        "Koch Foods": "Koch Foods",
+        "Perdue": "Perdue",
+        "Fieldale": "Fieldale Farms Corporation",
+        "Amick": "Amick",
+        "George's": "George's",
+        "Mar-Jac": "Mar-Jac",
+        "Harim": "Harim Group",
+        "Costco": "Costco",
+        "Aterian": "Aterian Investment Partners",
+        "Pilgrim's Pride": "Pilgrim's Pride",
+        "Mountaire": "Mountaire",
+        "Bachoco": "Bachoco OK Foods",
+        "Wayne Farms": "Wayne Farms",
+        "Hillshire": "Hillshire",
+        "Butterball": "Butterball",
+        "Case Farms": "Case Farms",
+        "Foster": "Foster Poultry Farms",
+        "Sanderson": "Sanderson Farms, Inc.",
+        "Harrison": "Harrison Poultry, Inc.",
+        "Farbest": "Farbest Foods, Inc.",
+        "Jennie-O": "Jennie-O",
+        "Keystone": "Keystone",
+        "Simmons": "Simmons Prepared Foods, Inc.",
+        "JCG": "Cagles, Inc.",
+        "Norman": "Norman W. Fries, Inc.",
+    }
+
+    def map_to_corporation(name, corp_mapping=CORP2PARENT):
+        for key in corp_mapping:
+            if key.lower() in name.lower():
+                return corp_mapping[key]
+        return "Other"
+
+    merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(
+        map_to_corporation
+    )
+
     KEEP_COLS = [
         "duns_number_fsis",
         "duns_number_nets",
+        "parent_corp_manual",
         "establishment_name_fsis",
         "company_nets",
         "street_fsis",
@@ -309,22 +360,38 @@ if __name__ == "__main__":
     )
     merged[KEEP_COLS].to_csv(RUN_DIR / "merged.csv", index=False)
 
-    # TODO: fill in missing sales data for unmatched plants
-    # TODO: check for 0 sales data plants also
-
-    # Save fully unmatched plants
-    unmatched = merged[merged.match_score == 0]
-    unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
-
-    # Select top match for each plant and save
+    # Select top match for each plant
     output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
-    output[KEEP_COLS].to_csv(RUN_DIR / "output.csv", index=False)
+
+    def calculate_sales(row, avg_sales):
+        if pd.isna(row["sales_here_nets"]):
+            row["display_sales"] = avg_sales[row["parent_corp_manual"]]
+        else:
+            row["display_sales"] = row["sales_here_nets"]
+
+        # Handle zero, unreasonably low, or missing sales data
+        if row["display_sales"] < 1000 or pd.isna(row["display_sales"]):
+            row["display_sales"] = avg_sales[
+                "Other"
+            ]  # TODO: This is maybe a bad assumption since sales here are large...
+        return row
+
+    # Get average sales for each parent corporation
+    avg_sales = output.groupby("parent_corp_manual")["sales_here_nets"].mean()
+
+    # Calculate display sales data
+    output = output.apply(lambda row: calculate_sales(row, avg_sales), axis=1)
+    output[KEEP_COLS + ["display_sales"]].to_csv(RUN_DIR / "output.csv", index=False)
+
+    # Save unmatched plants separately for review
+    unmatched = output[output.match_score == 0]
+    unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
 
     # TODO: Decide which columns to keep for web file
     if GET_ISOCHRONES:
         output["geometry"] = output["isochrone"]
         output = gpd.GeoDataFrame(output, geometry=output.geometry)
-        GEOJSON_COLS = KEEP_COLS + ["geometry"]
+        GEOJSON_COLS = KEEP_COLS + ["display_sales", "geometry"]
         output[GEOJSON_COLS].to_file(
             RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON"
         )
