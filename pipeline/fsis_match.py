@@ -56,34 +56,6 @@ def get_geospatial_matches(row, gdf_child, buffer=1000):
     row["spatial_match"] = spatial_match
     return row
 
-    # if spatial_matches.empty:
-    #     # No NETS record within buffered geometry, FSIS plant is unmatched so return
-    #     return row
-
-    # # Save the index for all spatial matches
-    # row["spatial_matches"] = spatial_matches.index.to_list()
-
-    # joined_spatial_matches = pd.merge(row.to_frame().T, spatial_matches, how="cross")
-    # joined_spatial_matches["spatial_match"] = True
-
-    # joined_spatial_matches = joined_spatial_matches.apply(
-    #     lambda row: get_string_matches(
-    #         row,
-    #         address_threshold=address_threshold,
-    #         company_threshold=company_threshold,
-    #     ),
-    #     axis=1,
-    # )
-
-    # matches = joined_spatial_matches[joined_spatial_matches.matched]
-
-    # if matches.empty:
-    #     # TODO: This is actually not clear to me what we want to do here...I'd like to save the spatial matches for unmatched plants
-    #     return row
-    # else:
-    #     # TODO: Do we really just want the first one?
-    #     return matches.iloc[0]
-
 
 def spatial_index_match(row, gdf_child):
     # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
@@ -126,9 +98,6 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     return row
 
 
-# def get_isochrones(
-#     coords: List[Tuple[float, float]], driving_dist_miles: float, token: str
-# ) -> pd.DataFrame:
 def get_isochrone(row, driving_dist_miles: int, token: str):
     """Adds plant isochrones to fsis dataframe; captures area that is within
             an x mile radius of the plant. 90 percent of all birds were
@@ -181,6 +150,7 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
 
 
 if __name__ == "__main__":
+    print("Loading data...")
     df_nets = pd.read_csv(
         NETS_PATH,
         sep="\t",
@@ -208,9 +178,9 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    GET_ISOCHRONES = False
-    SMOKE_TEST = True
+    GET_ISOCHRONES = True
     if GET_ISOCHRONES:
+        SMOKE_TEST = False
         if SMOKE_TEST:
             gdf_fsis = gdf_fsis.iloc[:10]
         dist = 60
@@ -220,10 +190,8 @@ if __name__ == "__main__":
         gdf_fsis = gdf_fsis.apply(
             lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
         )
-        # gdf_fsis = gdf_fsis.set_geometry("isochrone")
 
     # Note: rows are filtered geospatially so can set address and company threshold somewhat low
-    # TODO: Make sure this doesn't permanently change the CRS...
     gdf_nets = gdf_nets.to_crs(9822)
     gdf_fsis = gdf_fsis.to_crs(9822)
     buffer = 1000  # TODO...
@@ -231,6 +199,9 @@ if __name__ == "__main__":
 
     print("Getting geospatial matches...")
     gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_matches(row, gdf_nets), axis=1)
+
+    # Reset geospatial index to WGS84
+    gdf_fsis = gdf_fsis.to_crs(4326)
 
     merged_spatial = gdf_fsis.explode("spatial_match_index").merge(
         gdf_nets,
@@ -323,6 +294,7 @@ if __name__ == "__main__":
         "match_score",
     ]
 
+    print("Saving files...")
     merged = merged.sort_values(
         by=["establishment_name_fsis", "street_fsis", "match_score"],
         ascending=[True, True, False],
@@ -330,54 +302,29 @@ if __name__ == "__main__":
     merged[KEEP_COLS].to_csv(RUN_DIR / "merged.csv", index=False)
 
     # TODO: fill in missing sales data for unmatched plants
+    # TODO: check for 0 sales data plants also
 
-    # TODO: save fully unmatched plants
+    # Save fully unmatched plants
     unmatched = merged[merged.match_score == 0]
     unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
 
-    # TODO: select top match and save
-    output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1)
+    # Select top match for each plant and save
+    output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
     output[KEEP_COLS].to_csv(RUN_DIR / "output.csv", index=False)
 
-    # TODO: save as geojson
-
-    # ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
-    # misc_columns = [
-    #     col
-    #     for col in gdf_fsis.columns
-    #     if col not in ordered_columns and col != "geometry"
-    # ]
-    # ordered_columns += misc_columns
-
-    # TODO: Redo the column order so this is easy to review:
-    # duns_number	establishment_name		street	DunsNumber	Company	Address
-    # include match columns near the front
-    # sales
-
-    """
-
-    print("Saving files...")
-    gdf_fsis[gdf_fsis.matched][ordered_columns].to_csv(
-        RUN_DIR / "fsis_nets_matches.csv", index=False
-    )
-    gdf_fsis[~gdf_fsis.matched][ordered_columns].to_csv(
-        RUN_DIR / "fsis_nets_unmatched.csv", index=False
-    )
-
-    # TODO: Get average sales values for unmatched plants
-    # TODO: Check for plants with 0 sales also
-
-    # TODO: Save as GeoJSON
     # TODO: Decide which columns to keep for web file
-    KEEP_COLS = []
+    if GET_ISOCHRONES:
+        output["geometry"] = output["isochrone"]
+        output = gpd.GeoDataFrame(output, geometry=output.geometry)
+        GEOJSON_COLS = KEEP_COLS + ["geometry"]
+        output[GEOJSON_COLS].to_file(
+            RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON"
+        )
 
-    # Convert numpy.bool_ columns to native Python bool
-    for col in gdf_fsis.select_dtypes(include=[np.bool_]).columns:
-        gdf_fsis[col] = gdf_fsis[col].astype(bool)
+    # # Convert numpy.bool_ columns to native Python bool
+    # for col in gdf_fsis.select_dtypes(include=[np.bool_]).columns:
+    #     gdf_fsis[col] = gdf_fsis[col].astype(bool)
 
-    # Convert objects to strings to avoid dtype issues when saving as GeoJSON
-    for col in gdf_fsis.select_dtypes(include=[object]).columns:
-        gdf_fsis[col] = gdf_fsis[col].astype(str)
-
-    gdf_fsis.to_file(RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON")
-    """
+    # # Convert objects to strings to avoid dtype issues when saving as GeoJSON
+    # for col in gdf_fsis.select_dtypes(include=[object]).columns:
+    #     gdf_fsis[col] = gdf_fsis[col].astype(str)
