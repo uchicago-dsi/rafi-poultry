@@ -4,6 +4,11 @@ from pathlib import Path
 from fuzzywuzzy import fuzz
 from datetime import datetime
 import os
+import requests
+from tqdm import tqdm
+from typing import List, Tuple
+from shapely.geometry import Polygon
+import base64
 
 
 current_dir = Path(__file__).resolve().parent
@@ -50,7 +55,11 @@ def get_geospatial_match(
 
     joined_spatial_matches = pd.merge(row.to_frame().T, spatial_matches, how="cross")
     joined_spatial_matches["spatial_match"] = True
-    joined_spatial_matches["spatial_matches"] = spatial_matches
+    # TODO: This is still messed up when we save it...maybe save this some other way later
+    # joined_spatial_matches["spatial_matches"] = spatial_matches.to_json()
+    # joined_spatial_matches["spatial_matches"] = base64.b64encode(
+    #     spatial_matches.to_json().encode()
+    # ).decode()
 
     joined_spatial_matches = joined_spatial_matches.apply(
         lambda row: get_string_matches(
@@ -108,6 +117,57 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     return row
 
 
+# def get_isochrones(
+#     coords: List[Tuple[float, float]], driving_dist_miles: float, token: str
+# ) -> pd.DataFrame:
+def get_isochrone(row, driving_dist_miles: int, token: str):
+    """Adds plant isochrones to fsis dataframe; captures area that is within
+            an x mile radius of the plant. 90 percent of all birds were
+            produced on farms within 60 miles of the plant, according to 2011
+            ARMS data.
+
+    Args:
+        coords: list of tuples; lat and long for all processing plants.
+        driving_dist_miles: int; radius of captured area (in driving distance).
+        token: str; API token to access mapbox.
+
+    Returns:
+        list of plant isochrones
+
+    """
+
+    ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
+    DRIVING_DISTANCE_METERS = str(
+        int(driving_dist_miles * 1609.34)
+    )  # turns miles into meters
+
+    lat = row["latitude"]
+    lng = row["longitude"]
+    url = (
+        ENDPOINT
+        + str(lng)
+        + ","
+        + str(lat)
+        + "?"
+        + "contours_meters="
+        + DRIVING_DISTANCE_METERS
+        + "&access_token="
+        + token
+    )
+    response = requests.get(url)
+    if not response.ok:
+        raise Exception(
+            f"Within the isochrone helper function, unable to \
+                            access mapbox url using API token. Response \
+                            had status code {response.status_code}. \
+                            Error message was {response.text}"
+        )
+
+    isochrone = Polygon(response.json()["features"][0]["geometry"]["coordinates"])
+    row["isochrone"] = isochrone
+    return row
+
+
 if __name__ == "__main__":
     df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
     df_fsis = clean_fsis(df_fsis)
@@ -124,6 +184,8 @@ if __name__ == "__main__":
         dtype={"DunsNumber": str},
         low_memory=False,
     )
+
+    print("Matching on DUNS Number")
     df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
 
     # TODO: should prob just work with GDFs the whole time...
@@ -154,12 +216,33 @@ if __name__ == "__main__":
     gdf_fsis["buffered"] = gdf_fsis.geometry.buffer(buffer)
 
     gdf_fsis["spatial_match"] = False
+    print("Getting geospatial matches...")
     gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_match(row, gdf_nets), axis=1)
 
-    # TODO: Add isochrones
+    GET_ISOCHRONES = True
+    SMOKE_TEST = True
+    if GET_ISOCHRONES:
+        if SMOKE_TEST:
+            gdf_fsis = gdf_fsis.iloc[:10]
+        gdf_fsis = gdf_fsis.to_crs(4326)
+        dist = 60
+        MAPBOX_KEY = os.getenv("MAPBOX_API")
+        # TODO: may have a problem with the crs here
+
+        print("Getting isochrones...")
+        gdf_fsis = gdf_fsis.apply(
+            lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
+        )
+
+        # gdf_fsis["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
+        gdf_fsis = gdf_fsis.set_geometry("isochrone")
 
     ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
-    misc_columns = [col for col in gdf_fsis.columns if col not in ordered_columns]
+    misc_columns = [
+        col
+        for col in gdf_fsis.columns
+        if col not in ordered_columns and col != "geometry"
+    ]
     ordered_columns += misc_columns
 
     # TODO: Redo the column order so this is easy to review:
@@ -167,6 +250,7 @@ if __name__ == "__main__":
     # include match columns near the front
     # sales
 
+    print("Saving files...")
     gdf_fsis[gdf_fsis.matched][ordered_columns].to_csv(
         RUN_DIR / "fsis_nets_matches.csv", index=False
     )
@@ -180,3 +264,7 @@ if __name__ == "__main__":
     # TODO: Save as GeoJSON
     # TODO: Decide which columns to keep for web file
     KEEP_COLS = []
+
+    breakpoint()
+
+    gdf_fsis.to_file(RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON")
