@@ -41,43 +41,48 @@ def clean_fsis(df):
     return df
 
 
-def get_geospatial_match(
-    row, gdf_child, address_threshold=0.7, company_threshold=0.7, buffer=1000
-):
-    spatial_matches = spatial_index_match(row, gdf_child)
+def get_geospatial_matches(row, gdf_child, buffer=1000):
+    # TODO: wait...where do I use the buffer?
+    # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
+    # Then check whether they intersect with the buffered geometry
+    possible_matches_index = list(gdf_child.sindex.intersection(row["buffered"].bounds))
+    possible_matches = gdf_child.iloc[possible_matches_index]
+    spatial_match_index = possible_matches[
+        possible_matches.geometry.intersects(row["buffered"])
+    ].index.to_list()
+    spatial_match = len(spatial_match_index) > 0
+    # Handle unmatched plants — save -1 so they still show up in merge later
+    row["spatial_match_index"] = spatial_match_index if spatial_match else [-1]
+    row["spatial_match"] = spatial_match
+    return row
 
-    if spatial_matches.empty:
-        # No NETS record within buffered geometry, FSIS plant is unmatched so return
-        return row
+    # if spatial_matches.empty:
+    #     # No NETS record within buffered geometry, FSIS plant is unmatched so return
+    #     return row
 
-    # row["spatial_match"] = True
-    # row["spatial_matches"] = spatial_matches
+    # # Save the index for all spatial matches
+    # row["spatial_matches"] = spatial_matches.index.to_list()
 
-    joined_spatial_matches = pd.merge(row.to_frame().T, spatial_matches, how="cross")
-    joined_spatial_matches["spatial_match"] = True
-    # TODO: This is still messed up when we save it...maybe save this some other way later
-    # joined_spatial_matches["spatial_matches"] = spatial_matches.to_json()
-    # joined_spatial_matches["spatial_matches"] = base64.b64encode(
-    #     spatial_matches.to_json().encode()
-    # ).decode()
+    # joined_spatial_matches = pd.merge(row.to_frame().T, spatial_matches, how="cross")
+    # joined_spatial_matches["spatial_match"] = True
 
-    joined_spatial_matches = joined_spatial_matches.apply(
-        lambda row: get_string_matches(
-            row,
-            address_threshold=address_threshold,
-            company_threshold=company_threshold,
-        ),
-        axis=1,
-    )
+    # joined_spatial_matches = joined_spatial_matches.apply(
+    #     lambda row: get_string_matches(
+    #         row,
+    #         address_threshold=address_threshold,
+    #         company_threshold=company_threshold,
+    #     ),
+    #     axis=1,
+    # )
 
-    matches = joined_spatial_matches[joined_spatial_matches.matched]
+    # matches = joined_spatial_matches[joined_spatial_matches.matched]
 
-    if matches.empty:
-        # TODO: This is actually not clear to me what we want to do here...I'd like to save the spatial matches for unmatched plants
-        return row
-    else:
-        # TODO: Do we really just want the first one?
-        return matches.iloc[0]
+    # if matches.empty:
+    #     # TODO: This is actually not clear to me what we want to do here...I'd like to save the spatial matches for unmatched plants
+    #     return row
+    # else:
+    #     # TODO: Do we really just want the first one?
+    #     return matches.iloc[0]
 
 
 def spatial_index_match(row, gdf_child):
@@ -92,6 +97,10 @@ def spatial_index_match(row, gdf_child):
 
 
 def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
+    # Return if no matched NETS record
+    if pd.isna(row["Company"]):
+        return row
+
     row["company_match"] = (
         fuzz.token_sort_ratio(row["establishment_name"].upper(), row["Company"].upper())
         > company_threshold
@@ -167,14 +176,11 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
     isochrone = Polygon(
         response.json()["features"][0]["geometry"]["coordinates"]
     ).buffer(0)
-    row["geometry"] = isochrone
+    row["isochrone"] = isochrone
     return row
 
 
 if __name__ == "__main__":
-    df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
-    df_fsis = clean_fsis(df_fsis)
-
     df_nets = pd.read_csv(
         NETS_PATH,
         sep="\t",
@@ -187,29 +193,34 @@ if __name__ == "__main__":
         dtype={"DunsNumber": str},
         low_memory=False,
     )
-
-    print("Matching on DUNS Number")
     df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
-
-    # TODO: should prob just work with GDFs the whole time...
-
-    # Merge FSIS and NETS data on NETS data
-    df_duns = pd.merge(
-        df_fsis, df_nets, left_on="duns_number", right_on="DunsNumber", how="inner"
-    )
-    df_fsis["matched"] = df_fsis["duns_number"].isin(df_nets["DunsNumber"])
-
-    # Convert to GDF for spatial matching
-    gdf_fsis = gpd.GeoDataFrame(
-        df_fsis,
-        geometry=gpd.points_from_xy(df_fsis.longitude, df_fsis.latitude),
-        crs=4326,
-    )
     gdf_nets = gpd.GeoDataFrame(
         df_nets,
         geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
         crs=4326,
     )
+
+    df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
+    df_fsis = clean_fsis(df_fsis)
+    gdf_fsis = gpd.GeoDataFrame(
+        df_fsis,
+        geometry=gpd.points_from_xy(df_fsis.longitude, df_fsis.latitude),
+        crs=4326,
+    )
+
+    GET_ISOCHRONES = False
+    SMOKE_TEST = True
+    if GET_ISOCHRONES:
+        if SMOKE_TEST:
+            gdf_fsis = gdf_fsis.iloc[:10]
+        dist = 60
+        MAPBOX_KEY = os.getenv("MAPBOX_API")
+
+        print("Getting isochrones...")
+        gdf_fsis = gdf_fsis.apply(
+            lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
+        )
+        # gdf_fsis = gdf_fsis.set_geometry("isochrone")
 
     # Note: rows are filtered geospatially so can set address and company threshold somewhat low
     # TODO: Make sure this doesn't permanently change the CRS...
@@ -218,40 +229,132 @@ if __name__ == "__main__":
     buffer = 1000  # TODO...
     gdf_fsis["buffered"] = gdf_fsis.geometry.buffer(buffer)
 
-    gdf_fsis["spatial_match"] = False
     print("Getting geospatial matches...")
-    gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_match(row, gdf_nets), axis=1)
+    gdf_fsis = gdf_fsis.apply(lambda row: get_geospatial_matches(row, gdf_nets), axis=1)
 
-    GET_ISOCHRONES = True
-    SMOKE_TEST = True
-    if GET_ISOCHRONES:
-        if SMOKE_TEST:
-            gdf_fsis = gdf_fsis.iloc[:10]
-        gdf_fsis = gdf_fsis.to_crs(4326)
-        dist = 60
-        MAPBOX_KEY = os.getenv("MAPBOX_API")
-        # TODO: may have a problem with the crs here
+    merged_spatial = gdf_fsis.explode("spatial_match_index").merge(
+        gdf_nets,
+        left_on="spatial_match_index",
+        right_index=True,
+        suffixes=("_fsis", "_nets"),
+        how="left",
+    )
 
-        print("Getting isochrones...")
-        gdf_fsis = gdf_fsis.apply(
-            lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
-        )
+    # TODO: do I care about duplicates here or not really?
+    merged_duns = gdf_fsis.merge(
+        gdf_nets,
+        left_on="duns_number",
+        right_on="DunsNumber",
+        how="inner",
+        suffixes=("_fsis", "_nets"),
+    )
 
-        # gdf_fsis["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
-        # gdf_fsis = gdf_fsis.set_geometry("isochrone")
+    merged = pd.concat([merged_spatial, merged_duns])
 
-    ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
-    misc_columns = [
-        col
-        for col in gdf_fsis.columns
-        if col not in ordered_columns and col != "geometry"
+    # Fill in match columns for selecting the best match
+    merged = merged.apply(lambda row: get_string_matches(row), axis=1)
+
+    # Roundabout way of doing this to prevent fragmented DataFrame warning
+    duns_match = pd.DataFrame(
+        {"duns_match": merged["duns_number"] == merged["DunsNumber"]}
+    )
+    merged = pd.concat([merged, duns_match], axis=1)
+    merged["match_score"] = (
+        merged[
+            [
+                "spatial_match",
+                "company_match",
+                "address_match",
+                "duns_match",
+                "alt_name_match",
+            ]
+        ]
+        .fillna(False)
+        .sum(axis=1)
+    )
+
+    # Column renaming dictionary
+    RENAME_DICT = {
+        # FSIS columns
+        "establishment_name": "establishment_name_fsis",
+        "duns_number": "duns_number_fsis",
+        "street": "street_fsis",
+        "city": "city_fsis",
+        "state": "state_fsis",
+        "activities": "activities_fsis",
+        "dbas": "dbas_fsis",
+        "size": "size_fsis",
+        # NETS columns
+        "DunsNumber": "duns_number_nets",
+        "Company": "company_nets",
+        "TradeName": "trade_name_nets",
+        "Address": "address_nets",
+        "City": "city_nets",
+        "State": "state_nets",
+        "HQDuns": "hq_duns_nets",
+        "HQCompany": "hq_company_nets",
+        "SalesHere": "sales_here_nets",
+    }
+    merged = merged.rename(columns=RENAME_DICT)
+
+    KEEP_COLS = [
+        "duns_number_fsis",
+        "duns_number_nets",
+        "establishment_name_fsis",
+        "company_nets",
+        "street_fsis",
+        "address_nets",
+        "city_fsis",
+        "city_nets",
+        "state_fsis",
+        "state_nets",
+        "activities_fsis",
+        "dbas_fsis",
+        "size_fsis",
+        "trade_name_nets",
+        "hq_duns_nets",
+        "hq_company_nets",
+        "sales_here_nets",
+        "spatial_match",
+        "company_match",
+        "address_match",
+        "alt_name_match",
+        "duns_match",
+        "match_score",
     ]
-    ordered_columns += misc_columns
+
+    merged = merged.sort_values(
+        by=["establishment_name_fsis", "street_fsis", "match_score"],
+        ascending=[True, True, False],
+    )
+    merged[KEEP_COLS].to_csv(RUN_DIR / "merged.csv", index=False)
+
+    # TODO: fill in missing sales data for unmatched plants
+
+    # TODO: save fully unmatched plants
+    unmatched = merged[merged.match_score == 0]
+    unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
+
+    # TODO: select top match and save
+    output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1)
+    output[KEEP_COLS].to_csv(RUN_DIR / "output.csv", index=False)
+
+    # TODO: save as geojson
+
+    # ordered_columns = df_fsis.columns.to_list() + df_nets.columns.to_list()
+    # misc_columns = [
+    #     col
+    #     for col in gdf_fsis.columns
+    #     if col not in ordered_columns and col != "geometry"
+    # ]
+    # ordered_columns += misc_columns
 
     # TODO: Redo the column order so this is easy to review:
     # duns_number	establishment_name		street	DunsNumber	Company	Address
     # include match columns near the front
     # sales
+
+    """
 
     print("Saving files...")
     gdf_fsis[gdf_fsis.matched][ordered_columns].to_csv(
@@ -277,3 +380,4 @@ if __name__ == "__main__":
         gdf_fsis[col] = gdf_fsis[col].astype(str)
 
     gdf_fsis.to_file(RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON")
+    """
