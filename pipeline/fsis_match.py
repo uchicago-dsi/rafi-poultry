@@ -10,6 +10,7 @@ from typing import List, Tuple
 from shapely.geometry import Polygon
 import base64
 import numpy as np
+import argparse
 
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
@@ -24,7 +25,7 @@ NETS_PATH = DATA_DIR_RAW / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
 NETS_NAICS_PATH = DATA_DIR_RAW / "nets" / "NAICS2022_RAFI.csv"
 
 
-PARENT_CORPS = {
+FSIS2NETS_CORPS = {
     "House of Raeford Farms of LA": "Raeford Farms Louisiana",
     "Mar-Jac Poultry-AL": "MARSHALL DURBIN FOOD CORP",
     "Mar-Jac Poultry-MS": "MARSHALL DURBIN FOOD CORP",
@@ -83,10 +84,10 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     )
     # Initialize since not all establishments are in PARENT_CORPS
     alt_name_match = False
-    if row["establishment_name"] in PARENT_CORPS:
+    if row["establishment_name"] in FSIS2NETS_CORPS:
         alt_name_match = (
             fuzz.token_sort_ratio(
-                PARENT_CORPS.get(row["establishment_name"], "").upper(),
+                FSIS2NETS_CORPS.get(row["establishment_name"], "").upper(),
                 row["Company"].upper(),
             )
             > company_threshold
@@ -141,7 +142,7 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
                             Error message was {response.text}"
         )
 
-    # Note: buffer(0) can clean up invalid geometries
+    # Note: use buffer(0) to clean up invalid geometries
     isochrone = Polygon(
         response.json()["features"][0]["geometry"]["coordinates"]
     ).buffer(0)
@@ -150,6 +151,15 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--smoke_test", action="store_true")
+    parser.add_argument("--get_isochrones", action="store_true")
+
+    args = parser.parse_args()
+
+    GET_ISOCHRONES = args.get_isochrones
+    SMOKE_TEST = args.smoke_test
+
     print("Loading data...")
     df_nets = pd.read_csv(
         NETS_PATH,
@@ -178,9 +188,7 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    GET_ISOCHRONES = True
     if GET_ISOCHRONES:
-        SMOKE_TEST = False
         if SMOKE_TEST:
             gdf_fsis = gdf_fsis.iloc[:10]
         dist = 60
@@ -320,11 +328,3 @@ if __name__ == "__main__":
         output[GEOJSON_COLS].to_file(
             RUN_DIR / "fsis_nets_matches.geojson", driver="GeoJSON"
         )
-
-    # # Convert numpy.bool_ columns to native Python bool
-    # for col in gdf_fsis.select_dtypes(include=[np.bool_]).columns:
-    #     gdf_fsis[col] = gdf_fsis[col].astype(bool)
-
-    # # Convert objects to strings to avoid dtype issues when saving as GeoJSON
-    # for col in gdf_fsis.select_dtypes(include=[object]).columns:
-    #     gdf_fsis[col] = gdf_fsis[col].astype(str)
