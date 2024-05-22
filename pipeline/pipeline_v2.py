@@ -14,6 +14,7 @@ import argparse
 from fsis_match import fsis_match
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
+from filter_barns import filter_barns
 
 # TODO: constants & config
 # maybe load the states globally since these get use in multiple files and the main pipeline?
@@ -75,10 +76,15 @@ def pipeline(nets_path=NETS_PATH, nets_naics_path=NETS_NAICS_PATH, fsis_path=FSI
         gdf_fsis
     )
 
-    # TODO: Can probably use a unary union of the gdf_fsis to get the total area for filtering barns
+    FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
+    gdf_barns = gpd.read_file(FILENAME)
+    # TODO: filepaths, load files, what do we want to do...
+    gdf_barns = filter_barns(gdf_barns)
 
     # TODO: save files if wanted
 
 
 if __name__ == "__main__":
+    # TODO: move file I/O stuff here
+
     pipeline()
