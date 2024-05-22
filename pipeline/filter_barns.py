@@ -303,7 +303,7 @@ def filter_barns(gdf_barns, smoke_test=SMOKE_TEST):
             "../data/shapefiles/Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
             buffer=400,
         ),
-        smoke_test=args.smoke_test,
+        smoke_test=smoke_test,
     )
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in airports"
@@ -334,7 +334,7 @@ def filter_barns(gdf_barns, smoke_test=SMOKE_TEST):
             "../data/shapefiles/tl_2019_us_coastline/tl_2019_us_coastline.shp"
         ),
         buffer=1000,
-        smoke_test=args.smoke_test,
+        smoke_test=smoke_test,
     )
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns on the coastline"
@@ -348,7 +348,7 @@ def filter_barns(gdf_barns, smoke_test=SMOKE_TEST):
     gdf_barns = filter_on_membership(
         gdf_barns,
         gpd.read_file("../data/shapefiles/USA_Detailed_Water_Bodies.geojson"),
-        smoke_test=args.smoke_test,
+        smoke_test=smoke_test,
     )
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in bodies of water"
@@ -400,7 +400,7 @@ if __name__ == "__main__":
         / "plants_with_isochrones.geojson"
     )
 
-    gdf_barns = filter_barns(gdf_barns, gdf_fsis, smoke_test=SMOKE_TEST)
+    gdf_barns = filter_barns(gdf_barns, smoke_test=SMOKE_TEST)
 
     gdf_barns.to_file(f"{filename}.geojson", driver="GeoJSON")
     print(f"Complete! Saved to {filename}.geojson")
