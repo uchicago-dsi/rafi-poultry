@@ -13,6 +13,7 @@ import argparse
 
 from fsis_match import fsis_match
 from get_plant_isochrones import get_plant_isochrones
+from calculate_captured_areas import calculate_captured_areas
 
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
@@ -67,8 +68,9 @@ def pipeline(nets_path=NETS_PATH, nets_naics_path=NETS_NAICS_PATH, fsis_path=FSI
 
     gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
     gdf_fsis = get_plant_isochrones(gdf_fsis)
+    calculate_captured_areas(gdf_fsis)
 
-    # TODO: add get capture areas
+    # TODO: save files if wanted
 
 
 if __name__ == "__main__":

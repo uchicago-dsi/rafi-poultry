@@ -24,6 +24,15 @@ from constants import (
     USA_LNG,
 )
 import os
+from pathlib import Path
+from tqdm import tqdm
+
+tqdm.pandas()
+
+current_dir = Path(__file__).resolve().parent
+DATA_DIR = current_dir / "../data/"
+DATA_DIR_RAW = DATA_DIR / "raw/"
+DATA_DIR_CLEAN = DATA_DIR / "clean/"
 
 empty_color = lambda x: {"fillColor": "00"}  # empty
 one_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
@@ -511,24 +520,19 @@ def full_script(
     return df_corp_state
 
 
-if __name__ == "__main__":
-    df = pd.read_csv("matches.csv")
-
-    # # TODO: This isochrone addition should be done in the FSIS processing script
-    # lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
-    # dist = 60
-    # MAPBOX_KEY = os.getenv("MAPBOX_API")
-    # df["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
-    gdf = gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84)
+# TODO: Set up filepaths
+def calculate_captured_areas(
+    gdf_fsis, corp_col="Parent Corporation", chrone_col="isochrone"
+):
+    gdf_fsis = gdf_fsis.set_crs(WGS84).set_geometry("isochrone")
     simplify = 0.01
-    gdf["Isochrone (Simplified)"] = gdf["Isochrone"].simplify(simplify)
-
-    # TODO: All of this is going to get messed up when we rename the columns
+    chrone_col_simplified = f"{chrone_col}_simplified"
+    gdf_fsis[chrone_col_simplified] = gdf_fsis[chrone_col].simplify(simplify)
 
     # TODO: Is "Matched_Company" what we actually want? Review the FSIS matching code
     # Dissolve by parent corporation so we are calcualting access on a corporation level
-    corporate_areas = gdf.dissolve(by="Matched_Company").reset_index()[
-        ["Matched_Company", "Isochrone"]
+    corporate_areas = gdf_fsis.dissolve(by=corp_col).reset_index()[
+        [corp_col, chrone_col]
     ]
 
     # Self join to find intersections in corporate access
@@ -542,34 +546,39 @@ if __name__ == "__main__":
         .to_crs(WGS84)
     )
     # We need to explicitly calculate the geometry of the intersection
-    intersections_filtered["intersection_geometry"] = intersections_filtered.apply(
-        lambda row: corporate_areas.at[row.name, "Isochrone"].intersection(
-            corporate_areas.at[row["index_right"], "Isochrone"]
-        ),
-        axis=1,
+    print("Calculating intersections...")
+    intersections_filtered["intersection_geometry"] = (
+        intersections_filtered.progress_apply(
+            lambda row: corporate_areas.at[row.name, chrone_col].intersection(
+                corporate_areas.at[row["index_right"], chrone_col]
+            ),
+            axis=1,
+        )
     )
     intersections_filtered = intersections_filtered.set_geometry(
         "intersection_geometry"
     ).set_crs(WGS84)
     intersections_filtered = intersections_filtered[
-        ["Matched_Company_left", "Matched_Company_right", "intersection_geometry"]
+        [f"{corp_col}_left", f"{corp_col}_right", "intersection_geometry"]
     ]
     # This is using the index for the corporations so reset the index so each intersection has a unique index
     intersections_filtered = intersections_filtered.reset_index()
 
     # Calculate single plant access area
+    print("Calculating single plant access...")
     multi_plant_access_area = intersections_filtered[
         "intersection_geometry"
     ].unary_union
     # Take the difference between each corporate area and the area with access to more than one plant
     # This is the area that has access to only one corporation
-    corporate_areas["Captured Area"] = corporate_areas["Isochrone"].apply(
+    corporate_areas["Captured Area"] = corporate_areas[chrone_col].progress_apply(
         lambda x: x.difference(multi_plant_access_area)
     )
 
     # Calculate the area that has access to two or more plants
     # Join intersections with corporate areas — we will groupby the number of corporate areas
     # that are in an intersection
+    print("Calculating multi plant access...")
     corporate_access_join = gpd.sjoin(
         intersections_filtered, corporate_areas, how="left", predicate="intersects"
     )
@@ -588,6 +597,7 @@ if __name__ == "__main__":
     three_plus_plant_access_area = multi_plant_access_area - two_plant_access_area
 
     # TODO: Where do I actually want to save this?
+    print("Saving files...")
     gdf_two_plants = gpd.GeoDataFrame(geometry=[two_plant_access_area], crs=WGS84)
     gdf_two_plants.to_file("two_plant_access.geojson", driver="GeoJSON")
     gdf_three_plus_plants = gpd.GeoDataFrame(
@@ -595,9 +605,109 @@ if __name__ == "__main__":
     )
     gdf_three_plus_plants.to_file("three_plus_plant_access.geojson", driver="GeoJSON")
 
-    # TODO: Should we preprocess the plant access stuff based on state selection?
-    # Could have a geojson organized by state that includes the capture area to display
-    # Ask Aaron if we want to:
-    # - Display sliced on state lines?
-    # - Display everything for plants in a state
-    # - Combination of the two?
+
+if __name__ == "__main__":
+    # TODO: add file reading management
+
+    GDF_FSIS_PATH = (
+        DATA_DIR_CLEAN
+        / "clean_fsis_isochrones_2024-05-22_00-50-25"
+        / "plants_with_isochrones.geojson"
+    )
+    gdf_fsis = gpd.read_file(GDF_FSIS_PATH)
+
+    # Note: rename "geometry" to match the expected from of GDF passed to function
+    gdf_fsis["isochrone"] = gdf_fsis["geometry"]
+    calculate_captured_areas(gdf_fsis)
+
+    # TODO: separate calculating from saving
+
+    # df = pd.read_csv("matches.csv")
+
+    # # # TODO: This isochrone addition should be done in the FSIS processing script
+    # # lats_and_longs = list(map(tuple, df[["latitude", "longitude"]].to_numpy()))
+    # # dist = 60
+    # # MAPBOX_KEY = os.getenv("MAPBOX_API")
+    # # df["Isochrone"] = get_isochrones(lats_and_longs, dist, MAPBOX_KEY)
+    # gdf = gpd.GeoDataFrame(df).set_geometry("Isochrone").set_crs(WGS84)
+    # simplify = 0.01
+    # gdf["Isochrone (Simplified)"] = gdf["Isochrone"].simplify(simplify)
+
+    # # TODO: All of this is going to get messed up when we rename the columns
+
+    # # TODO: Is "Matched_Company" what we actually want? Review the FSIS matching code
+    # # Dissolve by parent corporation so we are calcualting access on a corporation level
+    # corporate_areas = gdf.dissolve(by="Matched_Company").reset_index()[
+    #     ["Matched_Company", "Isochrone"]
+    # ]
+
+    # # Self join to find intersections in corporate access
+    # intersections = gpd.sjoin(
+    #     corporate_areas, corporate_areas, how="inner", predicate="intersects"
+    # )
+    # # Each area will overlap with itself, so remove those
+    # intersections_filtered = (
+    #     intersections[intersections.index != intersections["index_right"]]
+    #     .copy()
+    #     .to_crs(WGS84)
+    # )
+    # # We need to explicitly calculate the geometry of the intersection
+    # intersections_filtered["intersection_geometry"] = intersections_filtered.apply(
+    #     lambda row: corporate_areas.at[row.name, "Isochrone"].intersection(
+    #         corporate_areas.at[row["index_right"], "Isochrone"]
+    #     ),
+    #     axis=1,
+    # )
+    # intersections_filtered = intersections_filtered.set_geometry(
+    #     "intersection_geometry"
+    # ).set_crs(WGS84)
+    # intersections_filtered = intersections_filtered[
+    #     ["Matched_Company_left", "Matched_Company_right", "intersection_geometry"]
+    # ]
+    # # This is using the index for the corporations so reset the index so each intersection has a unique index
+    # intersections_filtered = intersections_filtered.reset_index()
+
+    # # Calculate single plant access area
+    # multi_plant_access_area = intersections_filtered[
+    #     "intersection_geometry"
+    # ].unary_union
+    # # Take the difference between each corporate area and the area with access to more than one plant
+    # # This is the area that has access to only one corporation
+    # corporate_areas["Captured Area"] = corporate_areas["Isochrone"].apply(
+    #     lambda x: x.difference(multi_plant_access_area)
+    # )
+
+    # # Calculate the area that has access to two or more plants
+    # # Join intersections with corporate areas — we will groupby the number of corporate areas
+    # # that are in an intersection
+    # corporate_access_join = gpd.sjoin(
+    #     intersections_filtered, corporate_areas, how="left", predicate="intersects"
+    # )
+    # overlap_count = corporate_access_join.groupby(corporate_access_join.index).size()
+    # # Filter for intersections that have access to exactly two corporations
+    # # We know, then, that these areas must be all of the spots with exactly two plant access
+    # two_plant_access_indeces = overlap_count[overlap_count == 2]
+    # two_plant_access_isochrones = intersections_filtered[
+    #     intersections_filtered.index.isin(two_plant_access_indeces.index)
+    # ]
+    # two_plant_access_area = two_plant_access_isochrones[
+    #     "intersection_geometry"
+    # ].unary_union
+    # # Remove the two plant access area from everything else
+    # # Remainder must have access to 3+ plants
+    # three_plus_plant_access_area = multi_plant_access_area - two_plant_access_area
+
+    # # TODO: Where do I actually want to save this?
+    # gdf_two_plants = gpd.GeoDataFrame(geometry=[two_plant_access_area], crs=WGS84)
+    # gdf_two_plants.to_file("two_plant_access.geojson", driver="GeoJSON")
+    # gdf_three_plus_plants = gpd.GeoDataFrame(
+    #     geometry=[three_plus_plant_access_area], crs=WGS84
+    # )
+    # gdf_three_plus_plants.to_file("three_plus_plant_access.geojson", driver="GeoJSON")
+
+    # # TODO: Should we preprocess the plant access stuff based on state selection?
+    # # Could have a geojson organized by state that includes the capture area to display
+    # # Ask Aaron if we want to:
+    # # - Display sliced on state lines?
+    # # - Display everything for plants in a state
+    # # - Combination of the two?
