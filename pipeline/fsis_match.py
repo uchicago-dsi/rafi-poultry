@@ -35,15 +35,6 @@ FSIS2NETS_CORPS = {
 }
 
 
-def clean_fsis(df):
-    df = df.dropna(subset=["activities"])
-    df = df[df.activities.str.lower().str.contains("poultry slaughter")]
-    df = df[df["size"] == "Large"]
-    df["duns_number"] = df["duns_number"].str.replace("-", "")
-    df["matched"] = False
-    return df
-
-
 def get_geospatial_matches(row, gdf_child, buffer=1000):
     # TODO: wait...where do I use the buffer?
     # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
@@ -101,97 +92,7 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     return row
 
 
-# def get_isochrone(row, driving_dist_miles: int, token: str):
-#     """Adds plant isochrones to fsis dataframe; captures area that is within
-#             an x mile radius of the plant. 90 percent of all birds were
-#             produced on farms within 60 miles of the plant, according to 2011
-#             ARMS data.
-
-#     Args:
-#         coords: list of tuples; lat and long for all processing plants.
-#         driving_dist_miles: int; radius of captured area (in driving distance).
-#         token: str; API token to access mapbox.
-
-#     Returns:
-#         list of plant isochrones
-
-#     """
-
-#     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
-#     DRIVING_DISTANCE_METERS = str(
-#         int(driving_dist_miles * 1609.34)
-#     )  # turns miles into meters
-
-#     lat = row["latitude"]
-#     lng = row["longitude"]
-#     url = (
-#         ENDPOINT
-#         + str(lng)
-#         + ","
-#         + str(lat)
-#         + "?"
-#         + "contours_meters="
-#         + DRIVING_DISTANCE_METERS
-#         + "&access_token="
-#         + token
-#     )
-#     response = requests.get(url)
-#     if not response.ok:
-#         raise Exception(
-#             f"Within the isochrone helper function, unable to \
-#                             access mapbox url using API token. Response \
-#                             had status code {response.status_code}. \
-#                             Error message was {response.text}"
-#         )
-
-#     # Note: use buffer(0) to clean up invalid geometries
-#     isochrone = Polygon(
-#         response.json()["features"][0]["geometry"]["coordinates"]
-#     ).buffer(0)
-#     row["isochrone"] = isochrone
-#     return row
-
-
-if __name__ == "__main__":
-    print("Loading data...")
-    df_nets = pd.read_csv(
-        NETS_PATH,
-        sep="\t",
-        encoding="latin-1",
-        dtype={"DunsNumber": str},
-        low_memory=False,
-    )
-    df_nets_naics = pd.read_csv(
-        NETS_NAICS_PATH,
-        dtype={"DunsNumber": str},
-        low_memory=False,
-    )
-    df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
-    gdf_nets = gpd.GeoDataFrame(
-        df_nets,
-        geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
-        crs=4326,
-    )
-
-    df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
-    df_fsis = clean_fsis(df_fsis)
-    gdf_fsis = gpd.GeoDataFrame(
-        df_fsis,
-        geometry=gpd.points_from_xy(df_fsis.longitude, df_fsis.latitude),
-        crs=4326,
-    )
-
-    # if GET_ISOCHRONES:
-    #     if SMOKE_TEST:
-    #         gdf_fsis = gdf_fsis.iloc[:10]
-    #     dist = 60
-    #     MAPBOX_KEY = os.getenv("MAPBOX_API")
-
-    #     print("Getting isochrones...")
-    #     gdf_fsis = gdf_fsis.progress_apply(
-    #         lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
-    #     )
-
+def fsis_match(gdf_nets, gdf_fsis):
     # Note: rows are filtered geospatially so can set address and company threshold somewhat low
     gdf_nets = gdf_nets.to_crs(9822)
     gdf_fsis = gdf_fsis.to_crs(9822)
@@ -399,3 +300,242 @@ if __name__ == "__main__":
     GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
     output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
+
+
+if __name__ == "__main__":
+    fsis_match()
+    # print("Loading data...")
+    # df_nets = pd.read_csv(
+    #     NETS_PATH,
+    #     sep="\t",
+    #     encoding="latin-1",
+    #     dtype={"DunsNumber": str},
+    #     low_memory=False,
+    # )
+    # df_nets_naics = pd.read_csv(
+    #     NETS_NAICS_PATH,
+    #     dtype={"DunsNumber": str},
+    #     low_memory=False,
+    # )
+    # df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
+    # gdf_nets = gpd.GeoDataFrame(
+    #     df_nets,
+    #     geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
+    #     crs=4326,
+    # )
+
+    # df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
+    # df_fsis = clean_fsis(df_fsis)
+    # gdf_fsis = gpd.GeoDataFrame(
+    #     df_fsis,
+    #     geometry=gpd.points_from_xy(df_fsis.longitude, df_fsis.latitude),
+    #     crs=4326,
+    # )
+
+    # # Note: rows are filtered geospatially so can set address and company threshold somewhat low
+    # gdf_nets = gdf_nets.to_crs(9822)
+    # gdf_fsis = gdf_fsis.to_crs(9822)
+    # buffer = 1000  # TODO...
+    # gdf_fsis["buffered"] = gdf_fsis.geometry.buffer(buffer)
+
+    # print("Getting geospatial matches...")
+    # gdf_fsis = gdf_fsis.progress_apply(
+    #     lambda row: get_geospatial_matches(row, gdf_nets), axis=1
+    # )
+
+    # # Reset geospatial index to WGS84
+    # gdf_fsis = gdf_fsis.to_crs(4326)
+
+    # merged_spatial = gdf_fsis.explode("spatial_match_index").merge(
+    #     gdf_nets,
+    #     left_on="spatial_match_index",
+    #     right_index=True,
+    #     suffixes=("_fsis", "_nets"),
+    #     how="left",
+    # )
+
+    # # TODO: do I care about duplicates here or not really?
+    # merged_duns = gdf_fsis.merge(
+    #     gdf_nets,
+    #     left_on="duns_number",
+    #     right_on="DunsNumber",
+    #     how="inner",
+    #     suffixes=("_fsis", "_nets"),
+    # )
+
+    # merged = pd.concat([merged_spatial, merged_duns])
+
+    # # Fill in match columns for selecting the best match
+    # merged = merged.apply(lambda row: get_string_matches(row), axis=1)
+
+    # # Roundabout way of doing this to prevent fragmented DataFrame warning
+    # duns_match = pd.DataFrame(
+    #     {"duns_match": merged["duns_number"] == merged["DunsNumber"]}
+    # )
+    # merged = pd.concat([merged, duns_match], axis=1)
+    # merged["match_score"] = (
+    #     merged[
+    #         [
+    #             "spatial_match",
+    #             "company_match",
+    #             "address_match",
+    #             "duns_match",
+    #             "alt_name_match",
+    #         ]
+    #     ]
+    #     .fillna(False)
+    #     .sum(axis=1)
+    # )
+
+    # # Column renaming dictionary
+    # RENAME_DICT = {
+    #     # FSIS columns
+    #     "establishment_name": "establishment_name_fsis",
+    #     "duns_number": "duns_number_fsis",
+    #     "street": "street_fsis",
+    #     "city": "city_fsis",
+    #     "state": "state_fsis",
+    #     "zip": "zip_fsis",
+    #     "activities": "activities_fsis",
+    #     "dbas": "dbas_fsis",
+    #     "size": "size_fsis",
+    #     "latitude": "latitude_fsis",
+    #     "longitude": "longitude_fsis",
+    #     # NETS columns
+    #     "DunsNumber": "duns_number_nets",
+    #     "Company": "company_nets",
+    #     "TradeName": "trade_name_nets",
+    #     "Address": "address_nets",
+    #     "City": "city_nets",
+    #     "State": "state_nets",
+    #     "HQDuns": "hq_duns_nets",
+    #     "HQCompany": "hq_company_nets",
+    #     "SalesHere": "sales_here_nets",
+    # }
+    # merged = merged.rename(columns=RENAME_DICT)
+
+    # CORP2PARENT = {
+    #     "Tyson": "Tyson",
+    #     "JBS": "JBS",
+    #     "Cargill": "Cargill",
+    #     "Foster Farms": "Foster Farms",
+    #     "Peco Foods": "Peco Foods",
+    #     "Sechler": "Sechler Family Foods, Inc.",
+    #     "Raeford": "House of Raeford",
+    #     "Koch Foods": "Koch Foods",
+    #     "Perdue": "Perdue",
+    #     "Fieldale": "Fieldale Farms Corporation",
+    #     "Amick": "Amick",
+    #     "George's": "George's",
+    #     "Mar-Jac": "Mar-Jac",
+    #     "Harim": "Harim Group",
+    #     "Costco": "Costco",
+    #     "Aterian": "Aterian Investment Partners",
+    #     "Pilgrim's Pride": "Pilgrim's Pride",
+    #     "Mountaire": "Mountaire",
+    #     "Bachoco": "Bachoco OK Foods",
+    #     "Wayne Farms": "Wayne Farms",
+    #     "Hillshire": "Hillshire",
+    #     "Butterball": "Butterball",
+    #     "Case Farms": "Case Farms",
+    #     "Foster": "Foster Poultry Farms",
+    #     "Sanderson": "Sanderson Farms, Inc.",
+    #     "Harrison": "Harrison Poultry, Inc.",
+    #     "Farbest": "Farbest Foods, Inc.",
+    #     "Jennie-O": "Jennie-O",
+    #     "Keystone": "Keystone",
+    #     "Simmons": "Simmons Prepared Foods, Inc.",
+    #     "JCG": "Cagles, Inc.",
+    #     "Norman": "Norman W. Fries, Inc.",
+    # }
+
+    # def map_to_corporation(name, corp_mapping=CORP2PARENT):
+    #     for key in corp_mapping:
+    #         if key.lower() in name.lower():
+    #             return corp_mapping[key]
+    #     return "Other"
+
+    # merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(
+    #     map_to_corporation
+    # )
+
+    # KEEP_COLS = [
+    #     "duns_number_fsis",
+    #     "duns_number_nets",
+    #     "parent_corp_manual",
+    #     "establishment_name_fsis",
+    #     "company_nets",
+    #     "street_fsis",
+    #     "address_nets",
+    #     "city_fsis",
+    #     "city_nets",
+    #     "state_fsis",
+    #     "state_nets",
+    #     "activities_fsis",
+    #     "dbas_fsis",
+    #     "size_fsis",
+    #     "trade_name_nets",
+    #     "hq_duns_nets",
+    #     "hq_company_nets",
+    #     "sales_here_nets",
+    #     "spatial_match",
+    #     "company_match",
+    #     "address_match",
+    #     "alt_name_match",
+    #     "duns_match",
+    #     "match_score",
+    # ]
+
+    # print("Saving files...")
+    # merged = merged.sort_values(
+    #     by=["establishment_name_fsis", "street_fsis", "match_score"],
+    #     ascending=[True, True, False],
+    # )
+    # merged[KEEP_COLS].to_csv(RUN_DIR / "merged.csv", index=False)
+
+    # # Select top match for each plant
+    # output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
+
+    # def calculate_sales(row, avg_sales):
+    #     if pd.isna(row["sales_here_nets"]):
+    #         row["display_sales"] = avg_sales[row["parent_corp_manual"]]
+    #     else:
+    #         row["display_sales"] = row["sales_here_nets"]
+
+    #     # Handle zero, unreasonably low, or missing sales data
+    #     if row["display_sales"] < 1000 or pd.isna(row["display_sales"]):
+    #         row["display_sales"] = avg_sales[
+    #             "Other"
+    #         ]  # TODO: This is maybe a bad assumption since sales here are large...
+    #     return row
+
+    # # Get average sales for each parent corporation
+    # avg_sales = output.groupby("parent_corp_manual")["sales_here_nets"].mean()
+
+    # # Calculate display sales data
+    # output = output.apply(lambda row: calculate_sales(row, avg_sales), axis=1)
+    # output[KEEP_COLS + ["display_sales"]].to_csv(RUN_DIR / "output.csv", index=False)
+
+    # # Save unmatched plants separately for review
+    # unmatched = output[output.match_score == 0]
+    # unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
+
+    # output_geojson = output.copy()
+    # output_geojson["geometry"] = output.apply(
+    #     lambda row: Point(row["longitude_fsis"], row["latitude_fsis"]), axis=1
+    # )
+
+    # GEOJSON_RENAME_COLS = {
+    #     "parent_corp_manual": "Parent Corporation",
+    #     "establishment_name_fsis": "Establishment Name",
+    #     "street_fsis": "Address",
+    #     "city_fsis": "City",
+    #     "state_fsis": "State",
+    #     "zip_fsis": "Zip",
+    #     "display_sales": "Sales",
+    # }
+    # output_geojson = output_geojson.rename(columns=GEOJSON_RENAME_COLS)
+
+    # GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
+    # output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
+    # output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
