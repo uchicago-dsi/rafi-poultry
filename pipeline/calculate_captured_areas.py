@@ -555,7 +555,6 @@ def calculate_captured_areas(
         .copy()
         .to_crs(WGS84)
     )
-    breakpoint()
     # We need to explicitly calculate the geometry of the intersection
     print("Calculating intersections...")
     intersections_filtered["intersection_geometry"] = (
