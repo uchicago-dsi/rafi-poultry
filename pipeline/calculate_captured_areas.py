@@ -26,13 +26,19 @@ from constants import (
 import os
 from pathlib import Path
 from tqdm import tqdm
+from datetime import datetime
 
 tqdm.pandas()
 
+# TODO: Move to __main__
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
 DATA_DIR_CLEAN = DATA_DIR / "clean/"
+RUN_DIR = (
+    DATA_DIR_CLEAN / f"captured_areas_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+)
+os.makedirs(RUN_DIR, exist_ok=True)
 
 empty_color = lambda x: {"fillColor": "00"}  # empty
 one_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
@@ -637,4 +643,13 @@ if __name__ == "__main__":
 
     # Note: rename "geometry" to match the expected from of GDF passed to function
     gdf_fsis["isochrone"] = gdf_fsis["geometry"]
-    calculate_captured_areas(gdf_fsis)
+    gdf_single_corp, gdf_two_corps, gdf_three_plus_corps = calculate_captured_areas(
+        gdf_fsis
+    )
+
+    # TODO: save these files reasonably
+    gdf_single_corp.to_file(RUN_DIR / "single_corp_access.geojson", driver="GeoJSON")
+    gdf_two_corps.to_file(RUN_DIR / "two_corp_access.geojson", driver="GeoJSON")
+    gdf_three_plus_corps.to_file(
+        RUN_DIR / "three_plus_corp_access.geojson", driver="GeoJSON"
+    )
