@@ -522,19 +522,22 @@ def full_script(
     return df_corp_state
 
 
-# TODO: Set up filepaths
+# TODO: Set up filepaths, maybe move columns to a config file?
 def calculate_captured_areas(
     gdf_fsis, corp_col="Parent Corporation", chrone_col="isochrone"
 ):
+    gdf_fsis = (
+        gdf_fsis.drop("geometry", axis=1).set_geometry("isochrone").set_crs(WGS84)
+    )
     # TODO: a bunch of this should be done elsewhere probably
     gdf_states = gpd.read_file(US_STATES_FPATH).set_crs(WGS84)
     gdf_states = gdf_states.drop(["GEO_ID", "STATE", "LSAD", "CENSUSAREA"], axis=1)
     gdf_states = gdf_states.rename(columns={"NAME": "state"})
 
-    gdf_fsis = gdf_fsis.set_crs(WGS84).set_geometry("isochrone")
-    simplify = 0.01
-    chrone_col_simplified = f"{chrone_col}_simplified"
-    gdf_fsis[chrone_col_simplified] = gdf_fsis[chrone_col].simplify(simplify)
+    # gdf_fsis = gdf_fsis.set_crs(WGS84).set_geometry("isochrone")
+    # simplify = 0.01
+    # chrone_col_simplified = f"{chrone_col}_simplified"
+    # gdf_fsis[chrone_col_simplified] = gdf_fsis[chrone_col].simplify(simplify)
 
     # TODO: Is "Matched_Company" what we actually want? Review the FSIS matching code
     # Dissolve by parent corporation so we are calcualting access on a corporation level
@@ -552,6 +555,7 @@ def calculate_captured_areas(
         .copy()
         .to_crs(WGS84)
     )
+    breakpoint()
     # We need to explicitly calculate the geometry of the intersection
     print("Calculating intersections...")
     intersections_filtered["intersection_geometry"] = (
