@@ -14,7 +14,7 @@ import argparse
 from fsis_match import fsis_match
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
-from filter_barns import filter_barns
+from filter_barns import filter_barns, save_barns
 
 # TODO: constants & config
 # maybe load the states globally since these get use in multiple files and the main pipeline?
@@ -125,11 +125,4 @@ if __name__ == "__main__":
     )
     gdf_three_plus_corps.to_file(RUN_DIR / "three_plus_corps.geojson", driver="GeoJSON")
 
-    # TODO: maybe turn this into a function
-    gdf_barns.to_file(RUN_DIR / "barns.geojson", driver="GeoJSON")
-
-    # gzip file for web
-    print("Zipping file...")
-    with open(filename, "rb") as f_in:
-        with gzip.open(filename + ".gz", "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    save_barns(gdf_barns, RUN_DIR / "barns.geojson")
