@@ -12,6 +12,7 @@ import numpy as np
 import argparse
 
 from fsis_match import fsis_match
+from get_plant_isochrones import get_plant_isochrones
 
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
@@ -64,7 +65,10 @@ def pipeline(nets_path=NETS_PATH, nets_naics_path=NETS_NAICS_PATH, fsis_path=FSI
         crs=4326,
     )
 
-    fsis_match(gdf_nets, gdf_fsis)
+    gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
+    gdf_fsis = get_plant_isochrones(gdf_fsis)
+
+    # TODO: add get capture areas
 
 
 if __name__ == "__main__":
