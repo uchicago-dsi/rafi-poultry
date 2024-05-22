@@ -18,7 +18,7 @@ current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
 DATA_DIR_CLEAN = DATA_DIR / "clean/"
-RUN_DIR = DATA_DIR_CLEAN / f"pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+RUN_DIR = DATA_DIR_CLEAN / f"fsis_match_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 os.makedirs(RUN_DIR, exist_ok=True)
 
 # TODO: set filename in config for data files
