@@ -124,4 +124,12 @@ if __name__ == "__main__":
         driver="GeoJSON",
     )
     gdf_three_plus_corps.to_file(RUN_DIR / "three_plus_corps.geojson", driver="GeoJSON")
+
+    # TODO: maybe turn this into a function
     gdf_barns.to_file(RUN_DIR / "barns.geojson", driver="GeoJSON")
+
+    # gzip file for web
+    print("Zipping file...")
+    with open(filename, "rb") as f_in:
+        with gzip.open(filename + ".gz", "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
