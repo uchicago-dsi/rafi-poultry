@@ -15,6 +15,9 @@ from fsis_match import fsis_match
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
 
+# TODO: constants & config
+# maybe load the states globally since these get use in multiple files and the main pipeline?
+
 current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
@@ -68,7 +71,11 @@ def pipeline(nets_path=NETS_PATH, nets_naics_path=NETS_NAICS_PATH, fsis_path=FSI
 
     gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
     gdf_fsis = get_plant_isochrones(gdf_fsis)
-    calculate_captured_areas(gdf_fsis)
+    gdf_single_corp, gdf_two_corps, gdf_three_plus_corps = calculate_captured_areas(
+        gdf_fsis
+    )
+
+    # TODO: Can probably use a unary union of the gdf_fsis to get the total area for filtering barns
 
     # TODO: save files if wanted
 
