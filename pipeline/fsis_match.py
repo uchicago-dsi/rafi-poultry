@@ -92,7 +92,7 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     return row
 
 
-def fsis_match(gdf_nets, gdf_fsis):
+def fsis_match(gdf_fsis, gdf_nets):
     # Note: rows are filtered geospatially so can set address and company threshold somewhat low
     gdf_nets = gdf_nets.to_crs(9822)
     gdf_fsis = gdf_fsis.to_crs(9822)
@@ -301,8 +301,11 @@ def fsis_match(gdf_nets, gdf_fsis):
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
     output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
 
+    return output_geojson[GEOJSON_COLS]
+
 
 if __name__ == "__main__":
+    # TODO: separate saving data from the fsis_match function
     fsis_match()
     # print("Loading data...")
     # df_nets = pd.read_csv(
