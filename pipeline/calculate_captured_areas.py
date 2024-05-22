@@ -35,10 +35,6 @@ current_dir = Path(__file__).resolve().parent
 DATA_DIR = current_dir / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
 DATA_DIR_CLEAN = DATA_DIR / "clean/"
-RUN_DIR = (
-    DATA_DIR_CLEAN / f"captured_areas_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-)
-os.makedirs(RUN_DIR, exist_ok=True)
 
 empty_color = lambda x: {"fillColor": "00"}  # empty
 one_plant_color = lambda x: {"fillColor": "#ED7117"}  # carrot
@@ -633,6 +629,12 @@ def calculate_captured_areas(
 
 
 if __name__ == "__main__":
+    RUN_DIR = (
+        DATA_DIR_CLEAN
+        / f"captured_areas_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    )
+    os.makedirs(RUN_DIR, exist_ok=True)
+
     # TODO: add file reading management, args, whatever
     GDF_FSIS_PATH = (
         DATA_DIR_CLEAN

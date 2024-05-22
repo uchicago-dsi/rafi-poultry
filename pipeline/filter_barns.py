@@ -194,13 +194,13 @@ def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0, smoke_test=Fa
 
 # TODO: Handle filepaths, etc. correctly
 # TODO: Set an argument for filtering on barns that intersect with the capture areas
-def filter_barns(gdf_barns, gdf_fsis, smoke_test=SMOKE_TEST):
+def filter_barns(gdf_barns, smoke_test=SMOKE_TEST):
     if SMOKE_TEST:
         n = 10000
         gdf_barns = gdf_barns.sample(n=n)
         print(f"Running in smoke test mode with {n} samples.")
     else:
-        print("Running in normal mode.")
+        print(f"Running with {len(gdf_barns)} barns.")
 
     # Project to equal area projection and get centroid for each barn
     gdf_barns = gdf_barns.to_crs(epsg=2163)
@@ -211,20 +211,58 @@ def filter_barns(gdf_barns, gdf_fsis, smoke_test=SMOKE_TEST):
 
     # Initialize the "exclude" column
     gdf_barns["exclude"] = 0
+    gdf_barns["integrator_access"] = 0
 
     # Join with plant access isochrones
     print("Checking integrator access...")
 
-    # TODO: ...should maybe do this with one, two, and three plus plant access separately
-    # fsis_union = gpd.GeoDataFrame(
-    #     geometry=[gdf_fsis.geometry.unary_union], crs=gdf_barns.crs
-    # )
+    # TODO: handle filepaths
+    gdf_single_corp = gpd.read_file(
+        DATA_DIR_CLEAN
+        / "captured_areas_2024-05-22_17-35-03"
+        / "single_corp_access.geojson"
+    )
+    gdf_two_corps = gpd.read_file(
+        DATA_DIR_CLEAN
+        / "captured_areas_2024-05-22_17-35-03"
+        / "two_corp_access.geojson"
+    )
+    gdf_three_plus_corps = gpd.read_file(
+        DATA_DIR_CLEAN
+        / "captured_areas_2024-05-22_17-35-03"
+        / "three_plus_corp_access.geojson"
+    )
+
+    fsis_union = gpd.GeoDataFrame(
+        geometry=[gdf_single_corp.geometry.unary_union], crs=gdf_barns.crs
+    )
+
+    # TODO: can prob do this as a function
     gdf_barns = gpd.sjoin(gdf_barns, fsis_union, how="left", predicate="within")
-    gdf_barns["integrator_access"] = gdf_barns["index_right"].notnull()
-    # TODO: add a flag for this
-    gdf_barns = gdf_barns[gdf_barns["integrator_access"]]
-    # Note: Need to drop the join column for future joins
+    gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 1
+    # TODO: is this the right dataframe here...
+    gdf_barns["parent_corporation"] = gdf_barns.apply(
+        lambda row: (
+            gdf_single_corp.loc[row["index_right"], "Parent Corporation"]
+            if pd.notnull(row["index_right"])
+            else None
+        ),
+        axis=1,
+    )  # Note: need to do this for future joins
     gdf_barns = gdf_barns.drop("index_right", axis=1)
+
+    gdf_barns = gpd.sjoin(gdf_barns, gdf_two_corps, how="left", predicate="within")
+    gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 2
+    gdf_barns = gdf_barns.drop("index_right", axis=1)
+
+    gdf_barns = gpd.sjoin(
+        gdf_barns, gdf_three_plus_corps, how="left", predicate="within"
+    )
+    gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 3
+    gdf_barns = gdf_barns.drop("index_right", axis=1)
+
+    # TODO: add a flag for this
+    gdf_barns = gdf_barns[gdf_barns["integrator_access"] != 0]
 
     # Get state membership for each barn
     print("Getting states for all barns...")
@@ -321,18 +359,18 @@ def filter_barns(gdf_barns, gdf_fsis, smoke_test=SMOKE_TEST):
 
     # TODO: There's a problem somewhere where this stuff is named inconsistently
     # Fix this in the rest of the pipeline
-    # TODO: Ok, I think we need to add "Plant Access" back in
-    gdf_barns = gdf_barns.rename(
-        columns={
-            "Parent Corporation": "company",
-            "Plant Access": "plant_access",
-            "state_left": "state",
-        }
-    )
+    gdf_barns = gdf_barns.rename(columns={"state_left": "state"})
     # TODO: "company" is missing from the full state final output from the isochrone pipeline
     # OUTPUT_COLS = ["state", "company", "plant_access", "geometry", "exclude"]
-    OUTPUT_COLS = ["state", "plant_access", "geometry", "exclude"]
+    OUTPUT_COLS = [
+        "state",
+        "parent_corporation",
+        "integrator_access",
+        "geometry",
+        "exclude",
+    ]
     gdf_barns = gdf_barns[OUTPUT_COLS]
+    gdf_barns = gdf_barns.set_geometry("geometry")
 
     return gdf_barns
 
@@ -347,7 +385,7 @@ if __name__ == "__main__":
     SMOKE_TEST = args.smoke_test
 
     # TODO: what do I want to do here...
-    filename = "../data/clean/filtered_barns"
+    filename = "../data/clean/filtered_barns.geojson"
 
     # if args.smoke_test:
     #     filename += "_smoke_test"
@@ -355,6 +393,7 @@ if __name__ == "__main__":
     # TODO: ...
     gdf_barns = gpd.read_file(FILENAME)
 
+    # TODO: this also doesn't work...need to load the three dataframes with corp access
     gdf_fsis = gpd.read_file(
         DATA_DIR_CLEAN
         / "fsis_isochrones_2024-05-22_16-49-51"
@@ -366,6 +405,7 @@ if __name__ == "__main__":
     gdf_barns.to_file(f"{filename}.geojson", driver="GeoJSON")
     print(f"Complete! Saved to {filename}.geojson")
 
+    # TODO: what is this duplicate file error I'm getting?
     # gzip file for web
     print("Zipping file...")
     with open(filename, "rb") as f_in:

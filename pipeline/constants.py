@@ -10,6 +10,7 @@ RAW_DIR = DATA_DIR / "raw"
 HTML_DIR = DATA_DIR / "html"
 
 # raw data
+# TODO: some of this should be moved to config
 RAW_FSIS_1_FPATH = RAW_DIR / "MPI_Directory_by_Establishment_Number.xlsx"  # new fsis 2
 RAW_FSIS_2_FPATH = RAW_DIR / "Dataset_Establishment_Demographic_Data.xlsx"  # new fsis 1
 RAW_COUNTERGLOW_FPATH = RAW_DIR / "Counterglow+Facility+List+Complete.csv"
@@ -53,6 +54,7 @@ WGS84 = "EPSG:4326"
 USA_LAT = 37.0902
 USA_LNG = -95.7129
 
+# TODO: Ok, this also needs to be cleand up and redone
 COLUMNS_TO_KEEP = [
     "DUNSNUMBER",
     "COMPANY",
