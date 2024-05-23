@@ -1,5 +1,5 @@
 """Contains functions to match the sales volume data of processing plants 
-from Infogroup 2022 data to the FSIS dataset, based on address and location. 
+from NETS data to the FSIS dataset, based on address and location. 
 """
 
 from tqdm import tqdm
@@ -180,3 +180,39 @@ def match_plants(
     final_matches = pd.concat([address_matches, loc_matches]).drop_duplicates()
     final_matches = final_matches.dropna(subset=["Parent Corporation"])
     return final_matches
+
+
+if __name__ == "__main__":
+    FSIS_PATH = Path("data/raw/MPI_Directory_by_Establishment_Name_29_04_24.csv")
+    df_fsis = pd.read_csv(FSIS_PATH)
+
+    # TODO: This is to extract activities... remove later
+    df_fsis = df_fsis.dropna(subset=["activities"])
+    activities = set()
+    for activity_string in df_fsis.activities.unique():
+        activity_list = activity_string.split(";")
+        for activity in activity_list:
+            activities.add(activity.strip())
+
+    df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry processing")]
+
+    df_nets = pd.read_csv(
+        "data/raw/nets/NETSData2022_RAFI(WithAddresses).txt",
+        sep="\t",
+        encoding="latin-1",
+        low_memory=False,
+    )
+
+    df_nets_naics = pd.read_csv(
+        "data/raw/nets/NAICS2022_RAFI.csv",
+        low_memory=False,
+    )
+
+    df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
+    df_nets["DunsNumber"] = df_nets["DunsNumber"].astype(str)
+
+    df = pd.merge(
+        df_fsis, df_nets, left_on="duns_number", right_on="DunsNumber", how="left"
+    )
+
+    # TODO: We only want companies that were open in 2022
