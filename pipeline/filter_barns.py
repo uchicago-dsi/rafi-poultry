@@ -335,9 +335,6 @@ def save_barns(gdf_barns, filepath):
 
     # gzip file for web
     print("Zipping file...")
-    # with open(filename, "rb") as f_in:
-    #     with gzip.open(filename + ".gz", "wb") as f_out:
-    #         shutil.copyfileobj(f_in, f_out)
     with filepath.open("rb") as f_in:
         with gzip.open(filepath.with_suffix(filepath.suffix + ".gz"), "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
@@ -354,9 +351,6 @@ if __name__ == "__main__":
 
     # TODO: what do I want to do here...
     filename = "../data/clean/filtered_barns.geojson"
-
-    # if args.smoke_test:
-    #     filename += "_smoke_test"
 
     # TODO: ...
     gdf_barns = gpd.read_file(FILENAME)

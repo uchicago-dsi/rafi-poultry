@@ -96,6 +96,11 @@ if __name__ == "__main__":
         RUN_DIR / "plants_with_isochrones.geojson",
         driver="GeoJSON",
     )
+    gdf_isochrones.to_file(
+        RUN_DIR / "isochrones.geojson",
+        driver="GeoJSON",
+    )
 
     # Note: Handles saving barns as geojson and gzip
+    # TODO: Change to function
     save_barns(gdf_barns, RUN_DIR / "barns.geojson")
