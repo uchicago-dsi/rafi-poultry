@@ -124,13 +124,10 @@ export async function GET(req, reqParams) {
         await getData()
     }
 
-    // console.log("plants data example", JSON.stringify(data.features[0], null, 2))
-
     if (reqParams.params.datatype == "plants") {
         if (cleanedData.length == 0) {
             getCleanData(data)
         }
-        // console.log("cleaned data example", JSON.stringify(cleanedData.features[0], null, 2))
         return NextResponse.json(cleanedData, { status: 200 });
     }
 
