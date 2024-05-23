@@ -247,12 +247,10 @@ def fsis_match(gdf_fsis, gdf_nets):
         "match_score",
     ]
 
-    print("Saving files...")
     merged = merged.sort_values(
         by=["establishment_name_fsis", "street_fsis", "match_score"],
         ascending=[True, True, False],
     )
-    merged[KEEP_COLS].to_csv(RUN_DIR / "merged.csv", index=False)
 
     # Select top match for each plant
     output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
@@ -300,7 +298,7 @@ def fsis_match(gdf_fsis, gdf_nets):
 
     GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
-    output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
+    # output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
 
     return output_geojson[GEOJSON_COLS]
 

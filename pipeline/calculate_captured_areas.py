@@ -21,7 +21,8 @@ def calculate_captured_areas(
     chrone_col="isochrone",
     access_col="corp_access",
 ):
-    gdf_fsis = gdf_fsis.drop("geometry", axis=1).set_geometry(chrone_col).set_crs(WGS84)
+    # gdf_fsis = gdf_fsis.drop("geometry", axis=1).set_geometry(chrone_col).set_crs(WGS84)
+    gdf_fsis = gdf_fsis.set_geometry(chrone_col).set_crs(WGS84)
 
     # Dissolve by parent corporation to calculate access on a corporation (not plant) level
     gdf_single_corp = gdf_fsis.dissolve(by=corp_col).reset_index()[
