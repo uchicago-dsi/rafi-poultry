@@ -6,20 +6,8 @@ import gzip
 import shutil
 from pathlib import Path
 from datetime import datetime
-from constants import GDF_STATES
+from constants import GDF_STATES, RAW_DIR, CLEAN_DIR
 
-# TODO:...
-FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
-
-# STATES_FILE = "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
-# STATES = gpd.read_file(STATES_FILE)
-
-# TODO:...
-current_dir = Path(__file__).resolve().parent
-DATA_DIR = current_dir / "../data/"
-DATA_DIR_RAW = DATA_DIR / "raw/"
-DATA_DIR_CLEAN = DATA_DIR / "clean/"
-RUN_DIR = DATA_DIR_CLEAN / f"barns_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 
 # TODO: ...
 CITIES_PATH = DATA_DIR / "shapefiles" / "municipalities___states.geoparquet"
@@ -329,18 +317,27 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=
     return gdf_barns
 
 
-def save_barns(gdf_barns, filepath):
-    print(f"Saving barns to {filepath}.geojson")
-    gdf_barns.to_file(f"{filepath}", driver="GeoJSON")
+# TODO: Move this to utils
+def save_geojson(gdf, filepath, gzip=False):
+    print(f"Saving file to {filepath}.geojson")
+    gdf.to_file(f"{filepath}", driver="GeoJSON")
 
-    # gzip file for web
-    print("Zipping file...")
-    with filepath.open("rb") as f_in:
-        with gzip.open(filepath.with_suffix(filepath.suffix + ".gz"), "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    if gzip:
+        # gzip file for web
+        print("Zipping file...")
+        with filepath.open("rb") as f_in:
+            with gzip.open(
+                filepath.with_suffix(filepath.suffix + ".gz"), "wb"
+            ) as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
 
 if __name__ == "__main__":
+    RUN_DIR = CLEAN_DIR / f"barns_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
+    # TODO: Add to config
+    BARNS_FILENAME = "full-usa-3-13-2021_filtered_deduplicated.gpkg"
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--smoke_test", action="store_true", help="Run in smoke test mode"
@@ -349,23 +346,15 @@ if __name__ == "__main__":
 
     SMOKE_TEST = args.smoke_test
 
-    # TODO: what do I want to do here...
-    filename = "../data/clean/filtered_barns.geojson"
-
-    # TODO: ...
-    gdf_barns = gpd.read_file(FILENAME)
+    gdf_barns = gpd.read_file(RAW_DIR / BARNS_FILENAME)
 
     # TODO: this also doesn't work...need to load the three dataframes with corp access
     gdf_fsis = gpd.read_file(
-        DATA_DIR_CLEAN
+        CLEAN_DIR
         / "fsis_isochrones_2024-05-22_16-49-51"
         / "plants_with_isochrones.geojson"
     )
 
     gdf_barns = filter_barns(gdf_barns, smoke_test=SMOKE_TEST)
 
-    filename = RUN_DIR / "barns.geojson"
-
-    # TODO: This should be a function, put in utils
-    # Note: Saves as geojson and gzip
-    save_barns(gdf_barns, filename)
+    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip=True)
