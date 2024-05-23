@@ -6,11 +6,13 @@ import gzip
 import shutil
 from pathlib import Path
 from datetime import datetime
+from constants import GDF_STATES
 
+# TODO:...
 FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
 
-STATES_FILE = "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
-STATES = gpd.read_file(STATES_FILE)
+# STATES_FILE = "../data/shapefiles/cb_2022_us_state_500k/cb_2022_us_state_500k.shp"
+# STATES = gpd.read_file(STATES_FILE)
 
 # TODO:...
 current_dir = Path(__file__).resolve().parent
@@ -19,67 +21,9 @@ DATA_DIR_RAW = DATA_DIR / "raw/"
 DATA_DIR_CLEAN = DATA_DIR / "clean/"
 RUN_DIR = DATA_DIR_CLEAN / f"barns_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 
-# Switch to state abbreviations so command line arguments work
-state2abbrev = {
-    "Alabama": "AL",
-    "Alaska": "AK",
-    "Arizona": "AZ",
-    "Arkansas": "AR",
-    "California": "CA",
-    "Colorado": "CO",
-    "Connecticut": "CT",
-    "Delaware": "DE",
-    "Florida": "FL",
-    "Georgia": "GA",
-    "Hawaii": "HI",
-    "Idaho": "ID",
-    "Illinois": "IL",
-    "Indiana": "IN",
-    "Iowa": "IA",
-    "Kansas": "KS",
-    "Kentucky": "KY",
-    "Louisiana": "LA",
-    "Maine": "ME",
-    "Maryland": "MD",
-    "Massachusetts": "MA",
-    "Michigan": "MI",
-    "Minnesota": "MN",
-    "Mississippi": "MS",
-    "Missouri": "MO",
-    "Montana": "MT",
-    "Nebraska": "NE",
-    "Nevada": "NV",
-    "New Hampshire": "NH",
-    "New Jersey": "NJ",
-    "New Mexico": "NM",
-    "New York": "NY",
-    "North Carolina": "NC",
-    "North Dakota": "ND",
-    "Ohio": "OH",
-    "Oklahoma": "OK",
-    "Oregon": "OR",
-    "Pennsylvania": "PA",
-    "Rhode Island": "RI",
-    "South Carolina": "SC",
-    "South Dakota": "SD",
-    "Tennessee": "TN",
-    "Texas": "TX",
-    "Utah": "UT",
-    "Vermont": "VT",
-    "Virginia": "VA",
-    "Washington": "WA",
-    "West Virginia": "WV",
-    "Wisconsin": "WI",
-    "Wyoming": "WY",
-    "District of Columbia": "DC",
-    "American Samoa": "AS",
-    "Guam": "GU",
-    "Northern Mariana Islands": "MP",
-    "Puerto Rico": "PR",
-    "United States Minor Outlying Islands": "UM",
-    "U.S. Virgin Islands": "VI",
-}
-STATES["ABBREV"] = STATES["NAME"].map(state2abbrev)
+# TODO: ...
+CITIES_PATH = DATA_DIR / "shapefiles" / "municipalities___states.geoparquet"
+
 
 CITIES = {
     "North Carolina": [
@@ -120,7 +64,7 @@ SMOKE_TEST = False
 PROJECTION = 4326
 
 
-def load_geography(filepath, state=None):
+def load_geography(filepath, states=GDF_STATES, state=None):
     _, file_extension = os.path.splitext(filepath)
     if file_extension.lower() == ".parquet":
         gdf = gpd.read_parquet(filepath)
@@ -130,7 +74,7 @@ def load_geography(filepath, state=None):
         gdf = gdf.to_crs(STATES.crs)
         gdf = gpd.overlay(
             gdf,
-            STATES[STATES["NAME"] == state],
+            states[states["NAME"] == state],
             how="intersection",
             keep_geom_type=False,
         )
@@ -142,7 +86,7 @@ def filter_on_road_distance(gdf):
     pass
 
 
-def get_state_info(gdf, states=STATES):
+def get_state_info(gdf, states=GDF_STATES):
     states = states.to_crs(gdf.crs)
     gdf_with_state = gpd.sjoin(gdf, states, how="left", predicate="intersects")
     gdf_with_state = gdf_with_state[[column for column in gdf.columns] + ["ABBREV"]]
@@ -199,9 +143,7 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     # Exclude barns in major cities
     print("Excluding barns in major cities...")
     # TODO: Should maybe set this up as a function and clean it up
-    cities_all = gpd.read_parquet(
-        "../data/shapefiles/municipalities___states.geoparquet"
-    )
+    cities_all = gpd.read_parquet(CITIES_PATH)
     matches = []
     for state, cities in CITIES.items():
         for city in cities:
@@ -226,7 +168,9 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     gdf_barns = filter_on_membership(
         gdf_barns,
         gpd.read_file(
-            "../data/shapefiles/Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
+            DATA_DIR
+            / "shapefiles"
+            / "Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
             buffer=400,
         ),
         smoke_test=smoke_test,
@@ -238,7 +182,7 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     # Exclude barns in parks
     # Source: https://www.arcgis.com/home/item.html?id=578968f975774d3fab79fe56c8c90941
     print("Excluding barns in parks...")
-    parks_gdb_path = "../data/shapefiles/USA_Parks/v10/park_dtl.gdb"
+    parks_gdb_path = DATA_DIR / "shapefiles" / "USA_Parks/v10/park_dtl.gdb"
     layer_name = "park_dtl"
     parks_gdf = gpd.read_file(parks_gdb_path, layer=layer_name)
     previously_excluded = len(gdf_barns[gdf_barns.exclude == 1])
@@ -257,7 +201,7 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     gdf_barns = filter_on_membership(
         gdf_barns,
         gpd.read_file(
-            "../data/shapefiles/tl_2019_us_coastline/tl_2019_us_coastline.shp"
+            DATA_DIR / "shapefiles" / "tl_2019_us_coastline/tl_2019_us_coastline.shp"
         ),
         buffer=1000,
         smoke_test=smoke_test,
@@ -273,7 +217,7 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     previously_excluded = len(gdf_barns[gdf_barns.exclude == 1])
     gdf_barns = filter_on_membership(
         gdf_barns,
-        gpd.read_file("../data/shapefiles/USA_Detailed_Water_Bodies.geojson"),
+        gpd.read_file(DATA_DIR / "shapefiles" / "USA_Detailed_Water_Bodies.geojson"),
         smoke_test=smoke_test,
     )
     print(
@@ -288,7 +232,7 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
 
 # TODO: Handle filepaths, etc. correctly
 # TODO: Set an argument for filtering on barns that intersect with the capture areas
-def filter_barns(gdf_barns, smoke_test=SMOKE_TEST, filter_barns=True):
+def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=True):
     if SMOKE_TEST:
         n = 10000
         gdf_barns = gdf_barns.sample(n=n)
@@ -310,22 +254,26 @@ def filter_barns(gdf_barns, smoke_test=SMOKE_TEST, filter_barns=True):
     # Join with plant access isochrones
     print("Checking integrator access...")
 
-    # TODO: handle filepaths
-    gdf_single_corp = gpd.read_file(
-        DATA_DIR_CLEAN
-        / "captured_areas_2024-05-22_17-35-03"
-        / "single_corp_access.geojson"
-    )
-    gdf_two_corps = gpd.read_file(
-        DATA_DIR_CLEAN
-        / "captured_areas_2024-05-22_17-35-03"
-        / "two_corp_access.geojson"
-    )
-    gdf_three_plus_corps = gpd.read_file(
-        DATA_DIR_CLEAN
-        / "captured_areas_2024-05-22_17-35-03"
-        / "three_plus_corp_access.geojson"
-    )
+    # # TODO: handle filepaths
+    # gdf_single_corp = gpd.read_file(
+    #     DATA_DIR_CLEAN
+    #     / "captured_areas_2024-05-22_17-35-03"
+    #     / "single_corp_access.geojson"
+    # )
+    # gdf_two_corps = gpd.read_file(
+    #     DATA_DIR_CLEAN
+    #     / "captured_areas_2024-05-22_17-35-03"
+    #     / "two_corp_access.geojson"
+    # )
+    # gdf_three_plus_corps = gpd.read_file(
+    #     DATA_DIR_CLEAN
+    #     / "captured_areas_2024-05-22_17-35-03"
+    #     / "three_plus_corp_access.geojson"
+    # )
+
+    gdf_single_corp = gdf_isochrones[gdf_isochrones["corp_access"] == 1]
+    gdf_two_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 2]
+    gdf_three_plus_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 3]
 
     fsis_union = gpd.GeoDataFrame(
         geometry=[gdf_single_corp.geometry.unary_union], crs=gdf_barns.crs
@@ -381,14 +329,17 @@ def filter_barns(gdf_barns, smoke_test=SMOKE_TEST, filter_barns=True):
     return gdf_barns
 
 
-def save_barns(gdf_barns, filename):
-    print(f"Saving barns to {filename}.geojson")
-    gdf_barns.to_file(f"{filename}.geojson", driver="GeoJSON")
+def save_barns(gdf_barns, filepath):
+    print(f"Saving barns to {filepath}.geojson")
+    gdf_barns.to_file(f"{filepath}", driver="GeoJSON")
 
     # gzip file for web
     print("Zipping file...")
-    with open(filename, "rb") as f_in:
-        with gzip.open(filename + ".gz", "wb") as f_out:
+    # with open(filename, "rb") as f_in:
+    #     with gzip.open(filename + ".gz", "wb") as f_out:
+    #         shutil.copyfileobj(f_in, f_out)
+    with filepath.open("rb") as f_in:
+        with gzip.open(filepath.with_suffix(filepath.suffix + ".gz"), "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
 
 
@@ -420,4 +371,7 @@ if __name__ == "__main__":
     gdf_barns = filter_barns(gdf_barns, smoke_test=SMOKE_TEST)
 
     filename = RUN_DIR / "barns.geojson"
+
+    # TODO: This should be a function, put in utils
+    # Note: Saves as geojson and gzip
     save_barns(gdf_barns, filename)

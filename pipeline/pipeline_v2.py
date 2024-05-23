@@ -1,37 +1,15 @@
 import pandas as pd
 import geopandas as gpd
-from pathlib import Path
-from fuzzywuzzy import fuzz
 from datetime import datetime
 import os
-import requests
-from tqdm import tqdm
 from typing import List, Tuple
-from shapely.geometry import Polygon, Point
-import numpy as np
 import argparse
 
 from fsis_match import fsis_match
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
 from filter_barns import filter_barns, save_barns
-
-# TODO: constants & config
-# maybe load the states globally since these get use in multiple files and the main pipeline?
-
-current_dir = Path(__file__).resolve().parent
-DATA_DIR = current_dir / "../data/"
-DATA_DIR_RAW = DATA_DIR / "raw/"
-DATA_DIR_CLEAN = DATA_DIR / "clean/"
-RUN_DIR = (
-    DATA_DIR_CLEAN / f"full_pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-)
-os.makedirs(RUN_DIR, exist_ok=True)
-
-# TODO: set filename in config for data files
-FSIS_PATH = DATA_DIR_RAW / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
-NETS_PATH = DATA_DIR_RAW / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
-NETS_NAICS_PATH = DATA_DIR_RAW / "nets" / "NAICS2022_RAFI.csv"
+from constants import RAW_DIR, CLEAN_DIR
 
 
 def clean_fsis(df):
@@ -43,47 +21,44 @@ def clean_fsis(df):
     return df
 
 
-def pipeline(gdf_fsis, gdf_nets):
-    # TODO: What about saving intermediate files? Go through and figure out how to save these (if at all)
+def pipeline(gdf_fsis, gdf_nets, gdf_barns, smoke_test=False):
     gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
     gdf_fsis_isochrones = get_plant_isochrones(gdf_fsis)
-    gdf_single_corp, gdf_two_corps, gdf_three_plus_corps = calculate_captured_areas(
-        gdf_fsis_isochrones
-    )
-
-    # TODO: move the I/O out of here also...
-    FILENAME = "../data/raw/full-usa-3-13-2021_filtered_deduplicated.gpkg"
-    gdf_barns = gpd.read_file(FILENAME)
-
-    # TODO: filepaths, load files, what do we want to do...
-    # TODO: add something to skip filtering for testing
-    gdf_barns = filter_barns(gdf_barns)
-
-    return gdf_fsis, gdf_single_corp, gdf_two_corps, gdf_three_plus_corps, gdf_barns
+    gdf_isochrones = calculate_captured_areas(gdf_fsis_isochrones)
+    # TODO: maybe add something to skip filtering for testing
+    gdf_barns = filter_barns(gdf_barns, gdf_isochrones, smoke_test=smoke_test)
+    return gdf_fsis, gdf_fsis_isochrones, gdf_isochrones, gdf_barns
 
 
 if __name__ == "__main__":
+    RUN_DIR = (
+        CLEAN_DIR / f"full_pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    )
+    os.makedirs(RUN_DIR, exist_ok=True)
+
+    # TODO: set filename in config for data files
+    FSIS_PATH = RAW_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
+    NETS_PATH = RAW_DIR / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
+    NETS_NAICS_PATH = RAW_DIR / "nets" / "NAICS2022_RAFI.csv"
+    BARNS_PATH = RAW_DIR / "full-usa-3-13-2021_filtered_deduplicated.gpkg"
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke_test", action="store_true")
     args = parser.parse_args()
-    smoke_test = args.smoke_test
 
-    # TODO: how should I handle file I/O stuff
-    nets_path = NETS_PATH
-    nets_naics_path = NETS_NAICS_PATH
-    fsis_path = FSIS_PATH
+    smoke_test = args.smoke_test
 
     # TODO: should maybe put these in functions also
     print("Loading data...")
     df_nets = pd.read_csv(
-        nets_path,
+        NETS_PATH,
         sep="\t",
         encoding="latin-1",
         dtype={"DunsNumber": str},
         low_memory=False,
     )
     df_nets_naics = pd.read_csv(
-        nets_naics_path,
+        NETS_NAICS_PATH,
         dtype={"DunsNumber": str},
         low_memory=False,
     )
@@ -94,7 +69,7 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    df_fsis = pd.read_csv(fsis_path, dtype={"duns_number": str})
+    df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
     df_fsis = clean_fsis(df_fsis)
 
     gdf_fsis = gpd.GeoDataFrame(
@@ -104,25 +79,23 @@ if __name__ == "__main__":
     )
 
     if smoke_test:
-        gdf_fsis = gdf_fsis.sample(10)
+        gdf_fsis = gdf_fsis.sample(30)
 
-    gdf_fsis, gdf_single_corp, gdf_two_corps, gdf_three_plus_corps, gdf_barns = (
-        pipeline(gdf_fsis, gdf_nets)
+    gdf_barns = gpd.read_file(BARNS_PATH)
+
+    gdf_fsis, gdf_fsis_isochrones, gdf_isochrones, gdf_barns = pipeline(
+        gdf_fsis, gdf_nets, gdf_barns, smoke_test
     )
 
-    gdf_fsis = gdf_fsis.drop("isochrone", axis=1)
+    # TODO: maybe add a function to save these
     gdf_fsis.to_file(
         RUN_DIR / "plants.geojson",
         driver="GeoJSON",
     )
-    gdf_single_corp.to_file(
-        RUN_DIR / "single_corp.geojson",
+    gdf_fsis_isochrones.to_file(
+        RUN_DIR / "plants_with_isochrones.geojson",
         driver="GeoJSON",
     )
-    gdf_two_corps.to_file(
-        RUN_DIR / "two_corps.geojson",
-        driver="GeoJSON",
-    )
-    gdf_three_plus_corps.to_file(RUN_DIR / "three_plus_corps.geojson", driver="GeoJSON")
 
+    # Note: Handles saving barns as geojson and gzip
     save_barns(gdf_barns, RUN_DIR / "barns.geojson")
