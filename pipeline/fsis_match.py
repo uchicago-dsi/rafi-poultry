@@ -14,8 +14,8 @@ import argparse
 # Enable pandas progress bars for apply functions
 tqdm.pandas()
 
-current_dir = Path(__file__).resolve().parent
-DATA_DIR = current_dir / "../data/"
+CURRENT_DIR = Path(__file__).resolve().parent
+DATA_DIR = CURRENT_DIR / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
 DATA_DIR_CLEAN = DATA_DIR / "clean/"
 RUN_DIR = DATA_DIR_CLEAN / f"fsis_match_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"

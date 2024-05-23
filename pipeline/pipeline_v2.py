@@ -46,9 +46,9 @@ def clean_fsis(df):
 def pipeline(gdf_fsis, gdf_nets):
     # TODO: What about saving intermediate files? Go through and figure out how to save these (if at all)
     gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
-    gdf_fsis = get_plant_isochrones(gdf_fsis)
+    gdf_fsis_isochrones = get_plant_isochrones(gdf_fsis)
     gdf_single_corp, gdf_two_corps, gdf_three_plus_corps = calculate_captured_areas(
-        gdf_fsis
+        gdf_fsis_isochrones
     )
 
     # TODO: move the I/O out of here also...
