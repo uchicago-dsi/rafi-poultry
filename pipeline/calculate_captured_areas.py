@@ -12,6 +12,8 @@ from constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
 import os
 from datetime import datetime
 
+from filter_barns import save_geojson
+
 tqdm.pandas()
 
 
@@ -121,13 +123,13 @@ if __name__ == "__main__":
     )
     os.makedirs(RUN_DIR, exist_ok=True)
 
-    # TODO: is there a better way to do this?
+    # TODO: is there a better way to load clean versions of the files?
     GDF_FSIS_PATH = CLEAN_DIR / "_clean_run" / "plants_with_isochrones.geojson"
     gdf_fsis = gpd.read_file(GDF_FSIS_PATH)
 
-    # Note: rename "geometry" to match the expected from of GDF passed to function
+    # Note: Since we are loading raw GeoJSON, rename "geometry" to match the expected from of GDF passed to function
     gdf_fsis["isochrone"] = gdf_fsis["geometry"]
     isochrones = calculate_captured_areas(gdf_fsis)
 
     print(f"Saving to {RUN_DIR}/isochrones.geojson")
-    isochrones.to_file(RUN_DIR / "isochrones.geojson", driver="GeoJSON")
+    save_geojson(isochrones, RUN_DIR / "isochrones.geojson", gzip_file=True)
