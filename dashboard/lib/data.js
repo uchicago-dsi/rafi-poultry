@@ -2,7 +2,8 @@
 import pako from 'pako';
 import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
-const ISOCHRONES = "../data/v2/isochrones.geojson";
+// const ISOCHRONES = "../data/v2/isochrones.geojson";
+const ISOCHRONES = "../data/v2/isochrones.geojson.gz";
 const BARNS = "../data/v2/barns.geojson.gz"
 
 const fetchData = async (url) => {
@@ -22,7 +23,8 @@ export const updateStaticDataStore = async () => {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
       fetchGzip(BARNS),
-      fetchData(ISOCHRONES),
+      // fetchData(ISOCHRONES),
+      fetchGzip(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
 

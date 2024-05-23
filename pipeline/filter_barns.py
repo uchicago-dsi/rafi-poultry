@@ -300,8 +300,8 @@ def save_geojson(gdf, filepath, gzip_file=False):
     print(f"Saving file to {filepath}.geojson")
     gdf.to_file(f"{filepath}", driver="GeoJSON")
 
+    # gzip file for web
     if gzip_file:
-        # gzip file for web
         print("Zipping file...")
         with filepath.open("rb") as f_in:
             with gzip.open(
@@ -324,9 +324,9 @@ if __name__ == "__main__":
 
     SMOKE_TEST = args.smoke_test
 
+    # TODO: Maybe create a read function for this
     gdf_barns = gpd.read_file(RAW_DIR / BARNS_FILENAME)
-
-    # TODO: this also doesn't work...need to load the three dataframes with corp access
+    # TODO: Filepaths...
     gdf_fsis = gpd.read_file(
         CLEAN_DIR
         / "fsis_isochrones_2024-05-22_16-49-51"
