@@ -87,7 +87,7 @@ const getSalesData = (data) => {
         const state = feature.properties["State"];
         const parentCorp = feature.properties["Parent Corporation"];
         // const salesVolume = Number(feature.properties["Sales Volume (Location)"]);
-        const salesVolume = Number(feature.properties["Sales Volume (Location)"]);
+        const salesVolume = Number(feature.properties["Sales"]);
 
         
         if (!stateSales[state]) {
