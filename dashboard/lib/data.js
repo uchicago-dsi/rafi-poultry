@@ -26,23 +26,9 @@ export const updateStaticDataStore = async () => {
       fetchData("/api/plants/sales")
     ]);
 
-    // FSIS plant data to only include large chicken processing plants
-    // const processedPlants = {
-    //   type: "FeatureCollection",
-    //   features: rawPlants.features.filter(plant => 
-    //     plant.properties["Animals Processed"] === "Chicken" &&
-    //     plant.properties.Size === "Large")
-    // };
-    // staticDataStore.allPlants = processedPlants;
-    console.log("rawPlants", rawPlants)
     staticDataStore.allPlants = rawPlants;
-    // console.log("rawPlants", rawPlants)
-
-    // Get list of all states that have plants and update staticDataStore
-    // staticDataStore.allStates = processedPlants.features
-    // .map((feature) => feature.properties.State)
-    // .filter((value, index, array) => array.indexOf(value) === index)
-    // .sort();
+    
+    // Update states to display
     staticDataStore.allStates = rawPlants.features
     .map((feature) => feature.properties.State)
     .filter((value, index, array) => array.indexOf(value) === index)
@@ -58,6 +44,8 @@ export const updateStaticDataStore = async () => {
       ),
     };
     staticDataStore.allBarns = processedBarns;
+
+    console.log(rawSales)
 
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;

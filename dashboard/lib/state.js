@@ -113,7 +113,7 @@ function calculateCapturedBarns() {
 
   // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
   filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
-    const plantAccess = feature.properties.plant_access === 4 ? 3 : (feature.properties.plant_access || 0); // convert 4 to 3, default to 0 if null
+    const plantAccess = feature.properties.integrator_access === 4 ? 3 : (feature.properties.integrator_access || 0); // convert 4 to 3, default to 0 if null
     accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
     if (plantAccess != 0) {
