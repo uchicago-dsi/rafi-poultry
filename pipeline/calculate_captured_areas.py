@@ -8,7 +8,7 @@ import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 from typing import List, Dict, Tuple
-from constants import WGS84, CLEAN_DIR, GDF_STATES
+from constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
 import os
 from datetime import datetime
 
@@ -109,6 +109,8 @@ def calculate_captured_areas(
             [gdf_single_corp, gdf_two_corps, gdf_three_plus_corps], ignore_index=True
         )
     )
+
+    isochrones["state"] = isochrones["state"].map(STATE2ABBREV)
 
     return isochrones
 

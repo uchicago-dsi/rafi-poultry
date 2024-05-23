@@ -25,17 +25,24 @@ export const updateStaticDataStore = async () => {
       fetchData("/api/plants/sales")
     ]);
 
-    // Filter FSIS plant data to only include large chicken processing plants
-    const processedPlants = {
-      type: "FeatureCollection",
-      features: rawPlants.features.filter(plant => 
-        plant.properties["Animals Processed"] === "Chicken" &&
-        plant.properties.Size === "Large")
-    };
-    staticDataStore.allPlants = processedPlants;
+    // FSIS plant data to only include large chicken processing plants
+    // const processedPlants = {
+    //   type: "FeatureCollection",
+    //   features: rawPlants.features.filter(plant => 
+    //     plant.properties["Animals Processed"] === "Chicken" &&
+    //     plant.properties.Size === "Large")
+    // };
+    // staticDataStore.allPlants = processedPlants;
+    console.log("rawPlants", rawPlants)
+    staticDataStore.allPlants = rawPlants;
+    // console.log("rawPlants", rawPlants)
 
     // Get list of all states that have plants and update staticDataStore
-    staticDataStore.allStates = processedPlants.features
+    // staticDataStore.allStates = processedPlants.features
+    // .map((feature) => feature.properties.State)
+    // .filter((value, index, array) => array.indexOf(value) === index)
+    // .sort();
+    staticDataStore.allStates = rawPlants.features
     .map((feature) => feature.properties.State)
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
