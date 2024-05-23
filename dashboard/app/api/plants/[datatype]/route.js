@@ -86,7 +86,9 @@ const getSalesData = (data) => {
       data.features.forEach(feature => {
         const state = feature.properties["State"];
         const parentCorp = feature.properties["Parent Corporation"];
+        // const salesVolume = Number(feature.properties["Sales Volume (Location)"]);
         const salesVolume = Number(feature.properties["Sales Volume (Location)"]);
+
         
         if (!stateSales[state]) {
           stateSales[state] = {};

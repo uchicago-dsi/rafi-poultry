@@ -65,10 +65,10 @@ function updateFilteredIsochrones(states) {
 
 function updateFilteredBarns(states) {
   // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
-  const stateabbrevs = states.map((state) => state2abb[state]);
+  // const stateabbrevs = states.map((state) => state2abb[state]);
   filteredDataStore.filteredBarns =
   staticDataStore.allBarns.features.filter((row) =>
-    stateabbrevs.includes(row.properties.state)
+    states.includes(row.properties.state)
   );
 }
 
