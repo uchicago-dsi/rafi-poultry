@@ -6,13 +6,10 @@ import gzip
 import shutil
 from pathlib import Path
 from datetime import datetime
-from constants import GDF_STATES, RAW_DIR, CLEAN_DIR
+from constants import GDF_STATES, RAW_DIR, CLEAN_DIR, DATA_DIR, WGS84
 
-
-# TODO: ...
+# TODO: move to config or constants
 CITIES_PATH = DATA_DIR / "shapefiles" / "municipalities___states.geoparquet"
-
-
 CITIES = {
     "North Carolina": [
         "Charlotte",
@@ -47,11 +44,8 @@ CITIES = {
     ],
 }
 
-# TODO: Ok...what?
-SMOKE_TEST = False
-PROJECTION = 4326
 
-
+# TODO: This is probably a util also...
 def load_geography(filepath, states=GDF_STATES, state=None):
     _, file_extension = os.path.splitext(filepath)
     if file_extension.lower() == ".parquet":
@@ -59,7 +53,7 @@ def load_geography(filepath, states=GDF_STATES, state=None):
     else:
         gdf = gpd.read_file(filepath)
     if state is not None:
-        gdf = gdf.to_crs(STATES.crs)
+        gdf = gdf.to_crs(GDF_STATES.crs)
         gdf = gpd.overlay(
             gdf,
             states[states["NAME"] == state],
@@ -233,7 +227,7 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=
     gdf_barns["geometry"] = gdf_barns["geometry"].centroid
 
     # Project to latitude and longitude
-    gdf_barns = gdf_barns.to_crs(epsg=PROJECTION)
+    gdf_barns = gdf_barns.to_crs(epsg=WGS84)
 
     # Initialize the "exclude" column
     gdf_barns["exclude"] = 0
@@ -241,23 +235,6 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=
 
     # Join with plant access isochrones
     print("Checking integrator access...")
-
-    # # TODO: handle filepaths
-    # gdf_single_corp = gpd.read_file(
-    #     DATA_DIR_CLEAN
-    #     / "captured_areas_2024-05-22_17-35-03"
-    #     / "single_corp_access.geojson"
-    # )
-    # gdf_two_corps = gpd.read_file(
-    #     DATA_DIR_CLEAN
-    #     / "captured_areas_2024-05-22_17-35-03"
-    #     / "two_corp_access.geojson"
-    # )
-    # gdf_three_plus_corps = gpd.read_file(
-    #     DATA_DIR_CLEAN
-    #     / "captured_areas_2024-05-22_17-35-03"
-    #     / "three_plus_corp_access.geojson"
-    # )
 
     gdf_single_corp = gdf_isochrones[gdf_isochrones["corp_access"] == 1]
     gdf_two_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 2]
