@@ -137,6 +137,7 @@ abb2state = {
     "WY": "Wyoming",
 }
 
+# TODO: Maybe standardize this somewhere rather than converting back and forth
 STATE2ABBREV = {
     "Alabama": "AL",
     "Alaska": "AK",

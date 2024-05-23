@@ -14,6 +14,7 @@ import argparse
 # Enable pandas progress bars for apply functions
 tqdm.pandas()
 
+# TODO: wtf...
 CURRENT_DIR = Path(__file__).resolve().parent
 DATA_DIR = CURRENT_DIR / "../data/"
 DATA_DIR_RAW = DATA_DIR / "raw/"
@@ -298,9 +299,9 @@ def fsis_match(gdf_fsis, gdf_nets):
 
     GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
-    # output_geojson[GEOJSON_COLS].to_file(RUN_DIR / "plants.geojson", driver="GeoJSON")
+    output_geojson = output_geojson[GEOJSON_COLS]
 
-    return output_geojson[GEOJSON_COLS]
+    return output_geojson
 
 
 if __name__ == "__main__":
