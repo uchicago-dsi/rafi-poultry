@@ -1,11 +1,10 @@
 "use client";
-import { state, updateFilteredData, staticDataStore } from "../lib/state";
-import { unpack } from "msgpackr";
 import pako from 'pako';
+import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
-// TODO: This file needs to be regenerated with better column names
-const ISOCHRONES =
-  "../data/new_all_states_with_parent_corp_by_corp.geojson";
+// const ISOCHRONES = "../data/v2/isochrones.geojson";
+const ISOCHRONES = "../data/v2/isochrones.geojson.gz";
+const BARNS = "../data/v2/barns.geojson.gz"
 
 const fetchData = async (url) => {
   const response = await fetch(url);
@@ -23,22 +22,16 @@ export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
-      fetchGzip("/data/filtered_barns.geojson.gz"),
-      fetchData(ISOCHRONES),
+      fetchGzip(BARNS),
+      // fetchData(ISOCHRONES),
+      fetchGzip(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
 
-    // Filter FSIS plant data to only include large chicken processing plants
-    const processedPlants = {
-      type: "FeatureCollection",
-      features: rawPlants.features.filter(plant => 
-        plant.properties["Animals Processed"] === "Chicken" &&
-        plant.properties.Size === "Large")
-    };
-    staticDataStore.allPlants = processedPlants;
-
-    // Get list of all states that have plants and update staticDataStore
-    staticDataStore.allStates = processedPlants.features
+    staticDataStore.allPlants = rawPlants;
+    
+    // Update states to display
+    staticDataStore.allStates = rawPlants.features
     .map((feature) => feature.properties.State)
     .filter((value, index, array) => array.indexOf(value) === index)
     .sort();
@@ -49,14 +42,17 @@ export const updateStaticDataStore = async () => {
       features: rawBarns.features.filter(
         (feature) =>
           feature.properties.exclude === 0 &&
-          feature.properties.plant_access !== null
+          feature.properties.integrator_access !== null
       ),
     };
     staticDataStore.allBarns = processedBarns;
 
+    console.log(rawSales)
+
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;
     staticDataStore.allIsochrones = rawIsochrones
+
   } catch (error) {
     console.error(error);
   }

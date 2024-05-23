@@ -29,8 +29,6 @@ const markerPalette = {
 
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
-// console.log(colorPalette);
-
 export function DeckGLMap() {
   const {
     isDataLoaded,
@@ -57,7 +55,7 @@ export function DeckGLMap() {
     },
 
     getFillColor: function (dataRow) {
-      switch (dataRow.properties.corporate_access) {
+      switch (dataRow.properties.corp_access) {
         case 1:
           return colorPalette["One Integrator"];
         case 2:

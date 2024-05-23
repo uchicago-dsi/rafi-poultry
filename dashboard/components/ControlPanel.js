@@ -2,6 +2,7 @@
 // app.js
 import React, { useState } from "react";
 import { useSnapshot } from "valtio";
+import { abb2state } from "@/lib/constants";
 
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
@@ -80,7 +81,7 @@ export default function ControlPanel() {
         </div>
         {staticDataStore.allStates.map((option, index) => (
           <label key={index} className="label cursor-pointer py-1">
-            <span className="block label-text">{option}</span>
+            <span className="block label-text">{abb2state[option]}</span>
             <input
               className="checkbox checkbox-xs block"
               value={option}
