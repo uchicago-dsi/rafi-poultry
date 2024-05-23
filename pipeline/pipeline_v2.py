@@ -87,9 +87,9 @@ if __name__ == "__main__":
         gdf_fsis, gdf_nets, gdf_barns, SMOKE_TEST
     )
 
-    save_geojson(gdf_fsis, RUN_DIR / "plants.geojson", gzip=True)
+    save_geojson(gdf_fsis, RUN_DIR / "plants.geojson", gzip_file=True)
     save_geojson(gdf_isochrones, RUN_DIR / "plants_with_isochrones.geojson")
     save_geojson(
-        gdf_fsis_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip=True
+        gdf_fsis_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip_file=True
     )
-    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip=True)
+    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)
