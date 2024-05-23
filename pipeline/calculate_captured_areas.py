@@ -8,11 +8,7 @@ import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 from typing import List, Dict, Tuple
-from constants import (
-    US_STATES_FPATH,
-    WGS84,
-    CLEAN_DIR,
-)
+from constants import WGS84, CLEAN_DIR, GDF_STATES
 import os
 from datetime import datetime
 
@@ -23,11 +19,6 @@ def calculate_captured_areas(
     gdf_fsis, corp_col="Parent Corporation", chrone_col="isochrone"
 ):
     gdf_fsis = gdf_fsis.drop("geometry", axis=1).set_geometry(chrone_col).set_crs(WGS84)
-
-    # TODO: a bunch of this should be done elsewhere probably...load this from constants?
-    gdf_states = gpd.read_file(US_STATES_FPATH).set_crs(WGS84)
-    gdf_states = gdf_states.drop(["GEO_ID", "STATE", "LSAD", "CENSUSAREA"], axis=1)
-    gdf_states = gdf_states.rename(columns={"NAME": "state"})
 
     # Dissolve by parent corporation to calculate access on a corporation (not plant) level
     gdf_single_corp = gdf_fsis.dissolve(by=corp_col).reset_index()[
@@ -72,7 +63,7 @@ def calculate_captured_areas(
     )
     gdf_single_corp = gdf_single_corp.set_geometry("Captured Area")
 
-    gdf_single_corp = gpd.overlay(gdf_states, gdf_single_corp, how="intersection")
+    gdf_single_corp = gpd.overlay(GDF_STATES, gdf_single_corp, how="intersection")
     gdf_single_corp["plant_access"] = 1
     gdf_single_corp = gdf_single_corp.drop("isochrone", axis=1)
 
@@ -100,13 +91,13 @@ def calculate_captured_areas(
     three_plus_corp_access_area = multi_corp_access_area - two_corp_access_area
 
     gdf_two_corps = gpd.GeoDataFrame(geometry=[two_corp_access_area], crs=WGS84)
-    gdf_two_corps = gpd.overlay(gdf_states, gdf_two_corps)
+    gdf_two_corps = gpd.overlay(GDF_STATES, gdf_two_corps)
     gdf_two_corps["plant_access"] = 2
 
     gdf_three_plus_corps = gpd.GeoDataFrame(
         geometry=[three_plus_corp_access_area], crs=WGS84
     )
-    gdf_three_plus_corps = gpd.overlay(gdf_states, gdf_three_plus_corps)
+    gdf_three_plus_corps = gpd.overlay(GDF_STATES, gdf_three_plus_corps)
     gdf_three_plus_corps["plant_access"] = 3
 
     isochrones = gpd.GeoDataFrame(
@@ -132,4 +123,5 @@ if __name__ == "__main__":
     gdf_fsis["isochrone"] = gdf_fsis["geometry"]
     isochrones = calculate_captured_areas(gdf_fsis)
 
+    print(f"Saving to {RUN_DIR}/isochrones.geojson"...)
     isochrones.to_file(RUN_DIR / "isochrones.geojson", driver="GeoJSON")
