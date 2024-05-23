@@ -212,10 +212,9 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     return gdf_barns
 
 
-# TODO: Handle filepaths, etc. correctly
 # TODO: Set an argument for filtering on barns that intersect with the capture areas
-def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=True):
-    if SMOKE_TEST:
+def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True):
+    if smoke_test:
         n = 10000
         gdf_barns = gdf_barns.sample(n=n)
         print(f"Running in smoke test mode with {n} samples.")
@@ -255,7 +254,8 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=
             else None
         ),
         axis=1,
-    )  # Note: need to do this for future joins
+    )
+    # Note: Need to drop the index column created by the join for future joins
     gdf_barns = gdf_barns.drop("index_right", axis=1)
 
     gdf_barns = gpd.sjoin(gdf_barns, gdf_two_corps, how="left", predicate="within")
@@ -271,6 +271,7 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=
     # TODO: add a flag for this
     gdf_barns = gdf_barns[gdf_barns["integrator_access"] != 0]
 
+    # TODO: I think I should have this as a flag in the utils function
     # Get state membership for each barn
     print("Getting states for all barns...")
     gdf_barns = get_state_info(gdf_barns)
@@ -295,11 +296,11 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST, filter_barns=
 
 
 # TODO: Move this to utils
-def save_geojson(gdf, filepath, gzip=False):
+def save_geojson(gdf, filepath, gzip_file=False):
     print(f"Saving file to {filepath}.geojson")
     gdf.to_file(f"{filepath}", driver="GeoJSON")
 
-    if gzip:
+    if gzip_file:
         # gzip file for web
         print("Zipping file...")
         with filepath.open("rb") as f_in:
@@ -334,4 +335,4 @@ if __name__ == "__main__":
 
     gdf_barns = filter_barns(gdf_barns, smoke_test=SMOKE_TEST)
 
-    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip=True)
+    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)
