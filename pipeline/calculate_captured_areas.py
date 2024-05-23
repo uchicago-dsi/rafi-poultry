@@ -16,7 +16,10 @@ tqdm.pandas()
 
 
 def calculate_captured_areas(
-    gdf_fsis, corp_col="Parent Corporation", chrone_col="isochrone"
+    gdf_fsis,
+    corp_col="Parent Corporation",
+    chrone_col="isochrone",
+    access_col="corp_access",
 ):
     gdf_fsis = gdf_fsis.drop("geometry", axis=1).set_geometry(chrone_col).set_crs(WGS84)
 
@@ -64,7 +67,7 @@ def calculate_captured_areas(
     gdf_single_corp = gdf_single_corp.set_geometry("Captured Area")
 
     gdf_single_corp = gpd.overlay(GDF_STATES, gdf_single_corp, how="intersection")
-    gdf_single_corp["plant_access"] = 1
+    gdf_single_corp[access_col] = 1
     gdf_single_corp = gdf_single_corp.drop("isochrone", axis=1)
 
     # Calculate the area that has access to two or more plants
@@ -92,13 +95,13 @@ def calculate_captured_areas(
 
     gdf_two_corps = gpd.GeoDataFrame(geometry=[two_corp_access_area], crs=WGS84)
     gdf_two_corps = gpd.overlay(GDF_STATES, gdf_two_corps)
-    gdf_two_corps["plant_access"] = 2
+    gdf_two_corps[access_col] = 2
 
     gdf_three_plus_corps = gpd.GeoDataFrame(
         geometry=[three_plus_corp_access_area], crs=WGS84
     )
     gdf_three_plus_corps = gpd.overlay(GDF_STATES, gdf_three_plus_corps)
-    gdf_three_plus_corps["plant_access"] = 3
+    gdf_three_plus_corps[access_col] = 3
 
     isochrones = gpd.GeoDataFrame(
         pd.concat(
@@ -123,5 +126,5 @@ if __name__ == "__main__":
     gdf_fsis["isochrone"] = gdf_fsis["geometry"]
     isochrones = calculate_captured_areas(gdf_fsis)
 
-    print(f"Saving to {RUN_DIR}/isochrones.geojson"...)
+    print(f"Saving to {RUN_DIR}/isochrones.geojson")
     isochrones.to_file(RUN_DIR / "isochrones.geojson", driver="GeoJSON")
