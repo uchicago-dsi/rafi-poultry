@@ -8,7 +8,7 @@ import argparse
 from fsis_match import fsis_match
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
-from filter_barns import filter_barns, save_barns
+from filter_barns import filter_barns, save_geojson
 from constants import RAW_DIR, CLEAN_DIR
 
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument("--smoke_test", action="store_true")
     args = parser.parse_args()
 
-    smoke_test = args.smoke_test
+    SMOKE_TEST = args.smoke_test
 
     # TODO: should maybe put these in functions also
     print("Loading data...")
@@ -78,29 +78,18 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    if smoke_test:
+    if SMOKE_TEST:
         gdf_fsis = gdf_fsis.sample(30)
 
     gdf_barns = gpd.read_file(BARNS_PATH)
 
     gdf_fsis, gdf_fsis_isochrones, gdf_isochrones, gdf_barns = pipeline(
-        gdf_fsis, gdf_nets, gdf_barns, smoke_test
+        gdf_fsis, gdf_nets, gdf_barns, SMOKE_TEST
     )
 
-    # TODO: maybe add a function to save these
-    gdf_fsis.to_file(
-        RUN_DIR / "plants.geojson",
-        driver="GeoJSON",
+    save_geojson(gdf_fsis, RUN_DIR / "plants.geojson", gzip=True)
+    save_geojson(gdf_isochrones, RUN_DIR / "plants_with_isochrones.geojson")
+    save_geojson(
+        gdf_fsis_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip=True
     )
-    gdf_fsis_isochrones.to_file(
-        RUN_DIR / "plants_with_isochrones.geojson",
-        driver="GeoJSON",
-    )
-    gdf_isochrones.to_file(
-        RUN_DIR / "isochrones.geojson",
-        driver="GeoJSON",
-    )
-
-    # Note: Handles saving barns as geojson and gzip
-    # TODO: Change to function
-    save_barns(gdf_barns, RUN_DIR / "barns.geojson")
+    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip=True)
