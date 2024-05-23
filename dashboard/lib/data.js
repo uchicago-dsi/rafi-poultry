@@ -2,12 +2,7 @@
 import pako from 'pako';
 import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
-// TODO: This file needs to be regenerated with better column names
-const ISOCHRONES =
-  "../data/new_all_states_with_parent_corp_by_corp.geojson";
-const SINGLE_CORP = "../data/v2/single_corp.geojson";
-const TWO_CORPS = "../data/v2/two_corps.geojson";
-const THREE_CORPS = "../data/v2/three_plus_corps.geojson";
+const ISOCHRONES = "../data/v2/isochrones.geojson";
 
 const fetchData = async (url) => {
   const response = await fetch(url);
@@ -59,6 +54,7 @@ export const updateStaticDataStore = async () => {
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;
     staticDataStore.allIsochrones = rawIsochrones
+
   } catch (error) {
     console.error(error);
   }
