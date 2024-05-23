@@ -1,6 +1,7 @@
 """Constants used throughout the pipeline"""
 
 from pathlib import Path
+import geopandas as gpd
 
 # directories
 ROOT_DIR = Path(__file__).resolve().parent
@@ -10,6 +11,12 @@ RAW_DIR = DATA_DIR / "raw"
 
 
 HTML_DIR = DATA_DIR / "html"
+
+# mapping
+ALBERS_EQUAL_AREA = "EPSG:9822"
+WGS84 = "EPSG:4326"
+USA_LAT = 37.0902
+USA_LNG = -95.7129
 
 # raw data
 # TODO: some of this should be moved to config
@@ -27,6 +34,11 @@ US_STATES_FPATH = RAW_DIR / "gz_2010_us_040_00_500k.json"
 # TODO: should this be done differently
 SMOKE_TEST_FPATH = RAW_INFOGROUP_FPATH / "smoke_test"
 SMOKE_TEST_CLEAN_FPATH = CLEAN_DIR / "infogroup_2022_small_clean.csv"
+
+# TODO: a bunch of this should be done elsewhere probably...load this from constants?
+GDF_STATES = gpd.read_file(US_STATES_FPATH).set_crs(WGS84)
+GDF_STATES = GDF_STATES.drop(["GEO_ID", "STATE", "LSAD", "CENSUSAREA"], axis=1)
+GDF_STATES = GDF_STATES.rename(columns={"NAME": "state"})
 
 # cleaned data
 CLEANED_COUNTERGLOW_FPATH = CLEAN_DIR / "cleaned_counterglow_facility_list.csv"
@@ -49,12 +61,6 @@ NATION_MAP = HTML_DIR / "poultry-map-smoothed.html"
 
 # config file
 CONFIG_FPATH = ROOT_DIR / "config.json"
-
-# mapping
-ALBERS_EQUAL_AREA = "EPSG:9822"
-WGS84 = "EPSG:4326"
-USA_LAT = 37.0902
-USA_LNG = -95.7129
 
 # TODO: Ok, this also needs to be cleand up and redone
 COLUMNS_TO_KEEP = [
