@@ -298,20 +298,22 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
 # TODO: Move this to utils
 def save_file(gdf, filepath, file_format="geojson", gzip_file=False):
     if file_format == "geojson":
-        print(f"Saving file to {filepath}.geojson")
-        gdf.to_file(f"{filepath}", driver="GeoJSON")
+        final_filepath = filepath.with_suffix(".geojson")
+        print(f"Saving file to {final_filepath}.geojson")
+        gdf.to_file(f"{final_filepath}", driver="GeoJSON")
     elif file_format == "csv":
-        print(f"Saving file to {filepath}.csv")
-        gdf.to_csv(f"{filepath}.csv", index=False)
+        final_filepath = filepath.with_suffix(".csv")
+        print(f"Saving file to {final_filepath}.csv")
+        gdf.to_csv(f"{final_filepath}.csv", index=False)
     else:
         raise ValueError("Unsupported file format. Use 'geojson' or 'csv'.")
 
     # gzip file for web
     if gzip_file:
         print("Zipping file...")
-        with filepath.open("rb") as f_in:
+        with final_filepath.open("rb") as f_in:
             with gzip.open(
-                filepath.with_suffix(filepath.suffix + ".gz"), "wb"
+                final_filepath.with_suffix(filepath.suffix + ".gz"), "wb"
             ) as f_out:
                 shutil.copyfileobj(f_in, f_out)
 

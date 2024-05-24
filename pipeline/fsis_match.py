@@ -367,5 +367,3 @@ if __name__ == "__main__":
         RUN_DIR / "full_match.csv",
         file_format="csv",
     )
-
-    # unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
