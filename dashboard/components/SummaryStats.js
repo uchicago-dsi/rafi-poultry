@@ -70,7 +70,7 @@ export function SummaryStats() {
                 <tr key={key}>
                   <td>{key}</td>
                   <td>
-                    {(item.sales * 1000).toLocaleString("en-US", {
+                    {(item.sales).toLocaleString("en-US", {
                       style: "currency",
                       currency: "USD",
                       minimumFractionDigits: 0,

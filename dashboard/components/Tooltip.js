@@ -15,20 +15,19 @@ export default function Tooltip() {
       position: "absolute",
       top: `${snapshot.y}px`,
       left: `${snapshot.x}px`,
-      // Additional styles for the tooltip
     };
 
-    // console.log(snapshot.hoveredObject);
+    console.log(snapshot.hoveredObject.properties)
 
-    if ("corporate_access" in snapshot.hoveredObject.properties) {
+    if ("corp_access" in snapshot.hoveredObject.properties) {
       // TODO: Set this up to log corporation access
-      if (snapshot.hoveredObject.properties.corporate_access == 1) {
+      if (snapshot.hoveredObject.properties.corp_access == 1) {
         return (
           <div className="tooltip" style={tooltipPosition}>
             <div>
               <b>
                 Corporation Access:{" "}
-                {snapshot.hoveredObject.properties["parent_corporation"]}
+                {snapshot.hoveredObject.properties["Parent Corporation"]}
               </b>
             </div>
           </div>
@@ -43,7 +42,8 @@ export default function Tooltip() {
             <b>{snapshot.hoveredObject.properties["Establishment Name"]}</b>
           </div>
           <div>
-            <b>{snapshot.hoveredObject.properties["Full Address"]}</b>
+            <b>{snapshot.hoveredObject.properties["Address"]}</b>
+            <b>{snapshot.hoveredObject.properties["City"]} {snapshot.hoveredObject.properties["State"]} {snapshot.hoveredObject.properties["Zip"]}</b>
           </div>
           <div>
             <b>
