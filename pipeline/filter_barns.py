@@ -296,9 +296,15 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
 
 
 # TODO: Move this to utils
-def save_geojson(gdf, filepath, gzip_file=False):
-    print(f"Saving file to {filepath}.geojson")
-    gdf.to_file(f"{filepath}", driver="GeoJSON")
+def save_file(gdf, filepath, file_format="geojson", gzip_file=False):
+    if file_format == "geojson":
+        print(f"Saving file to {filepath}.geojson")
+        gdf.to_file(f"{filepath}", driver="GeoJSON")
+    elif file_format == "csv":
+        print(f"Saving file to {filepath}.csv")
+        gdf.to_csv(f"{filepath}.csv", index=False)
+    else:
+        raise ValueError("Unsupported file format. Use 'geojson' or 'csv'.")
 
     # gzip file for web
     if gzip_file:
@@ -335,4 +341,4 @@ if __name__ == "__main__":
 
     gdf_barns = filter_barns(gdf_barns, smoke_test=SMOKE_TEST)
 
-    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)
+    save_file(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)
