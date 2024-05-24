@@ -2,7 +2,6 @@
 import pako from 'pako';
 import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
-// const ISOCHRONES = "../data/v2/isochrones.geojson";
 const ISOCHRONES = "../data/v2/isochrones.geojson.gz";
 const BARNS = "../data/v2/barns.geojson.gz"
 
