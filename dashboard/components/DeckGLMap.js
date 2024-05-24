@@ -99,7 +99,8 @@ export function DeckGLMap() {
     getSize: 35,
     getColor: colorPalette.plant,
     getLineColor: (d) => [0, 0, 0, 255], // TODO: I want these to be outlined but maybe there's a transparent border?
-    getTooltip: (d) => `Address: ${d.properties["Full Address"]}`,
+    // TODO: Wait...can I just delete this or?
+    getTooltip: (d) => `Address: ${d.properties["Address"]}`,
 
     pickable: true,
     // TODO: tooltip should probably be split out for performance eventually
