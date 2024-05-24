@@ -5,20 +5,11 @@ import os
 from typing import List, Tuple
 import argparse
 
-from fsis_match import fsis_match
+from fsis_match import fsis_match, clean_fsis
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
 from filter_barns import filter_barns, save_geojson
 from constants import RAW_DIR, CLEAN_DIR
-
-
-def clean_fsis(df):
-    df = df.dropna(subset=["activities"])
-    df = df[df.activities.str.lower().str.contains("poultry slaughter")]
-    df = df[df["size"] == "Large"]
-    df["duns_number"] = df["duns_number"].str.replace("-", "")
-    df["matched"] = False
-    return df
 
 
 def pipeline(gdf_fsis, gdf_nets, gdf_barns, smoke_test=False):
