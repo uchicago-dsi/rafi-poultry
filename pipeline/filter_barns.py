@@ -2,10 +2,10 @@ import argparse
 import os
 import pandas as pd
 import geopandas as gpd
-import gzip
-import shutil
 from pathlib import Path
 from datetime import datetime
+
+from utils import save_file
 from constants import GDF_STATES, RAW_DIR, CLEAN_DIR, DATA_DIR, WGS84
 
 # TODO: move to config or constants
@@ -76,7 +76,9 @@ def get_state_info(gdf, states=GDF_STATES):
     return gdf_with_state
 
 
-def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0, smoke_test=False):
+def filter_on_membership(
+    gdf, gdf_exclude, gdf_isochrones=None, how="inside", buffer=0, smoke_test=False
+):
     if buffer != 0:
         gdf_exclude = gdf_exclude.to_crs(
             epsg=5070
@@ -121,7 +123,7 @@ def filter_on_membership(gdf, gdf_exclude, how="inside", buffer=0, smoke_test=Fa
 
 
 # TODO: These function names need some work
-def filter_barns_handler(gdf_barns, smoke_test=False):
+def filter_barns_handler(gdf_barns, gdf_isochrones, smoke_test=False):
     # Exclude barns in major cities
     print("Excluding barns in major cities...")
     # TODO: Should maybe set this up as a function and clean it up
@@ -168,10 +170,7 @@ def filter_barns_handler(gdf_barns, smoke_test=False):
     layer_name = "park_dtl"
     parks_gdf = gpd.read_file(parks_gdb_path, layer=layer_name)
     previously_excluded = len(gdf_barns[gdf_barns.exclude == 1])
-    gdf_barns = filter_on_membership(
-        gdf_barns,
-        parks_gdf,
-    )
+    gdf_barns = filter_on_membership(gdf_barns, parks_gdf)
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in parks"
     )
@@ -222,11 +221,12 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
         print(f"Running with {len(gdf_barns)} barns.")
 
     # Project to equal area projection and get centroid for each barn
+    # TODO: Set this up to use config
     gdf_barns = gdf_barns.to_crs(epsg=2163)
     gdf_barns["geometry"] = gdf_barns["geometry"].centroid
 
     # Project to latitude and longitude
-    gdf_barns = gdf_barns.to_crs(epsg=WGS84)
+    gdf_barns = gdf_barns.to_crs(WGS84)
 
     # Initialize the "exclude" column
     gdf_barns["exclude"] = 0
@@ -244,6 +244,7 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
     )
 
     # TODO: can prob do this as a function
+    # Note: I think I'm preprocessing for the barn calculation here?
     gdf_barns = gpd.sjoin(gdf_barns, fsis_union, how="left", predicate="within")
     gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 1
     # TODO: is this the right dataframe here...
@@ -278,8 +279,11 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
 
     print(f"Barns before filtering: {len(gdf_barns)}")
 
+    # Note: Option for skipping geospatial filtering on barns for faster runs
     if filter_barns:
-        gdf_barns = filter_barns_handler(gdf_barns, smoke_test=smoke_test)
+        gdf_barns = filter_barns_handler(
+            gdf_barns, gdf_isochrones, smoke_test=smoke_test
+        )
 
     # TODO: Maybe put this in a config
     OUTPUT_COLS = [
@@ -293,27 +297,6 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
     gdf_barns = gdf_barns.set_geometry("geometry")
 
     return gdf_barns
-
-
-# TODO: Move this to utils
-def save_file(gdf, filepath, file_format="geojson", gzip_file=False):
-    if file_format == "geojson":
-        print(f"Saving file to {filepath}.geojson")
-        gdf.to_file(f"{filepath}", driver="GeoJSON")
-    elif file_format == "csv":
-        print(f"Saving file to {filepath}.csv")
-        gdf.to_csv(f"{filepath}.csv", index=False)
-    else:
-        raise ValueError("Unsupported file format. Use 'geojson' or 'csv'.")
-
-    # gzip file for web
-    if gzip_file:
-        print("Zipping file...")
-        with filepath.open("rb") as f_in:
-            with gzip.open(
-                filepath.with_suffix(filepath.suffix + ".gz"), "wb"
-            ) as f_out:
-                shutil.copyfileobj(f_in, f_out)
 
 
 if __name__ == "__main__":
@@ -333,12 +316,8 @@ if __name__ == "__main__":
     # TODO: Maybe create a read function for this
     gdf_barns = gpd.read_file(RAW_DIR / BARNS_FILENAME)
     # TODO: Filepaths...
-    gdf_fsis = gpd.read_file(
-        CLEAN_DIR
-        / "fsis_isochrones_2024-05-22_16-49-51"
-        / "plants_with_isochrones.geojson"
-    )
+    gdf_isochrones = gpd.read_file(CLEAN_DIR / "_clean_run" / "isochrones.geojson")
 
-    gdf_barns = filter_barns(gdf_barns, smoke_test=SMOKE_TEST)
+    gdf_barns = filter_barns(gdf_barns, gdf_isochrones, smoke_test=SMOKE_TEST)
 
     save_file(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)

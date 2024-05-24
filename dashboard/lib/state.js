@@ -174,6 +174,9 @@ function updateMapZoom(filteredStates) {
     state.map.containerHeight
   );
 
+  console.log("boundingBox", boundingBox);
+  console.log("fittedViewport", fittedViewport)
+
   const currentLatLonZoom = fittedViewport.fitBounds(
     [
       [boundingBox[0], boundingBox[1]],

@@ -11,7 +11,7 @@ from shapely.geometry import Polygon, Point
 import numpy as np
 import argparse
 from constants import RAW_DIR, CLEAN_DIR
-from filter_barns import save_file
+from utils import save_file
 
 # Enable pandas progress bars for apply functions
 tqdm.pandas()
@@ -129,7 +129,7 @@ def fsis_match(gdf_fsis, gdf_nets):
     # Fill in match columns for selecting the best match
     merged = merged.apply(lambda row: get_string_matches(row), axis=1)
 
-    # Roundabout way of doing this to prevent fragmented DataFrame warning
+    # Note: Roundabout way of doing this to prevent fragmented DataFrame warning
     duns_match = pd.DataFrame(
         {"duns_match": merged["duns_number"] == merged["DunsNumber"]}
     )
@@ -148,6 +148,7 @@ def fsis_match(gdf_fsis, gdf_nets):
         .sum(axis=1)
     )
 
+    # TODO: Move to config/constants
     # Column renaming dictionary
     RENAME_DICT = {
         # FSIS columns
@@ -210,6 +211,7 @@ def fsis_match(gdf_fsis, gdf_nets):
         "Norman": "Norman W. Fries, Inc.",
     }
 
+    # TODO: Move to utils?
     def map_to_corporation(name, corp_mapping=CORP2PARENT):
         for key in corp_mapping:
             if key.lower() in name.lower():
@@ -220,6 +222,7 @@ def fsis_match(gdf_fsis, gdf_nets):
         map_to_corporation
     )
 
+    # TODO: Move to config/constants
     KEEP_COLS = [
         "duns_number_fsis",
         "duns_number_nets",
@@ -274,11 +277,10 @@ def fsis_match(gdf_fsis, gdf_nets):
     output = output.apply(
         lambda row: calculate_sales(row, avg_sales, overall_median_sales), axis=1
     )
-    output[KEEP_COLS + ["display_sales"]].to_csv(RUN_DIR / "output.csv", index=False)
 
     # Save unmatched plants separately for review
     unmatched = output[output.match_score == 0]
-    unmatched[KEEP_COLS].to_csv(RUN_DIR / "unmatched.csv", index=False)
+    unmatched = unmatched[KEEP_COLS]
 
     output_geojson = output.copy()
     output_geojson["geometry"] = output.apply(
@@ -300,7 +302,10 @@ def fsis_match(gdf_fsis, gdf_nets):
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
     output_geojson = output_geojson[GEOJSON_COLS]
 
-    return output_geojson
+    # TODO: Has to be a better way...
+    full_match = merged[KEEP_COLS]
+
+    return output_geojson, unmatched, full_match
 
 
 if __name__ == "__main__":
@@ -342,11 +347,22 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    # TODO: Add option to save or return unmatched records
-    gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
+    gdf_fsis, unmatched, full_match = fsis_match(gdf_fsis, gdf_nets)
 
     save_file(
         gdf_fsis,
-        RUN_DIR / "plants.geojson",
+        RUN_DIR / "plants.csv",
+        file_format="csv",
+    )
+
+    save_file(
+        unmatched,
+        RUN_DIR / "unmatched.csv",
+        file_format="csv",
+    )
+
+    save_file(
+        full_match,
+        RUN_DIR / "full_match.csv",
         file_format="csv",
     )
