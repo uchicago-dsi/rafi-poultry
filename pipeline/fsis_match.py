@@ -11,7 +11,7 @@ from shapely.geometry import Polygon, Point
 import numpy as np
 import argparse
 from constants import RAW_DIR, CLEAN_DIR
-from filter_barns import save_file
+from utils import save_file
 
 # Enable pandas progress bars for apply functions
 tqdm.pandas()
@@ -349,7 +349,6 @@ if __name__ == "__main__":
 
     gdf_fsis, unmatched, full_match = fsis_match(gdf_fsis, gdf_nets)
 
-    # TODO: csv handling doesn't work right for extensions
     save_file(
         gdf_fsis,
         RUN_DIR / "plants.csv",
