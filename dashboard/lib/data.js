@@ -22,7 +22,6 @@ export const updateStaticDataStore = async () => {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
       fetchGzip(BARNS),
-      // fetchData(ISOCHRONES),
       fetchGzip(ISOCHRONES),
       fetchData("/api/plants/sales")
     ]);
@@ -51,6 +50,8 @@ export const updateStaticDataStore = async () => {
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;
     staticDataStore.allIsochrones = rawIsochrones
+
+    console.log("rawIsochrones", rawIsochrones)
 
   } catch (error) {
     console.error(error);
