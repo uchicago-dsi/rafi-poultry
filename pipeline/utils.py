@@ -2,7 +2,6 @@ import gzip
 import shutil
 
 
-# TODO: Move this to utils
 def save_file(gdf, filepath, file_format="geojson", gzip_file=False):
     if file_format == "geojson":
         final_filepath = filepath.with_suffix(".geojson")
@@ -18,7 +17,7 @@ def save_file(gdf, filepath, file_format="geojson", gzip_file=False):
     # gzip file for web
     if gzip_file:
         gzip_filepath = final_filepath.with_suffix(filepath.suffix + ".gz")
-        print("Zipping file to ...")
+        print(f"Zipping file to {gzip_filepath}")
         with final_filepath.open("rb") as f_in:
             with gzip.open(gzip_filepath, "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
