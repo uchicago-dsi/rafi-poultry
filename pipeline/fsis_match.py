@@ -10,23 +10,13 @@ from typing import List, Tuple
 from shapely.geometry import Polygon, Point
 import numpy as np
 import argparse
+from constants import RAW_DIR, CLEAN_DIR
+from filter_barns import save_file
 
 # Enable pandas progress bars for apply functions
 tqdm.pandas()
 
-# TODO: wtf...
-CURRENT_DIR = Path(__file__).resolve().parent
-DATA_DIR = CURRENT_DIR / "../data/"
-DATA_DIR_RAW = DATA_DIR / "raw/"
-DATA_DIR_CLEAN = DATA_DIR / "clean/"
-RUN_DIR = DATA_DIR_CLEAN / f"fsis_match_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-os.makedirs(RUN_DIR, exist_ok=True)
-
-# TODO: set filename in config for data files
-FSIS_PATH = DATA_DIR_RAW / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
-NETS_PATH = DATA_DIR_RAW / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
-NETS_NAICS_PATH = DATA_DIR_RAW / "nets" / "NAICS2022_RAFI.csv"
-
+# TODO: move this to constants
 # This is used for string matching
 FSIS2NETS_CORPS = {
     "House of Raeford Farms of LA": "Raeford Farms Louisiana",
@@ -34,6 +24,15 @@ FSIS2NETS_CORPS = {
     "Mar-Jac Poultry-MS": "MARSHALL DURBIN FOOD CORP",
     "Perdue Foods, LLC": "PERDUE FARMS INC",
 }
+
+
+def clean_fsis(df):
+    df = df.dropna(subset=["activities"])
+    df = df[df.activities.str.lower().str.contains("poultry slaughter")]
+    df = df[df["size"] == "Large"]
+    df["duns_number"] = df["duns_number"].str.replace("-", "")
+    df["matched"] = False
+    return df
 
 
 def get_geospatial_matches(row, gdf_child, buffer=1000):
@@ -305,5 +304,49 @@ def fsis_match(gdf_fsis, gdf_nets):
 
 
 if __name__ == "__main__":
-    # TODO: separate saving data from the fsis_match function
-    fsis_match()
+    RUN_DIR = CLEAN_DIR / f"fsis_match_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    os.makedirs(RUN_DIR, exist_ok=True)
+
+    # TODO: set filename in config for data files
+    FSIS_PATH = RAW_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
+    NETS_PATH = RAW_DIR / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
+    NETS_NAICS_PATH = RAW_DIR / "nets" / "NAICS2022_RAFI.csv"
+
+    # TODO: Make a function for this
+    df_nets = pd.read_csv(
+        NETS_PATH,
+        sep="\t",
+        encoding="latin-1",
+        dtype={"DunsNumber": str},
+        low_memory=False,
+    )
+    df_nets_naics = pd.read_csv(
+        NETS_NAICS_PATH,
+        dtype={"DunsNumber": str},
+        low_memory=False,
+    )
+    df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
+    gdf_nets = gpd.GeoDataFrame(
+        df_nets,
+        geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
+        crs=4326,
+    )
+
+    # TODO: and this...
+    df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
+    df_fsis = clean_fsis(df_fsis)
+
+    gdf_fsis = gpd.GeoDataFrame(
+        df_fsis,
+        geometry=gpd.points_from_xy(df_fsis.longitude, df_fsis.latitude),
+        crs=4326,
+    )
+
+    # TODO: Add option to save or return unmatched records
+    gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
+
+    save_file(
+        gdf_fsis,
+        RUN_DIR / "plants.geojson",
+        file_format="csv",
+    )
