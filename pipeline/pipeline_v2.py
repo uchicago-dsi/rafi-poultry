@@ -8,12 +8,14 @@ import argparse
 from fsis_match import fsis_match, clean_fsis
 from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
-from filter_barns import filter_barns, save_geojson
+from filter_barns import filter_barns
 from constants import RAW_DIR, CLEAN_DIR
+from utils import save_file
 
 
 def pipeline(gdf_fsis, gdf_nets, gdf_barns, smoke_test=False):
-    gdf_fsis = fsis_match(gdf_fsis, gdf_nets)
+    # TODO: Do I want to also return and save intermediate files?
+    gdf_fsis, _, _ = fsis_match(gdf_fsis, gdf_nets)
     gdf_fsis_isochrones = get_plant_isochrones(gdf_fsis)
     gdf_isochrones = calculate_captured_areas(gdf_fsis_isochrones)
     # TODO: maybe add something to skip filtering for testing
@@ -78,11 +80,9 @@ if __name__ == "__main__":
         gdf_fsis, gdf_nets, gdf_barns, SMOKE_TEST
     )
 
-    save_geojson(gdf_fsis, RUN_DIR / "plants.geojson")
-    save_geojson(
-        gdf_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip_file=True
-    )
-    save_geojson(
+    save_file(gdf_fsis, RUN_DIR / "plants.geojson")
+    save_file(gdf_isochrones, RUN_DIR / "isochrones.geojson", gzip_file=True)
+    save_file(
         gdf_fsis_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip_file=True
     )
-    save_geojson(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)
+    save_file(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)

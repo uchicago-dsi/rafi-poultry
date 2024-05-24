@@ -12,7 +12,7 @@ from constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
 import os
 from datetime import datetime
 
-from filter_barns import save_geojson
+from utils import save_file
 
 tqdm.pandas()
 
@@ -22,6 +22,7 @@ def calculate_captured_areas(
     corp_col="Parent Corporation",
     chrone_col="isochrone",
     access_col="corp_access",
+    simplify_tol=0.01,
 ):
     # gdf_fsis = gdf_fsis.drop("geometry", axis=1).set_geometry(chrone_col).set_crs(WGS84)
     gdf_fsis = gdf_fsis.set_geometry(chrone_col).set_crs(WGS84)
@@ -113,6 +114,7 @@ def calculate_captured_areas(
     )
 
     isochrones["state"] = isochrones["state"].map(STATE2ABBREV)
+    isochrones["geometry"] = isochrones.simplify(simplify_tol)
 
     return isochrones
 
@@ -123,7 +125,7 @@ if __name__ == "__main__":
     )
     os.makedirs(RUN_DIR, exist_ok=True)
 
-    # TODO: is there a better way to load clean versions of the files?
+    # TODO: is there a better way to load clean versions of the files? Specify in config?
     GDF_FSIS_PATH = CLEAN_DIR / "_clean_run" / "plants_with_isochrones.geojson"
     gdf_fsis = gpd.read_file(GDF_FSIS_PATH)
 
@@ -132,4 +134,4 @@ if __name__ == "__main__":
     isochrones = calculate_captured_areas(gdf_fsis)
 
     print(f"Saving to {RUN_DIR}/isochrones.geojson")
-    save_geojson(isochrones, RUN_DIR / "isochrones.geojson", gzip_file=True)
+    save_file(isochrones, RUN_DIR / "isochrones.geojson", gzip_file=True)
