@@ -45,6 +45,12 @@ filters:
     filename: "USA_Detailed_Water_Bodies.geojson"
     filter_on_state: True
 
+  - description: "manufacturing facilities"
+    source: "https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::general-manufacturing-facilities/about"
+    filename: "General_Manufacturing_Facilities.geojson"
+    filter_on_state: True
+    buffer: 400 # meters — stored as Point
+
   - description: "major roads"
     source: "https://geodata.bts.gov/datasets/usdot::north-american-roads/about"
     filename: "North_American_Roads.geojson"
