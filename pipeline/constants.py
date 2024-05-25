@@ -8,6 +8,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 DATA_DIR = ROOT_DIR.parent / "data"
 CLEAN_DIR = DATA_DIR / "clean"
 RAW_DIR = DATA_DIR / "raw"
+SHAPEFILE_DIR = DATA_DIR / "shapefiles"
 
 
 HTML_DIR = DATA_DIR / "html"
