@@ -176,12 +176,14 @@ def apply_filters(gdf, filter_configs, shapefile_dir=SHAPEFILE_DIR):
         filter_on_state = config.get("filter_on_state", False)
 
         print(f"Filtering barns in/on {description}...")
+        print(f"Reading file {exclude_gdf_path}")
         if exclude_gdf_path.suffix == ".gdb":
             layer = config.get("layer")
             exclude_gdf = gpd.read_file(exclude_gdf_path, layer=layer)
         else:
             exclude_gdf = gpd.read_file(exclude_gdf_path)
 
+        print("Applying filter...")
         previously_excluded = len(gdf[gdf.exclude == 1])
         gdf = filter_on_membership(
             gdf, exclude_gdf, buffer=buffer, filter_on_state=filter_on_state, how=how
