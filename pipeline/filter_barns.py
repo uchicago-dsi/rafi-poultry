@@ -3,10 +3,11 @@ import os
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
+import yaml
 from datetime import datetime
 
 from utils import save_file
-from constants import GDF_STATES, RAW_DIR, CLEAN_DIR, DATA_DIR, WGS84
+from constants import GDF_STATES, RAW_DIR, CLEAN_DIR, DATA_DIR, WGS84, SHAPEFILE_DIR
 
 # TODO: move to config or constants
 CITIES_PATH = DATA_DIR / "shapefiles" / "municipalities___states.geoparquet"
@@ -63,12 +64,10 @@ def load_geography(filepath, states=GDF_STATES, state=None):
     return gdf
 
 
-def filter_on_road_distance(gdf):
-    # TODO: This should already be filtered but it filters only on 0 maybe? Look into this further
-    pass
-
-
 def get_state_info(gdf, states=GDF_STATES):
+    # TODO: fix this warning
+    # /usr/local/lib/python3.10/dist-packages/geopandas/geodataframe.py:1569: FutureWarning: Passing 'suffixes' which cause duplicate columns {'state_left'} in the result is deprecated and will raise a MergeError in a future version.
+    # result = DataFrame.merge(self, *args, **kwargs)
     states = states.to_crs(gdf.crs)
     gdf_with_state = gpd.sjoin(gdf, states, how="left", predicate="intersects")
     gdf_with_state = gdf_with_state[[column for column in gdf.columns] + ["ABBREV"]]
@@ -77,8 +76,17 @@ def get_state_info(gdf, states=GDF_STATES):
 
 
 def filter_on_membership(
-    gdf, gdf_exclude, gdf_isochrones=None, how="inside", buffer=0, smoke_test=False
+    gdf, gdf_exclude, how="inside", buffer=0, tolerance=0.1, filter_on_state=True
 ):
+    # Simplify geometries to speed up processing
+    gdf_exclude["geometry"] = gdf_exclude["geometry"].simplify(
+        tolerance, preserve_topology=True
+    )
+
+    if filter_on_state:
+        gdf_exclude = get_state_info(gdf_exclude)
+        gdf_exclude = gdf_exclude[gdf_exclude["state"].isin(gdf["state"].unique())]
+
     if buffer != 0:
         gdf_exclude = gdf_exclude.to_crs(
             epsg=5070
@@ -86,13 +94,6 @@ def filter_on_membership(
         gdf_exclude["geometry"] = gdf_exclude["geometry"].buffer(buffer)
 
     gdf_exclude = gdf_exclude.to_crs(gdf.crs)
-
-    # Simplify geometries if smoke_test is passed
-    if smoke_test:
-        tolerance = 0.1
-        gdf_exclude["geometry"] = gdf_exclude["geometry"].simplify(
-            tolerance, preserve_topology=True
-        )
 
     # Exclude previously excluded barns to speed up processing
     joined = gpd.sjoin(
@@ -122,11 +123,10 @@ def filter_on_membership(
     return gdf
 
 
-# TODO: These function names need some work
-def filter_barns_handler(gdf_barns, gdf_isochrones, smoke_test=False):
+def filter_barns_handler(gdf_barns, filter_configs, data_dir=SHAPEFILE_DIR):
     # Exclude barns in major cities
+    # Note: Do this separately from the other filters since we need to aggregate the cities
     print("Excluding barns in major cities...")
-    # TODO: Should maybe set this up as a function and clean it up
     cities_all = gpd.read_parquet(CITIES_PATH)
     matches = []
     for state, cities in CITIES.items():
@@ -144,23 +144,102 @@ def filter_barns_handler(gdf_barns, gdf_isochrones, smoke_test=False):
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in major cities"
     )
 
+    # Apply all other filters from config
+    gdf_barns = apply_filters(gdf_barns, filter_configs, data_dir)
+
+    print(f"There are {len(gdf_barns[gdf_barns.exclude == 0])} barns remaining")
+    return gdf_barns
+
+
+def apply_filters(gdf, filter_configs, shapefile_dir=SHAPEFILE_DIR):
+    for config in filter_configs:
+        description = config["description"]
+        exclude_gdf_path = shapefile_dir / config["filename"]
+        buffer = config.get("buffer", 0)
+        how = config.get("how", "inside")
+
+        if exclude_gdf_path.suffix == ".gdb":
+            layer = config.get("layer")
+            exclude_gdf = gpd.read_file(exclude_gdf_path, layer=layer)
+        else:
+            exclude_gdf = gpd.read_file(exclude_gdf_path)
+
+        print(f"Filtering barns in {description}...")
+        previously_excluded = len(gdf[gdf.exclude == 1])
+        gdf = filter_on_membership(gdf, exclude_gdf, buffer=buffer, how=how)
+        excluded_count = len(gdf[gdf.exclude == 1]) - previously_excluded
+        print(f"Excluded {excluded_count} barns in/on {description}")
+
+    return gdf
+
+
+# TODO: These function names need some work
+def filter_barns_handler_v1(gdf_barns):
+    # Exclude barns in major cities
+    print("Excluding barns in major cities...")
+    # TODO: Should maybe set this up as a function and clean it up
+    cities_all = gpd.read_parquet(CITIES_PATH)
+    matches = []
+    for state, cities in CITIES.items():
+        for city in cities:
+            match = cities_all[
+                cities_all["name"].str.contains(city, case=False, na=False)
+                & cities_all["name"].str.contains(state, case=False, na=False)
+            ]
+            matches.append(match)
+    cities_filtered = pd.concat(matches, ignore_index=True).drop_duplicates()
+    cities_filtered = gpd.GeoDataFrame(cities_filtered, geometry="geometry")
+
+    previously_excluded = len(gdf_barns[gdf_barns.exclude == 1])
+    gdf_barns = filter_on_membership(gdf_barns, cities_filtered)
+    print(
+        f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in major cities"
+    )
+
     # TODO: This seems to not be working, look into this
     # Exclude barns in airports
     # Source: https://geodata.bts.gov/datasets/c3ca6a6cdcb242698f1eadb7681f6162_0/explore
+    # Updated source: https://hub.arcgis.com/documents/f74df2ed82ba4440a2059e8dc2ec9a5d/explore
     print("Excluding barns in airports...")
     previously_excluded = len(gdf_barns[gdf_barns.exclude == 1])
     gdf_barns = filter_on_membership(
         gdf_barns,
         gpd.read_file(
-            DATA_DIR
-            / "shapefiles"
-            / "Aviation_Facilities_-8733969321550682504/Aviation_Facilities.shp",
+            DATA_DIR / "shapefiles" / "Airports.geojson",
             buffer=400,
         ),
-        smoke_test=smoke_test,
     )
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in airports"
+    )
+
+    # TODO: good idea...
+    # Exclude barns in military bases
+
+    # TODO: good idea...
+    # Exclude barns in prisons
+
+    # TODO: good idea...
+    # Exclude barns in schools
+
+    # TODO: good idea...
+    # Exclude barns in hospitals
+
+    # TODO:
+
+    # Exclude barns on roads
+    # Note: Microsoft's filter should handle this but misses many barns
+    # Source: https://geodata.bts.gov/datasets/usdot::north-american-roads/about
+    print("Excluding barns on major roads...")
+    previously_excluded = len(gdf_barns[gdf_barns.exclude == 1])
+    gdf_barns = filter_on_membership(
+        gdf_barns,
+        gpd.read_file(
+            DATA_DIR / "shapefiles" / "North_American_Roads.geojson",
+        ),
+    )
+    print(
+        f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns on major roads"
     )
 
     # Exclude barns in parks
@@ -185,7 +264,6 @@ def filter_barns_handler(gdf_barns, gdf_isochrones, smoke_test=False):
             DATA_DIR / "shapefiles" / "tl_2019_us_coastline/tl_2019_us_coastline.shp"
         ),
         buffer=1000,
-        smoke_test=smoke_test,
     )
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns on the coastline"
@@ -199,7 +277,6 @@ def filter_barns_handler(gdf_barns, gdf_isochrones, smoke_test=False):
     gdf_barns = filter_on_membership(
         gdf_barns,
         gpd.read_file(DATA_DIR / "shapefiles" / "USA_Detailed_Water_Bodies.geojson"),
-        smoke_test=smoke_test,
     )
     print(
         f"Excluded {len(gdf_barns[gdf_barns.exclude == 1]) - previously_excluded} barns in bodies of water"
@@ -212,7 +289,13 @@ def filter_barns_handler(gdf_barns, gdf_isochrones, smoke_test=False):
 
 
 # TODO: Set an argument for filtering on barns that intersect with the capture areas
-def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True):
+def filter_barns(
+    gdf_barns,
+    gdf_isochrones,
+    shapefile_dir=SHAPEFILE_DIR,
+    smoke_test=False,
+    filter_barns=True,
+):
     if smoke_test:
         n = 10000
         gdf_barns = gdf_barns.sample(n=n)
@@ -279,11 +362,17 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
 
     print(f"Barns before filtering: {len(gdf_barns)}")
 
+    # TODO:...
+    config_filename = "geospatial_filter_config.yaml"
+
+    with open(config_filename, "r") as f:
+        filter_configs = yaml.safe_load(f)
+
+    filter_configs = filter_configs["filters"]
+
     # Note: Option for skipping geospatial filtering on barns for faster runs
     if filter_barns:
-        gdf_barns = filter_barns_handler(
-            gdf_barns, gdf_isochrones, smoke_test=smoke_test
-        )
+        gdf_barns = filter_barns_handler(gdf_barns, filter_configs, shapefile_dir)
 
     # TODO: Maybe put this in a config
     OUTPUT_COLS = [
@@ -301,6 +390,7 @@ def filter_barns(gdf_barns, gdf_isochrones, smoke_test=False, filter_barns=True)
 
 if __name__ == "__main__":
     RUN_DIR = CLEAN_DIR / f"barns_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    os.makedirs(RUN_DIR, exist_ok=True)
 
     # TODO: Add to config
     BARNS_FILENAME = "full-usa-3-13-2021_filtered_deduplicated.gpkg"
