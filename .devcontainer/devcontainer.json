@@ -1,5 +1,6 @@
 {
 	"name": "rafi-pipeline",
+    // TODO: Can we handle all of this in the devcontainer.json?
     "image": "rafi-pipeline", // Build the image first using make build-pipeline to build with the correct chip architecture
 	// "build": {
 	// 	"context": "..",

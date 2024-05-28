@@ -38,7 +38,7 @@ filters:
     source: "https://catalog.data.gov/dataset/tiger-line-shapefile-2019-nation-u-s-coastline-national-shapefile"
     filename: "tl_2019_us_coastline/tl_2019_us_coastline.shp"
     buffer: 1000 # meters - want to exclude beaches, water, etc. on the coastline
-    filter_on_state: True
+    filter_on_state: False # This doesn't work if you try to filter on state
 
   - description: "bodies of water"
     source: "https://www.arcgis.com/home/item.html?id=48c77cbde9a0470fb371f8c8a8a7421a"
