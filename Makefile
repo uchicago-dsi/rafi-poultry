@@ -29,6 +29,7 @@ endif
 include .env
 
 # Build Docker image for pipeline
+# TODO: probably just want to delete this and use the pipeline image in the pipeline container
 build-pipeline:
 	docker build --platform $(DOCKER_PLATFORM) -t $(pipeline_image_name) -f "${pipeline_dir}/Dockerfile" $(current_abs_path) --build-arg PLATFORM=$(DOCKER_PLATFORM)
 
