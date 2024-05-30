@@ -8,7 +8,8 @@ def test_fsis_match():
     gdf_fsis = gpd.GeoDataFrame(
         {
             "duns_number": ["123"],
-            "Company": "Chicken Little Chicken Factory",
+            "establishment_name": "Chicken Little Chicken Factory",
+            "street": "123 Main St",
             "geometry": [Point(1, 1)],
         }
     ).set_crs(WGS84)
@@ -16,7 +17,9 @@ def test_fsis_match():
         {
             "DunsNumber": ["123"],
             "Company": "Chicken Little Chicken Factory, Inc.",
+            "Address": "123 Main Street",
             "geometry": [Point(1, 1)],
+            "sales_here": 1000,
         }
     ).set_crs(WGS84)
     result, _, _ = fsis_match(gdf_fsis, gdf_nets)

@@ -2,13 +2,21 @@
 
 from pathlib import Path
 import geopandas as gpd
+import yaml
 
 # directories
-ROOT_DIR = Path(__file__).resolve().parent
-DATA_DIR = ROOT_DIR.parent / "data"
+PIPELINE_DIR = Path(__file__).resolve().parent
+DATA_DIR = PIPELINE_DIR.parent / "data"
 CLEAN_DIR = DATA_DIR / "clean"
 RAW_DIR = DATA_DIR / "raw"
 SHAPEFILE_DIR = DATA_DIR / "shapefiles"
+
+# dataframe columns
+with open(PIPELINE_DIR / "config_dataframes.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
+FSIS_COLUMNS = config["column_names"]["fsis"]
+NETS_COLUMNS = config["column_names"]["nets"]
 
 
 HTML_DIR = DATA_DIR / "html"
@@ -61,7 +69,7 @@ ISOCHRONES_WITH_PARENT_CORP_FPATH = CLEAN_DIR / "isochrones_with_parent_corp.geo
 NATION_MAP = HTML_DIR / "poultry-map-smoothed.html"
 
 # config file
-CONFIG_FPATH = ROOT_DIR / "config.json"
+CONFIG_FPATH = PIPELINE_DIR / "config.json"
 
 # TODO: Ok, this also needs to be cleand up and redone
 COLUMNS_TO_KEEP = [
