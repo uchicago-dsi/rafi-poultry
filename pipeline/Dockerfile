@@ -23,12 +23,13 @@ COPY pipeline/requirements.txt .
 RUN pip install --trusted-host pypi.python.org --no-cache-dir -r requirements.txt
 
 # Copy the pipeline, notebook, and data directory into the container
-COPY setup.py .
+# COPY setup.py .
+COPY pyproject.toml .
+COPY setup.cfg .
 COPY pipeline ./pipeline
 RUN pip install -e .
 
 # Set environment variable for pipeline logic
 ENV INSIDE_DOCKER=True
 
-# When running the container, additional arguments can be passed, which will be appended to this CMD.
-CMD ["python", "pipeline/main.py"]
+CMD ["bin/bash"]
