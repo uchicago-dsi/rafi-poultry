@@ -1,0 +1,6 @@
+# def test_fsis_match():
+#     # Mock data
+#     gdf_fsis = ...
+#     gdf_nets = ...
+#     result = fsis_match(gdf_fsis, gdf_nets)
+#     assert ...  # Add assertions to check if the result is as expected
