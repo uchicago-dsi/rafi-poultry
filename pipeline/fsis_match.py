@@ -1,15 +1,11 @@
 import pandas as pd
 import geopandas as gpd
-from pathlib import Path
 from fuzzywuzzy import fuzz
 from datetime import datetime
 import os
-import requests
 from tqdm import tqdm
 from typing import List, Tuple
-from shapely.geometry import Polygon, Point
-import numpy as np
-import argparse
+from shapely.geometry import Point
 from pipeline.constants import RAW_DIR, CLEAN_DIR
 from pipeline.utils import save_file
 
