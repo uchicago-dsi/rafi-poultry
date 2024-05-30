@@ -3,6 +3,7 @@ and a distance threshold in km to find matching farms within, and whether
 filtering needs to be done on Infogroup or not. Functions can be run 
 individually by including a function flag; the default is to run all of them.
 """
+
 # TODO: ok these functions shouldn't be NETS or Infogroup specific
 import clean
 import match_farms
@@ -38,7 +39,7 @@ from constants import (
     CLEANED_MATCHED_PLANTS_FPATH,
     MATCHED_FARMS_FPATH,
     UNMATCHED_FARMS_FPATH,
-    ROOT_DIR,
+    PIPELINE_DIR,
     CLEAN_DIR,
     ALL_STATES_GEOJSON_FPATH,
     CONFIG_FPATH,
@@ -476,7 +477,7 @@ def main(args) -> None:
                 path = "html/cafo_poultry_eda_" + state + ".html"
                 visualize.map_state(
                     MATCHED_FARMS_FPATH, UNMATCHED_FARMS_FPATH, state
-                ).save(ROOT_DIR / path)
+                ).save(PIPELINE_DIR / path)
         except Exception as e:
             print(f"{e}")
             exit(1)
