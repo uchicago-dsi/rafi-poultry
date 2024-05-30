@@ -2,7 +2,6 @@ import pandas as pd
 import geopandas as gpd
 from datetime import datetime
 import os
-from typing import List, Tuple
 import argparse
 
 from fsis_match import fsis_match, clean_fsis
