@@ -7,9 +7,18 @@ import yaml
 from datetime import datetime
 
 from utils import save_file
-from constants import GDF_STATES, RAW_DIR, CLEAN_DIR, DATA_DIR, WGS84, SHAPEFILE_DIR
+from constants import (
+    GDF_STATES,
+    RAW_DIR,
+    CLEAN_DIR,
+    DATA_DIR,
+    WGS84,
+    SHAPEFILE_DIR,
+    ALBERS_EQUAL_AREA,
+)
 
 # TODO: move to config or constants
+CONFIG_FILENAME = Path(__file__).resolve().parent / "geospatial_filter_config.yaml"
 CITIES_PATH = SHAPEFILE_DIR / "municipalities___states.geoparquet"
 CITIES = {
     "North Carolina": [
@@ -198,6 +207,7 @@ def filter_barns(
     gdf_barns,
     gdf_isochrones,
     shapefile_dir=SHAPEFILE_DIR,
+    nearest_neighbor=500,
     smoke_test=False,
     filter_barns=True,
 ):
@@ -267,10 +277,36 @@ def filter_barns(
 
     print(f"Barns before filtering: {len(gdf_barns)}")
 
-    # TODO:...
-    config_filename = "geospatial_filter_config.yaml"
+    print(f"Filtering barns with no other barn within {nearest_neighbor}m...")
 
-    with open(config_filename, "r") as f:
+    def get_nearest_neighbors(point, gdf, distance=nearest_neighbor):
+        possible_matches_index = list(
+            gdf.sindex.intersection(point.buffer(distance).bounds)
+        )
+        possible_matches = gdf.iloc[possible_matches_index]
+        precise_matches = possible_matches[possible_matches.distance(point) <= distance]
+        return precise_matches
+
+    # List to store indices of points to keep
+    indices_to_keep = []
+
+    # TODO: project to Albers
+    # TODO: there's probably a way to do this as an "apply"
+    # Iterate over each point
+    for idx, point in gdf_barns.iterrows():
+        if (
+            len(
+                get_nearest_neighbors(
+                    point.geometry, gdf_barns, distance=nearest_neighbor
+                )
+            )
+            > 1
+        ):
+            indices_to_keep.append(idx)
+
+    gdf_barns = gdf_barns.loc[indices_to_keep]
+
+    with open(CONFIG_FILENAME, "r") as f:
         filter_configs = yaml.safe_load(f)
 
     filter_configs = filter_configs["filters"]
