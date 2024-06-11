@@ -7,7 +7,7 @@ from tqdm import tqdm
 from typing import List, Tuple
 from shapely.geometry import Point
 from pipeline.constants import RAW_DIR, CLEAN_DIR
-from pipeline.utils import save_file
+from pipeline.rafi.utils import save_file
 
 # Enable pandas progress bars for apply functions
 tqdm.pandas()

@@ -5,14 +5,15 @@ import geopandas as gpd
 import yaml
 
 # directories
-PIPELINE_DIR = Path(__file__).resolve().parent
+PACKAGE_DIR = Path(__file__).resolve().parent
+PIPELINE_DIR = PACKAGE_DIR.parent
 DATA_DIR = PIPELINE_DIR.parent / "data"
 CLEAN_DIR = DATA_DIR / "clean"
 RAW_DIR = DATA_DIR / "raw"
 SHAPEFILE_DIR = DATA_DIR / "shapefiles"
 
 # dataframe columns
-with open(PIPELINE_DIR / "config_dataframes.yaml", "r") as file:
+with open(PACKAGE_DIR / "config_dataframes.yaml", "r") as file:
     config = yaml.safe_load(file)
 
 FSIS_COLUMNS = config["column_names"]["fsis"]

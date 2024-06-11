@@ -12,7 +12,7 @@ from constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
 import os
 from datetime import datetime
 
-from utils import save_file
+from pipeline.rafi.utils import save_file
 
 tqdm.pandas()
 
