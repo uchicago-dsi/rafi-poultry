@@ -51,8 +51,8 @@ filters:
     filter_on_state: True
     buffer: 400 # meters — stored as Point
 
-  - description: "major roads"
-    source: "https://geodata.bts.gov/datasets/usdot::north-american-roads/about"
-    filename: "North_American_Roads.geojson"
-    buffer: 200 # meters — stored as LineString
-    filter_on_state: True
+  # - description: "major roads"
+  #   source: "https://geodata.bts.gov/datasets/usdot::north-american-roads/about"
+  #   filename: "North_American_Roads.geojson"
+  #   buffer: 200 # meters — stored as LineString
+  #   filter_on_state: True
