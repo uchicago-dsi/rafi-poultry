@@ -9,7 +9,7 @@ from get_plant_isochrones import get_plant_isochrones
 from calculate_captured_areas import calculate_captured_areas
 from filter_barns import filter_barns
 from constants import RAW_DIR, CLEAN_DIR
-from utils import save_file
+from pipeline.rafi.utils import save_file
 
 
 def pipeline(gdf_fsis, gdf_nets, gdf_barns, smoke_test=False):

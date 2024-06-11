@@ -1,6 +1,8 @@
 {
 	"name": "rafi-pipeline",
-    "build": {
+    "build": 
+    {
+        //TODO: Fix this...
         "dockerfile": "/Users/toddnief/Dropbox/1-Projects/dsi/rafi-poultry/rafi-poultry/pipeline/Dockerfile",
         "context": "..",
         "args": {

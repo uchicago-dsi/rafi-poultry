@@ -4,9 +4,6 @@ version = "0.1.0"
 description = "Data pipeline for RAFI poultry concentration dashboard"
 readme = "README.md"
 
-[tool.setuptools.packages.find]
-where = ["pipeline"]
-
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
