@@ -5,17 +5,19 @@ import geopandas as gpd
 from pathlib import Path
 import yaml
 from datetime import datetime
+from tqdm import tqdm
 
-from utils import save_file
-from constants import (
+from rafi.utils import save_file
+from rafi.constants import (
     GDF_STATES,
     RAW_DIR,
     CLEAN_DIR,
-    DATA_DIR,
     WGS84,
     SHAPEFILE_DIR,
     ALBERS_EQUAL_AREA,
 )
+
+tqdm.pandas()
 
 # TODO: move to config or constants
 CONFIG_FILENAME = Path(__file__).resolve().parent / "geospatial_filter_config.yaml"
@@ -112,6 +114,7 @@ def filter_on_membership(
         gdf_exclude = get_state_info(gdf_exclude, valid_states=valid_states)
         gdf_exclude = gdf_exclude[gdf_exclude["state"].isin(valid_states)]
 
+    # TODO: Should I use ALBERS_EQUAL_AREA here?
     if buffer != 0:
         gdf_exclude = gdf_exclude.to_crs(
             epsg=5070
@@ -126,12 +129,12 @@ def filter_on_membership(
     )
 
     if how == "inside":
-        joined["exclude"] = joined.apply(
+        joined["exclude"] = joined.progress_apply(
             lambda row: (1 if not pd.isna(row["index_right"]) else row["exclude"]),
             axis=1,
         )
     elif how == "outside":
-        joined["exclude"] = joined.apply(
+        joined["exclude"] = joined.progress_apply(
             lambda row: (
                 1
                 if pd.isna(row["index_right"]) and row["exclude"] == 0
@@ -207,7 +210,7 @@ def filter_barns(
     gdf_barns,
     gdf_isochrones,
     shapefile_dir=SHAPEFILE_DIR,
-    nearest_neighbor=500,
+    nearest_neighbor=50,
     smoke_test=False,
     filter_barns=True,
 ):
@@ -219,20 +222,29 @@ def filter_barns(
         print(f"Running with {len(gdf_barns)} barns.")
 
     # Project to equal area projection and get centroid for each barn
-    # TODO: Set this up to use config
-    gdf_barns = gdf_barns.to_crs(epsg=2163)
+    gdf_barns = gdf_barns.to_crs(ALBERS_EQUAL_AREA)
     gdf_barns["geometry"] = gdf_barns["geometry"].centroid
+
+    # Exclude barns with no nearest neighbor (barns are almost always in at least groups of two)
+    # TODO: Make this prettier?
+    def nearest_neighbor(geom, gdf, distance=nearest_neighbor):
+        nearest_idx = gdf.sindex.nearest(geom, exclusive=True, max_distance=distance)
+        return nearest_idx.size == 0
+
+    print("Excluding barns without a nearest neighbor...")
+    gdf_barns["exclude"] = gdf_barns["geometry"].progress_apply(
+        lambda geom: nearest_neighbor(geom, gdf_barns, distance=50)
+    )
+    # Drop the barns that don't have a nearest neighbor here to save computation time on other steps
+    gdf_barns = gdf_barns[~gdf_barns["exclude"]]
+    gdf_barns["exclude"] = gdf_barns["exclude"].astype(int)  # Dashboard expects int
 
     # Project to latitude and longitude
     gdf_barns = gdf_barns.to_crs(WGS84)
 
-    # Initialize the "exclude" column
-    gdf_barns["exclude"] = 0
-    gdf_barns["integrator_access"] = 0
-
     # Join with plant access isochrones
     print("Checking integrator access...")
-
+    gdf_barns["integrator_access"] = 0
     gdf_single_corp = gdf_isochrones[gdf_isochrones["corp_access"] == 1]
     gdf_two_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 2]
     gdf_three_plus_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 3]
@@ -246,7 +258,7 @@ def filter_barns(
     gdf_barns = gpd.sjoin(gdf_barns, fsis_union, how="left", predicate="within")
     gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 1
     # TODO: is this the right dataframe here...
-    gdf_barns["parent_corporation"] = gdf_barns.apply(
+    gdf_barns["parent_corporation"] = gdf_barns.progress_apply(
         lambda row: (
             gdf_single_corp.loc[row["index_right"], "Parent Corporation"]
             if pd.notnull(row["index_right"])
@@ -275,36 +287,7 @@ def filter_barns(
     print("Getting states for all barns...")
     gdf_barns = get_state_info(gdf_barns)
 
-    print(f"Barns before filtering: {len(gdf_barns)}")
-
-    print(f"Filtering barns with no other barn within {nearest_neighbor}m...")
-
-    def get_nearest_neighbors(point, gdf, distance=nearest_neighbor):
-        possible_matches_index = list(
-            gdf.sindex.intersection(point.buffer(distance).bounds)
-        )
-        possible_matches = gdf.iloc[possible_matches_index]
-        precise_matches = possible_matches[possible_matches.distance(point) <= distance]
-        return precise_matches
-
-    # List to store indices of points to keep
-    indices_to_keep = []
-
-    # TODO: project to Albers
-    # TODO: there's probably a way to do this as an "apply"
-    # Iterate over each point
-    for idx, point in gdf_barns.iterrows():
-        if (
-            len(
-                get_nearest_neighbors(
-                    point.geometry, gdf_barns, distance=nearest_neighbor
-                )
-            )
-            > 1
-        ):
-            indices_to_keep.append(idx)
-
-    gdf_barns = gdf_barns.loc[indices_to_keep]
+    print(f"Barns before filtering on shapefiles: {len(gdf_barns)}")
 
     with open(CONFIG_FILENAME, "r") as f:
         filter_configs = yaml.safe_load(f)
