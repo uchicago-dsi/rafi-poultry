@@ -25,7 +25,7 @@ RUN pip install --trusted-host pypi.python.org --no-cache-dir -r requirements.tx
 # Copy the pipeline, notebook, and data directory into the container
 # COPY setup.py .
 COPY pyproject.toml .
-COPY setup.cfg .
+COPY setup.py .
 COPY pipeline ./pipeline
 RUN pip install -e .
 
