@@ -4,12 +4,9 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="pipeline",
+    name="rafi",
     version="0.1.0",
-    packages=find_packages(
-        include=[
-            "pipeline"
-        ]
-    ),
+    packages=find_packages(where="pipeline"),
+    package_dir={"": "pipeline"},
     install_requires=[],
 )
