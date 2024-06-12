@@ -296,6 +296,10 @@ def fsis_match(gdf_fsis, gdf_nets):
 
     GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
+    # Remove ZIP+4 from ZIP code when present
+    output_geojson["Zip"] = output_geojson["Zip"].str.replace(
+        r"-\d{4}$", "", regex=True
+    )
     output_geojson = output_geojson[GEOJSON_COLS]
 
     # TODO: Has to be a better way...
