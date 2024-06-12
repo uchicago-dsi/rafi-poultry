@@ -35,6 +35,7 @@ export const updateStaticDataStore = async () => {
     .sort();
 
     // Filter barns data to only include farms that are not excluded and have plant access
+    console.log("rawBarns", rawBarns)
     const processedBarns = {
       type: "FeatureCollection",
       features: rawBarns.features.filter(
@@ -45,7 +46,8 @@ export const updateStaticDataStore = async () => {
     };
     staticDataStore.allBarns = processedBarns;
 
-    console.log(rawSales)
+    console.log("processedBarns", processedBarns)
+    console.log("rawSales", rawSales)
 
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;

@@ -1,0 +1,58 @@
+filters:
+  # Note: put the quickest filters first to reduce the number of barns to process for the slower filters
+  # Coastline, bodies of water, and roads are *slow*
+
+  # Exclude barns in schools?
+  # Any industrial site data available?
+
+  - description: "prisons"
+    source: "https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::prison-boundaries/about"
+    filename: "Prison_Boundaries_-3815396979007080341.geojson"
+
+  - description: "airports"
+    source: "https://hub.arcgis.com/documents/f74df2ed82ba4440a2059e8dc2ec9a5d/explore"
+    filename: "Airports.geojson"
+    buffer: 800 # meters, stored as Point
+
+  - description: "hospitals"
+    source: "https://hifld-geoplatform.opendata.arcgis.com/datasets/75079bdea94743bcaca7b6e833692639/explore"
+    filename: "Hospitals.geojson"
+    buffer: 800 # meters, stored as Point
+
+  - description: "parks"
+    source: "https://www.arcgis.com/home/item.html?id=578968f975774d3fab79fe56c8c90941"
+    filename: "USA_Parks/v10/park_dtl.gdb"
+    layer: "park_dtl"
+
+  - description: "military bases"
+    source: "https://data-usdot.opendata.arcgis.com/datasets/fb5aff99c6e74ed99cd8b36dfae1c469/explore"
+    filename: "Military_Bases.geojson"
+
+  - description: "railroads"
+    source: "https://atlas.eia.gov/datasets/esri::usa-railroads-2/about"
+    filename: "USA_Railroads.geojson"
+    buffer: 200 # meters — stored as LineString
+    filter_on_state: True
+
+  - description: "coastline"
+    source: "https://catalog.data.gov/dataset/tiger-line-shapefile-2019-nation-u-s-coastline-national-shapefile"
+    filename: "tl_2019_us_coastline/tl_2019_us_coastline.shp"
+    buffer: 1000 # meters - want to exclude beaches, water, etc. on the coastline
+    filter_on_state: False # This doesn't work if you try to filter on state
+
+  - description: "bodies of water"
+    source: "https://www.arcgis.com/home/item.html?id=48c77cbde9a0470fb371f8c8a8a7421a"
+    filename: "USA_Detailed_Water_Bodies.geojson"
+    filter_on_state: True
+
+  - description: "manufacturing facilities"
+    source: "https://hifld-geoplatform.opendata.arcgis.com/datasets/geoplatform::general-manufacturing-facilities/about"
+    filename: "General_Manufacturing_Facilities.geojson"
+    filter_on_state: True
+    buffer: 400 # meters — stored as Point
+
+  # - description: "major roads"
+  #   source: "https://geodata.bts.gov/datasets/usdot::north-american-roads/about"
+  #   filename: "North_American_Roads.geojson"
+  #   buffer: 200 # meters — stored as LineString
+  #   filter_on_state: True

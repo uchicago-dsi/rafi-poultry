@@ -1,5 +1,9 @@
 ## -*- mode: gitignore; -*-
 
+.env*
+*.geojson*
+*rafi-usa-3f3f4a3368ec.json
+
 ## Terraform Files
 .terraform
 .terraform*
