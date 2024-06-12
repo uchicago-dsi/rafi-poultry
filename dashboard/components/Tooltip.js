@@ -43,6 +43,8 @@ export default function Tooltip() {
           </div>
           <div>
             <b>{snapshot.hoveredObject.properties["Address"]}</b>
+          </div>
+          <div>
             <b>{snapshot.hoveredObject.properties["City"]} {snapshot.hoveredObject.properties["State"]} {snapshot.hoveredObject.properties["Zip"]}</b>
           </div>
           <div>

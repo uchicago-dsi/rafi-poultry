@@ -1,0 +1,12 @@
+column_names:
+  fsis:
+    duns: "duns_number"
+    company: "establishment_name"
+    address: "street"
+    geometry: "geometry"
+  nets:
+    duns: "DunsNumber"
+    company: "Company"
+    address: "Address"
+    geometry: "geometry"
+    sales: "sales_here"

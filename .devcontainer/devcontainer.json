@@ -1,10 +1,14 @@
 {
 	"name": "rafi-pipeline",
-    "image": "rafi-pipeline", // Build the image first using make build-pipeline to build with the correct chip architecture
-	// "build": {
-	// 	"context": "..",
-	// 	"args": {}
-	// },
+    "build": 
+    {
+        "dockerfile": "../pipeline/Dockerfile",
+        "context": "..",
+        // Note: This is used to use the correct base image. Update for different architectures.
+        "args": {
+            "PLATFORM": "linux/arm64/v8"
+        }
+    },
 	// Set *default* container specific settings.json values on container create.
     "customizations": {
         "vscode": {
