@@ -8,11 +8,13 @@ import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 from typing import List, Dict, Tuple
-from constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
+from rafi.constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
 import os
 from datetime import datetime
+from shapely.ops import unary_union
 
-from pipeline.rafi.utils import save_file
+
+from rafi.utils import save_file
 
 tqdm.pandas()
 
@@ -24,17 +26,19 @@ def calculate_captured_areas(
     access_col="corp_access",
     simplify_tol=0.01,
 ):
-    # gdf_fsis = gdf_fsis.drop("geometry", axis=1).set_geometry(chrone_col).set_crs(WGS84)
     gdf_fsis = gdf_fsis.set_geometry(chrone_col).set_crs(WGS84)
 
     # Dissolve by parent corporation to calculate access on a corporation (not plant) level
-    gdf_single_corp = gdf_fsis.dissolve(by=corp_col).reset_index()[
+    gdf_single_corp_dissolved = gdf_fsis.dissolve(by=corp_col).reset_index()[
         [corp_col, chrone_col]
     ]
 
     # Self join to find intersections in corporate access
     intersections = gpd.sjoin(
-        gdf_single_corp, gdf_single_corp, how="inner", predicate="intersects"
+        gdf_single_corp_dissolved,
+        gdf_single_corp_dissolved,
+        how="inner",
+        predicate="intersects",
     )
     # Each area will overlap with itself, so remove those
     intersections_filtered = (
@@ -46,8 +50,8 @@ def calculate_captured_areas(
     print("Calculating intersections...")
     intersections_filtered["intersection_geometry"] = (
         intersections_filtered.progress_apply(
-            lambda row: gdf_single_corp.at[row.name, chrone_col].intersection(
-                gdf_single_corp.at[row["index_right"], chrone_col]
+            lambda row: gdf_single_corp_dissolved.at[row.name, chrone_col].intersection(
+                gdf_single_corp_dissolved.at[row["index_right"], chrone_col]
             ),
             axis=1,
         )
@@ -55,56 +59,94 @@ def calculate_captured_areas(
     intersections_filtered = intersections_filtered.set_geometry(
         "intersection_geometry"
     ).set_crs(WGS84)
+    intersections_filtered = intersections_filtered.rename(
+        columns={
+            f"{corp_col}_left": f"{corp_col} #1",
+            f"{corp_col}_right": f"{corp_col} #2",
+        }
+    )
     intersections_filtered = intersections_filtered[
-        [f"{corp_col}_left", f"{corp_col}_right", "intersection_geometry"]
+        [f"{corp_col} #1", f"{corp_col} #2", "intersection_geometry"]
     ]
     # This is still using the index for the corporations - reset so each intersection has a unique index
-    intersections_filtered = intersections_filtered.reset_index()
+    intersections_filtered = intersections_filtered.reset_index(drop=True)
 
-    print("Calculating single plant access...")
+    print("Calculating single corporation access...")
     multi_corp_access_area = intersections_filtered["intersection_geometry"].unary_union
-    # Take the difference between each corporate area and the area with access to more than one plant
+    # Take the difference between each corporate area and the area with access to more than one corp
     # This is the area that has access to only one corporation
+    # Note: Make a copy so we can update this and save it in the isochrones
+    gdf_single_corp = gdf_single_corp_dissolved.copy()
     gdf_single_corp["Captured Area"] = gdf_single_corp[chrone_col].progress_apply(
         lambda x: x.difference(multi_corp_access_area)
     )
     gdf_single_corp = gdf_single_corp.set_geometry("Captured Area")
 
-    gdf_single_corp = gpd.overlay(GDF_STATES, gdf_single_corp, how="intersection")
+    gdf_single_corp = gpd.overlay(
+        GDF_STATES, gdf_single_corp, how="intersection", keep_geom_type=False
+    )
     gdf_single_corp[access_col] = 1
     gdf_single_corp = gdf_single_corp.drop("isochrone", axis=1)
 
-    # Calculate the area that has access to two or more plants
-    # Join intersections with corporate areas — we will groupby the number of corporate areas
-    # that are in an intersection
-    print("Calculating multi plant access...")
-    corporate_access_join = gpd.sjoin(
-        intersections_filtered, gdf_single_corp, how="left", predicate="intersects"
-    )
-    overlap_count = corporate_access_join.groupby(corporate_access_join.index).size()
+    # To calculate 3+ corporation access, we join intersections with themselves
+    # Then we filter for intersections that intersect with at least three corporations
+    # and calculate the actual overlapping area of those intersections
 
-    # Filter for intersections that have access to exactly two corporations
-    # We know that these areas must be all of the spots with exactly two plant access
-    two_corp_access_indeces = overlap_count[overlap_count == 2]
-    two_corp_access_isochrones = intersections_filtered[
-        intersections_filtered.index.isin(two_corp_access_indeces.index)
-    ]
-    two_corp_access_area = two_corp_access_isochrones[
+    # Note: These are multipolygons so need to explode the dataframe
+    intersections_exploded = intersections_filtered.explode(index_parts=True)
+    # Note: sjoin only keeps one geometry so we need to reassign it to retain after the join
+    intersections_exploded["geometry_saved"] = intersections_exploded[
         "intersection_geometry"
-    ].unary_union
+    ]
+    multi_corp_intersections = gpd.sjoin(
+        intersections_exploded,
+        intersections_exploded,
+        how="inner",
+        predicate="intersects",
+    )
 
-    # Remove the two plant access area from everything else
-    # Remainder must have access to 3+ plants
-    three_plus_corp_access_area = multi_corp_access_area - two_corp_access_area
+    # Find intersections that intersect with at least three corporations
+    corp_columns = [
+        "Parent Corporation #1_left",
+        "Parent Corporation #2_left",
+        "Parent Corporation #1_right",
+        "Parent Corporation #2_right",
+    ]
+
+    def count_unique_corporations(row):
+        corporations = row[corp_columns].dropna().unique()
+        return len(corporations)
+
+    print("Calculating multi corporation access...")
+    multi_corp_intersections["unique_corp_count"] = (
+        multi_corp_intersections.progress_apply(count_unique_corporations, axis=1)
+    )
+    multi_corp_intersections = multi_corp_intersections[
+        multi_corp_intersections["unique_corp_count"] >= 3
+    ]
+    print("Calculating 3+ corporation access...")
+    multi_corp_intersections["3+ Area"] = multi_corp_intersections[
+        "geometry_saved_right"
+    ].intersection(multi_corp_intersections["geometry_saved_left"])
+    three_plus_corp_access_area = multi_corp_intersections["3+ Area"].unary_union
+
+    # Two corp access area is the area with multi corp access minus the area with 3+ corp access
+    print("Calculating two corporation access...")
+    multi_corp_access_area = intersections_filtered["intersection_geometry"].unary_union
+    two_corp_access_area = multi_corp_access_area.difference(
+        three_plus_corp_access_area
+    )
 
     gdf_two_corps = gpd.GeoDataFrame(geometry=[two_corp_access_area], crs=WGS84)
-    gdf_two_corps = gpd.overlay(GDF_STATES, gdf_two_corps)
+    gdf_two_corps = gpd.overlay(GDF_STATES, gdf_two_corps, keep_geom_type=False)
     gdf_two_corps[access_col] = 2
 
     gdf_three_plus_corps = gpd.GeoDataFrame(
         geometry=[three_plus_corp_access_area], crs=WGS84
     )
-    gdf_three_plus_corps = gpd.overlay(GDF_STATES, gdf_three_plus_corps)
+    gdf_three_plus_corps = gpd.overlay(
+        GDF_STATES, gdf_three_plus_corps, keep_geom_type=False
+    )
     gdf_three_plus_corps[access_col] = 3
 
     isochrones = gpd.GeoDataFrame(
