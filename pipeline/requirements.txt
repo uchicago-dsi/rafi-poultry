@@ -3,7 +3,6 @@ folium==0.14.0
 fuzzywuzzy==0.18.0
 geopandas==0.14.4 # Note: was 0.13.2, upgraded for nearest neighbors
 ipykernel
-# numpy==1.21.5
 numpy>=1.22
 pandas==1.5.2
 pyproj==3.6.0

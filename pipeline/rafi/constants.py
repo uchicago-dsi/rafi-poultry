@@ -1,6 +1,7 @@
 """Constants used throughout the pipeline"""
 
 from pathlib import Path
+
 import geopandas as gpd
 import yaml
 
