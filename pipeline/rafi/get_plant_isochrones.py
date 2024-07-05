@@ -1,17 +1,18 @@
-import pandas as pd
-import geopandas as gpd
-from pathlib import Path
-from fuzzywuzzy import fuzz
-from datetime import datetime
-import os
-import requests
-from tqdm import tqdm
-from typing import List, Tuple
-from shapely.geometry import Polygon
-import numpy as np
 import argparse
+import os
+from datetime import datetime
+from pathlib import Path
+from typing import List, Tuple
 
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import requests
 from constants import CLEAN_DIR, RAW_DIR
+from fuzzywuzzy import fuzz
+from shapely.geometry import Polygon
+from tqdm import tqdm
+
 from pipeline.rafi.utils import save_file
 
 # TODO: uh...

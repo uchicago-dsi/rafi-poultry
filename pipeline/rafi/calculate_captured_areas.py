@@ -4,16 +4,16 @@
     corporations.
 """
 
-import pandas as pd
-import geopandas as gpd
-from tqdm import tqdm
-from typing import List, Dict, Tuple
-from rafi.constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
 import os
 from datetime import datetime
+from typing import Dict, List, Tuple
+
+import geopandas as gpd
+import pandas as pd
 from shapely.ops import unary_union
+from tqdm import tqdm
 
-
+from rafi.constants import CLEAN_DIR, GDF_STATES, STATE2ABBREV, WGS84
 from rafi.utils import save_file
 
 tqdm.pandas()
