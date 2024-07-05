@@ -1,16 +1,14 @@
 # TODO:...
-"""Contains functions for creating a US map with markers for poultry processing 
-    plants and isochrones representing area captured by the plants' parent 
-    corporations.
+"""Contains functions for creating a US map with markers for poultry processing
+plants and isochrones representing area captured by the plants' parent 
+corporations.
 """
 
 import os
 from datetime import datetime
-from typing import Dict, List, Tuple
 
 import geopandas as gpd
 import pandas as pd
-from shapely.ops import unary_union
 from tqdm import tqdm
 
 from rafi.constants import CLEAN_DIR, GDF_STATES, STATE2ABBREV, WGS84

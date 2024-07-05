@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from typing import List, Tuple
 
 import geopandas as gpd
 import pandas as pd

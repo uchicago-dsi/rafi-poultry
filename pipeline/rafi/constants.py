@@ -14,7 +14,7 @@ RAW_DIR = DATA_DIR / "raw"
 SHAPEFILE_DIR = DATA_DIR / "shapefiles"
 
 # dataframe columns
-with open(PACKAGE_DIR / "config_dataframes.yaml", "r") as file:
+with open(PACKAGE_DIR / "config_dataframes.yaml") as file:
     config = yaml.safe_load(file)
 
 FSIS_COLUMNS = config["column_names"]["fsis"]

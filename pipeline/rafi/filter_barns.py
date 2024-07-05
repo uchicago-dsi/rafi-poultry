@@ -1,21 +1,22 @@
 import argparse
 import os
-import pandas as pd
-import geopandas as gpd
-from pathlib import Path
-import yaml
 from datetime import datetime
+from pathlib import Path
+
+import geopandas as gpd
+import pandas as pd
+import yaml
 from tqdm import tqdm
 
-from rafi.utils import save_file
 from rafi.constants import (
+    ALBERS_EQUAL_AREA,
+    CLEAN_DIR,
     GDF_STATES,
     RAW_DIR,
-    CLEAN_DIR,
-    WGS84,
     SHAPEFILE_DIR,
-    ALBERS_EQUAL_AREA,
+    WGS84,
 )
+from rafi.utils import save_file
 
 tqdm.pandas()
 
@@ -289,7 +290,7 @@ def filter_barns(
 
     print(f"Barns before filtering on shapefiles: {len(gdf_barns)}")
 
-    with open(CONFIG_FILENAME, "r") as f:
+    with open(CONFIG_FILENAME) as f:
         filter_configs = yaml.safe_load(f)
 
     filter_configs = filter_configs["filters"]

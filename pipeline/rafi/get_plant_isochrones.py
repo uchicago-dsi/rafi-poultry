@@ -1,15 +1,10 @@
 import argparse
 import os
 from datetime import datetime
-from pathlib import Path
-from typing import List, Tuple
 
 import geopandas as gpd
-import numpy as np
-import pandas as pd
 import requests
-from constants import CLEAN_DIR, RAW_DIR
-from fuzzywuzzy import fuzz
+from constants import CLEAN_DIR
 from shapely.geometry import Polygon
 from tqdm import tqdm
 
@@ -38,7 +33,6 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
         list of plant isochrones
 
     """
-
     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
     DRIVING_DISTANCE_METERS = str(
         int(driving_dist_miles * 1609.34)
