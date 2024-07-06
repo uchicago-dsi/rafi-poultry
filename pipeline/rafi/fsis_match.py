@@ -25,9 +25,10 @@ FSIS2NETS_CORPS = {
 }
 
 TURKEY_CORPS = {"Butterball", "Jennie-O"}
+EXCLUDE_STRINGS_NETS = {"turkey", "cattle", "hatchery"}
 
 
-def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: str = TURKEY_CORPS) -> pd.DataFrame:
+def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
 
     Args:
@@ -46,6 +47,26 @@ def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: str = TURKEY_CORPS) -> pd.Da
     df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
     df_fsis["matched"] = False
     return df_fsis
+
+
+def clean_nets(
+    df_nets: pd.DataFrame, exclude_strings: set = EXCLUDE_STRINGS_NETS
+) -> pd.DataFrame:
+    """Cleans the NETS data by dropping rows containing excluded strings.
+
+    Args:
+        df_nets: The NETS DataFrame to clean.
+        exclude_strings: Set of strings to exclude. Defaults to EXCLUDE_STRINGS_NETS.
+
+    Returns:
+        The cleaned NETS DataFrame.
+    """
+    exclude_pattern = "|".join(exclude_strings)
+    df_nets = df_nets[
+        ~df_nets["Company"].str.contains(exclude_pattern, case=False)
+        & ~df_nets["TradeName"].str.contains(exclude_pattern, case=False)
+    ]
+    return df_nets
 
 
 def get_geospatial_matches(
@@ -408,6 +429,7 @@ if __name__ == "__main__":
         low_memory=False,
     )
     df_nets = df_nets.merge(df_nets_naics, on="DunsNumber", how="left")
+    df_nets = clean_nets(df_nets)
     gdf_nets = gpd.GeoDataFrame(
         df_nets,
         geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
