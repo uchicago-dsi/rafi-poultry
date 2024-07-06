@@ -25,7 +25,22 @@ FSIS2NETS_CORPS = {
 }
 
 TURKEY_CORPS = {"Butterball", "Jennie-O"}
-EXCLUDE_STRINGS_NETS = {"turkey", "cattle", "hatchery"}
+EXCLUDE_STRINGS_NETS = {
+    "turkey",
+    "cattle",
+    "hatchery",
+    "beef",
+    "pig",
+    "dlisted",
+    "hog",
+    "livestock exch",
+    "pork",
+    "saw sharpening",
+    "livestock auction",
+    "darling ingredients",
+    "wehrmann genetics",
+    "back road trucking",
+}
 
 
 def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.DataFrame:
