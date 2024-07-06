@@ -315,7 +315,7 @@ def filter_barns(
 
 if __name__ == "__main__":
     RUN_DIR = CLEAN_DIR / f"barns_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    os.makedirs(RUN_DIR, exist_ok=True)
+    Path.mkdir(RUN_DIR, parents=True, exist_ok=True)
 
     # TODO: Add to config
     BARNS_FILENAME = "full-usa-3-13-2021_filtered_deduplicated.gpkg"
