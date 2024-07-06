@@ -1,6 +1,9 @@
+"""Get FSIS plant isochrones using the Mapbox API"""
+
 import argparse
 import os
 from datetime import datetime
+from pathlib import Path
 
 import geopandas as gpd
 import requests
@@ -17,21 +20,19 @@ MAPBOX_KEY = os.getenv("MAPBOX_API")
 tqdm.pandas()
 
 
-def get_isochrone(row, driving_dist_miles: int, token: str):
-    """TODO: rewrite this...
-    Adds plant isochrones to fsis dataframe; captures area that is within
-            an x mile radius of the plant. 90 percent of all birds were
-            produced on farms within 60 miles of the plant, according to 2011
-            ARMS data.
+def get_isochrone(
+    row: gpd.GeoSeries, driving_dist_miles: int, token: str, timeout: int = 60
+) -> gpd.GeoSeries:
+    """Adds plant isochrones to fsis dataframe; captures area that is within an x mile radius of the plant. 90 percent of all birds were produced on farms within 60 miles of the plant, according to 2011 ARMS data.
 
     Args:
-        coords: list of tuples; lat and long for all processing plants.
-        driving_dist_miles: int; radius of captured area (in driving distance).
-        token: str; API token to access mapbox.
+        row: GeoSeries containing plant location data.
+        driving_dist_miles: Radius of captured area (in driving distance) in miles.
+        token: API token to access mapbox.
+        timeout: Time in seconds before request times out.
 
     Returns:
-        list of plant isochrones
-
+        GeoSeries with added isochrone geometry.
     """
     ENDPOINT = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
     DRIVING_DISTANCE_METERS = str(
@@ -51,7 +52,13 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
         + "&access_token="
         + token
     )
-    response = requests.get(url)
+    try:
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()
+    except requests.exceptions.Timeout as e:
+        raise Exception(
+            f"Request to Mapbox API timed out after {timeout} seconds."
+        ) from e
     if not response.ok:
         raise Exception(
             f"Within the isochrone helper function, unable to \
@@ -68,7 +75,19 @@ def get_isochrone(row, driving_dist_miles: int, token: str):
     return row
 
 
-def get_plant_isochrones(gdf_fsis, dist=60, token=MAPBOX_KEY):
+def get_plant_isochrones(
+    gdf_fsis: gpd.GeoDataFrame, dist: int = 60, token: str = MAPBOX_KEY
+) -> gpd.GeoDataFrame:
+    """Retrieves isochrones for each plant in the given GeoDataFrame.
+
+    Args:
+        gdf_fsis: GeoDataFrame containing plant location data.
+        dist: Radius of captured area (in driving distance) in miles.
+        token: API token to access mapbox.
+
+    Returns:
+        GeoDataFrame with isochrone geometries.
+    """
     print("Getting isochrones...")
     gdf_fsis = gdf_fsis.progress_apply(
         lambda row: get_isochrone(row, dist, MAPBOX_KEY), axis=1
@@ -81,7 +100,7 @@ if __name__ == "__main__":
     RUN_DIR = (
         CLEAN_DIR / f"fsis_isochrones_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     )
-    os.makedirs(RUN_DIR, exist_ok=True)
+    Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke_test", action="store_true")
