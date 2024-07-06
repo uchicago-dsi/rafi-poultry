@@ -24,18 +24,24 @@ FSIS2NETS_CORPS = {
     "Perdue Foods, LLC": "PERDUE FARMS INC",
 }
 
+TURKEY_CORPS = {"Butterball", "Jennie-O"}
 
-def clean_fsis(df_fsis: pd.DataFrame) -> pd.DataFrame:
+
+def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: str = TURKEY_CORPS) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
 
     Args:
         df_fsis: The FSIS DataFrame to clean.
+        turkey_corps: Set of corporations known to process turkey to exclude. Defaults to TURKEY_CORPS.
 
     Returns:
         The cleaned FSIS DataFrame.
     """
     df_fsis = df_fsis.dropna(subset=["activities"])
     df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry slaughter")]
+    df_fsis = df_fsis[
+        ~df_fsis["establishment_name"].str.contains("|".join(turkey_corps), case=False)
+    ]
     df_fsis = df_fsis[df_fsis["size"] == "Large"]
     df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
     df_fsis["matched"] = False
@@ -244,15 +250,15 @@ def fsis_match(
         "Harim": "Harim Group",
         "Costco": "Costco",
         "Aterian": "Aterian Investment Partners",
-        "Pilgrim's Pride": "Pilgrim's Pride",
+        "Pilgrim's Pride": "Pilgrim's Pride (JBS)",
         "Mountaire": "Mountaire",
         "Bachoco": "Bachoco OK Foods",
-        "Wayne Farms": "Wayne Farms",
+        "Wayne Farms": "Wayne-Sanderson (Cargill)",
         "Hillshire": "Hillshire",
         "Butterball": "Butterball",
         "Case Farms": "Case Farms",
         "Foster": "Foster Poultry Farms",
-        "Sanderson": "Sanderson Farms, Inc.",
+        "Sanderson": "Wayne-Sanderson (Cargill)",
         "Harrison": "Harrison Poultry, Inc.",
         "Farbest": "Farbest Foods, Inc.",
         "Jennie-O": "Jennie-O",
@@ -260,6 +266,15 @@ def fsis_match(
         "Simmons": "Simmons Prepared Foods, Inc.",
         "JCG": "Cagles, Inc.",
         "Norman": "Norman W. Fries, Inc.",
+        # Other corps?
+        "Soulshine": "Soulshine Farms, LLC",
+        "Lincoln": "Lincoln Premium Poultry",
+        "Ozark": "Ozark Mountain Poultry",
+        "Prestage": "Prestage Foods",
+        "Pitman": "Pitman Farms",
+        "Plainville": "Plainville Brands",
+        "Tip Top": "Tip Top Poultry",
+        "West Liberty": "West Liberty Foods",
     }
 
     # TODO: Move to utils?
