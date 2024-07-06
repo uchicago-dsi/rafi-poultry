@@ -120,14 +120,18 @@ def spatial_index_match(
 
 
 def get_string_matches(
-    row: pd.Series, company_threshold: float = 0.7, address_threshold: float = 0.7
+    row: pd.Series,
+    company_threshold: float = 50,
+    address_threshold: float = 70,
+    company_bonus: int = 100,
 ) -> pd.Series:
     """Finds string matches for a given row in the FSIS DataFrame based on company and address similarity.
 
     Args:
         row: The row of the FSIS DataFrame.
-        company_threshold: The threshold for company name matching. Defaults to 0.7.
-        address_threshold: The threshold for address matching. Defaults to 0.7.
+        company_threshold: The threshold for company name matching.
+        address_threshold: The threshold for address matching.
+        company_bonus: The bonus for company name matching.
 
     Returns:
         The row with added string match information.
@@ -135,6 +139,15 @@ def get_string_matches(
     if pd.isna(row["Company"]):
         return row
 
+    # row["company_match"] = (
+    #     int(
+    #         fuzz.token_sort_ratio(
+    #             row["establishment_name"].upper(), row["Company"].upper()
+    #         )
+    #         > company_threshold
+    #     )
+    #     * company_bonus
+    # )
     row["company_match"] = (
         fuzz.token_sort_ratio(row["establishment_name"].upper(), row["Company"].upper())
         > company_threshold
