@@ -79,8 +79,8 @@ def clean_nets(
     Returns:
         The cleaned NETS DataFrame.
     """
-    most_recent_year_col = f"NAICS{most_recent_year}"
-    df_nets = df_nets[~df_nets[most_recent_year_col].isna()]
+    most_recent_year_col = f"Sales{most_recent_year}"
+    df_nets = df_nets[~(df_nets[most_recent_year_col].isna())]
     exclude_pattern = "|".join(exclude_strings)
     df_nets = df_nets[
         ~df_nets["Company"].str.contains(exclude_pattern, case=False)
