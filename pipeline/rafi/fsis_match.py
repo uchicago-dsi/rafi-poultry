@@ -65,17 +65,22 @@ def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.Da
 
 
 def clean_nets(
-    df_nets: pd.DataFrame, exclude_strings: set = EXCLUDE_STRINGS_NETS
+    df_nets: pd.DataFrame,
+    exclude_strings: set = EXCLUDE_STRINGS_NETS,
+    most_recent_year: int = 22,
 ) -> pd.DataFrame:
     """Cleans the NETS data by dropping rows containing excluded strings.
 
     Args:
         df_nets: The NETS DataFrame to clean.
         exclude_strings: Set of strings to exclude. Defaults to EXCLUDE_STRINGS_NETS.
+        most_recent_year: The most recent year of NAICS data for filtering closed businesses
 
     Returns:
         The cleaned NETS DataFrame.
     """
+    most_recent_year_col = f"NAICS{most_recent_year}"
+    df_nets = df_nets[~df_nets[most_recent_year_col].isna()]
     exclude_pattern = "|".join(exclude_strings)
     df_nets = df_nets[
         ~df_nets["Company"].str.contains(exclude_pattern, case=False)
