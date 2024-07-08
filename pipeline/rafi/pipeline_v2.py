@@ -1,18 +1,37 @@
-import pandas as pd
-import geopandas as gpd
-from datetime import datetime
-import os
+"""Run full pipeline for RAFI project."""
+
 import argparse
+from datetime import datetime
+from pathlib import Path
 
-from fsis_match import fsis_match, clean_fsis
-from get_plant_isochrones import get_plant_isochrones
+import geopandas as gpd
+import pandas as pd
 from calculate_captured_areas import calculate_captured_areas
+from constants import CLEAN_DIR, RAW_DIR
 from filter_barns import filter_barns
-from constants import RAW_DIR, CLEAN_DIR
-from pipeline.rafi.utils import save_file
+from fsis_match import clean_fsis, clean_nets, fsis_match
+from get_plant_isochrones import get_plant_isochrones
+
+from rafi.utils import save_file
 
 
-def pipeline(gdf_fsis, gdf_nets, gdf_barns, smoke_test=False):
+def pipeline(
+    gdf_fsis: gpd.GeoDataFrame,
+    gdf_nets: gpd.GeoDataFrame,
+    gdf_barns: gpd.GeoDataFrame,
+    smoke_test: bool = False,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """Runs the full pipeline for the RAFI project.
+
+    Args:
+        gdf_fsis: GeoDataFrame of FSIS plants.
+        gdf_nets: GeoDataFrame of NETS data.
+        gdf_barns: GeoDataFrame of barns data.
+        smoke_test: Boolean flag to run a smoke test with a smaller dataset.
+
+    Returns:
+        A tuple of GeoDataFrames: (gdf_fsis, gdf_fsis_isochrones, gdf_isochrones, gdf_barns).
+    """
     # TODO: Do I want to also return and save intermediate files?
     gdf_fsis, _, _ = fsis_match(gdf_fsis, gdf_nets)
     gdf_fsis_isochrones = get_plant_isochrones(gdf_fsis)
@@ -26,7 +45,7 @@ if __name__ == "__main__":
     RUN_DIR = (
         CLEAN_DIR / f"full_pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     )
-    os.makedirs(RUN_DIR, exist_ok=True)
+    Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
     # TODO: set filename in config for data files
     FSIS_PATH = RAW_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
@@ -54,7 +73,8 @@ if __name__ == "__main__":
         dtype={"DunsNumber": str},
         low_memory=False,
     )
-    df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
+    df_nets = df_nets.merge(df_nets_naics, on="DunsNumber", how="left")
+    df_nets = clean_nets(df_nets)
     gdf_nets = gpd.GeoDataFrame(
         df_nets,
         geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),

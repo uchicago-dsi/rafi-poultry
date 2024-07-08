@@ -17,7 +17,7 @@ export default function Tooltip() {
       left: `${snapshot.x}px`,
     };
 
-    console.log(snapshot.hoveredObject.properties)
+    console.log(snapshot.hoveredObject.properties);
 
     if ("corp_access" in snapshot.hoveredObject.properties) {
       // TODO: Set this up to log corporation access
@@ -45,7 +45,11 @@ export default function Tooltip() {
             <b>{snapshot.hoveredObject.properties["Address"]}</b>
           </div>
           <div>
-            <b>{snapshot.hoveredObject.properties["City"]} {snapshot.hoveredObject.properties["State"]} {snapshot.hoveredObject.properties["Zip"]}</b>
+            <b>
+              {snapshot.hoveredObject.properties["City"]}{" "}
+              {snapshot.hoveredObject.properties["State"]}{" "}
+              {snapshot.hoveredObject.properties["Zip"]}
+            </b>
           </div>
           <div>
             <b>
