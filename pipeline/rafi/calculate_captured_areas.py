@@ -1,31 +1,40 @@
-# TODO:...
-"""Contains functions for creating a US map with markers for poultry processing 
-    plants and isochrones representing area captured by the plants' parent 
-    corporations.
-"""
+"""Calculate captured areas for FSIS plants."""
 
-import pandas as pd
-import geopandas as gpd
-from tqdm import tqdm
-from typing import List, Dict, Tuple
-from rafi.constants import WGS84, CLEAN_DIR, GDF_STATES, STATE2ABBREV
-import os
 from datetime import datetime
-from shapely.ops import unary_union
+from pathlib import Path
 
+import geopandas as gpd
+import pandas as pd
+from tqdm import tqdm
 
+from rafi.constants import CLEAN_DIR, GDF_STATES, STATE2ABBREV, WGS84
 from rafi.utils import save_file
 
 tqdm.pandas()
 
 
 def calculate_captured_areas(
-    gdf_fsis,
-    corp_col="Parent Corporation",
-    chrone_col="isochrone",
-    access_col="corp_access",
-    simplify_tol=0.01,
-):
+    gdf_fsis: gpd.GeoDataFrame,
+    corp_col: str = "Parent Corporation",
+    chrone_col: str = "isochrone",
+    access_col: str = "corp_access",
+    simplify_tol: float = 0.01,
+    multi_corp_threshold: int = 3,
+) -> gpd.GeoDataFrame:
+    """Calculates captured areas for each parent corporation and determines areas with access to one, two, or three or more corporations
+
+    Args:
+        gdf_fsis: GeoDataFrame of FSIS plants.
+        corp_col: Column name for the parent corporation.
+        chrone_col: Column name for the isochrone geometry.
+        access_col: Column name for the corporation access level.
+        simplify_tol: Tolerance for simplifying geometries.
+        multi_corp_threshold: The minimum number of corporations to count as multi corp access.
+
+
+    Returns:
+        GeoDataFrame with captured areas for each parent corporation.
+    """
     gdf_fsis = gdf_fsis.set_geometry(chrone_col).set_crs(WGS84)
 
     # Dissolve by parent corporation to calculate access on a corporation (not plant) level
@@ -50,8 +59,10 @@ def calculate_captured_areas(
     print("Calculating intersections...")
     intersections_filtered["intersection_geometry"] = (
         intersections_filtered.progress_apply(
-            lambda row: gdf_single_corp_dissolved.at[row.name, chrone_col].intersection(
-                gdf_single_corp_dissolved.at[row["index_right"], chrone_col]
+            lambda row: gdf_single_corp_dissolved.loc[
+                row.name, chrone_col
+            ].intersection(
+                gdf_single_corp_dissolved.loc[row["index_right"], chrone_col]
             ),
             axis=1,
         )
@@ -113,7 +124,15 @@ def calculate_captured_areas(
         "Parent Corporation #2_right",
     ]
 
-    def count_unique_corporations(row):
+    def count_unique_corporations(row: pd.Series) -> int:
+        """Counts the number of unique corporations in a row.
+
+        Args:
+            row: The row of the DataFrame to process.
+
+        Returns:
+            The number of unique corporations.
+        """
         corporations = row[corp_columns].dropna().unique()
         return len(corporations)
 
@@ -122,7 +141,7 @@ def calculate_captured_areas(
         multi_corp_intersections.progress_apply(count_unique_corporations, axis=1)
     )
     multi_corp_intersections = multi_corp_intersections[
-        multi_corp_intersections["unique_corp_count"] >= 3
+        multi_corp_intersections["unique_corp_count"] >= multi_corp_threshold
     ]
     print("Calculating 3+ corporation access...")
     multi_corp_intersections["3+ Area"] = multi_corp_intersections[
@@ -165,7 +184,7 @@ if __name__ == "__main__":
     RUN_DIR = (
         CLEAN_DIR / f"captured_areas_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     )
-    os.makedirs(RUN_DIR, exist_ok=True)
+    Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
     # TODO: is there a better way to load clean versions of the files? Specify in config?
     GDF_FSIS_PATH = CLEAN_DIR / "_clean_run" / "plants_with_isochrones.geojson"

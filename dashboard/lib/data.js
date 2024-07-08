@@ -1,9 +1,9 @@
 "use client";
-import pako from 'pako';
+import pako from "pako";
 import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
 const ISOCHRONES = "../data/v2/isochrones.geojson.gz";
-const BARNS = "../data/v2/barns.geojson.gz"
+const BARNS = "../data/v2/barns.geojson.gz";
 
 const fetchData = async (url) => {
   const response = await fetch(url);
@@ -13,9 +13,11 @@ const fetchData = async (url) => {
 const fetchGzip = async (url) => {
   const response = await fetch(url);
   const arrayBuffer = await response.arrayBuffer();
-  const decompressed = pako.inflate(new Uint8Array(arrayBuffer), { to: 'string' });
+  const decompressed = pako.inflate(new Uint8Array(arrayBuffer), {
+    to: "string",
+  });
   return JSON.parse(decompressed);
-}
+};
 
 export const updateStaticDataStore = async () => {
   try {
@@ -23,19 +25,19 @@ export const updateStaticDataStore = async () => {
       fetchData("/api/plants/plants"),
       fetchGzip(BARNS),
       fetchGzip(ISOCHRONES),
-      fetchData("/api/plants/sales")
+      fetchData("/api/plants/sales"),
     ]);
 
     staticDataStore.allPlants = rawPlants;
-    
+
     // Update states to display
     staticDataStore.allStates = rawPlants.features
-    .map((feature) => feature.properties.State)
-    .filter((value, index, array) => array.indexOf(value) === index)
-    .sort();
+      .map((feature) => feature.properties.State)
+      .filter((value, index, array) => array.indexOf(value) === index)
+      .sort();
 
     // Filter barns data to only include farms that are not excluded and have plant access
-    console.log("rawBarns", rawBarns)
+    console.log("rawBarns", rawBarns);
     const processedBarns = {
       type: "FeatureCollection",
       features: rawBarns.features.filter(
@@ -46,15 +48,14 @@ export const updateStaticDataStore = async () => {
     };
     staticDataStore.allBarns = processedBarns;
 
-    console.log("processedBarns", processedBarns)
-    console.log("rawSales", rawSales)
+    console.log("processedBarns", processedBarns);
+    console.log("rawSales", rawSales);
 
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;
-    staticDataStore.allIsochrones = rawIsochrones
+    staticDataStore.allIsochrones = rawIsochrones;
 
-    console.log("rawIsochrones", rawIsochrones)
-
+    console.log("rawIsochrones", rawIsochrones);
   } catch (error) {
     console.error(error);
   }
