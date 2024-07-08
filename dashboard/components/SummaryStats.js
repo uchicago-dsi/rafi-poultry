@@ -8,7 +8,7 @@ export function SummaryStats() {
     filteredSales,
     percentCapturedBarns,
     totalCapturedBarns,
-    HHI
+    HHI,
   } = useMapData();
 
   if (!isDataLoaded) {
@@ -18,14 +18,16 @@ export function SummaryStats() {
   return (
     <div className="overflow-y-auto">
       <div className="flex flex-row justify-center h-[25vh]">
-          <PieChart />
+        <PieChart />
       </div>
       {totalCapturedBarns > 0 &&
       Object.keys(percentCapturedBarns).length > 0 ? (
         <div className="max-h-[75%] overflow-y-auto">
           <div className="flex justify-center m-10">
             <div className="w-full">
-            <h5 className="text-center">% of Barns with Access to Integrators in Selected Area</h5>
+              <h5 className="text-center">
+                % of Barns with Access to Integrators in Selected Area
+              </h5>
               <table className="table table-sm">
                 <tbody>
                   {Object.entries(percentCapturedBarns).map(([key, item]) => (
@@ -54,23 +56,21 @@ export function SummaryStats() {
         <p className="text-center">No data available</p>
       )}
       <div className="max-h-[50vh] overflow-y-auto">
-        {filteredSales &&
-        Object.keys(filteredSales).length > 0 ? (
+        {filteredSales && Object.keys(filteredSales).length > 0 ? (
           <table className="table table-sm">
-
-              <thead className="sticky">
-                <tr>
-                  <th>Company</th>
-                  <th>Sales</th>
-                  <th>Percent of Sales</th>
-                </tr>
-              </thead>
+            <thead className="sticky">
+              <tr>
+                <th>Company</th>
+                <th>Sales</th>
+                <th>Percent of Sales</th>
+              </tr>
+            </thead>
             <tbody>
               {Object.entries(filteredSales).map(([key, item]) => (
                 <tr key={key}>
                   <td>{key}</td>
                   <td>
-                    {(item.sales).toLocaleString("en-US", {
+                    {item.sales.toLocaleString("en-US", {
                       style: "currency",
                       currency: "USD",
                       minimumFractionDigits: 0,

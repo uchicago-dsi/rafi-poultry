@@ -483,8 +483,4 @@ if __name__ == "__main__":
         file_format="csv",
     )
 
-    save_file(
-        full_match,
-        RUN_DIR / "full_match.csv",
-        file_format="csv",
-    )
+    save_file(full_match, RUN_DIR / "full_match.csv", file_format="csv", index=True)

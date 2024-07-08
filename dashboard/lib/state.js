@@ -3,7 +3,6 @@ import { proxy } from "valtio";
 import bbox from "@turf/bbox";
 import { WebMercatorViewport } from "@deck.gl/core";
 import { derive } from "valtio/utils";
-import { state2abb } from "./constants";
 
 export const staticDataStore = {
   allPlants: [],
@@ -23,7 +22,7 @@ export const filteredDataStore = {
   percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
   totalCapturedBarns: [],
   totalSales: 0,
-  HHI: 0
+  HHI: 0,
 };
 
 export const state = proxy({
@@ -50,54 +49,58 @@ export const state = proxy({
 
 function updateFilteredPlants(states) {
   filteredDataStore.filteredPlants = staticDataStore.allPlants.features
-  ? staticDataStore.allPlants.features.filter((row) =>
-      states.includes(row.properties.State)
-    )
-  : [];
+    ? staticDataStore.allPlants.features.filter((row) =>
+        states.includes(row.properties.State)
+      )
+    : [];
 }
 
 function updateFilteredIsochrones(states) {
   filteredDataStore.filteredIsochrones =
-  staticDataStore.allIsochrones.features.filter((row) =>
-    states.includes(row.properties.state)
-  );
+    staticDataStore.allIsochrones.features.filter((row) =>
+      states.includes(row.properties.state)
+    );
 }
 
 function updateFilteredBarns(states) {
   // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
   // const stateabbrevs = states.map((state) => state2abb[state]);
-  filteredDataStore.filteredBarns =
-  staticDataStore.allBarns.features.filter((row) =>
-    states.includes(row.properties.state)
+  filteredDataStore.filteredBarns = staticDataStore.allBarns.features.filter(
+    (row) => states.includes(row.properties.state)
   );
 }
 
 function updateFilteredSales(states) {
-    let corporationTotals = {};
+  let corporationTotals = {};
 
-    states.forEach(state => {
-      const stateData = staticDataStore.allSales[state];
-      if (stateData) {
-        Object.entries(stateData).forEach(([corporation, data]) => {
-          if (!corporationTotals[corporation]) {
-            corporationTotals[corporation] = { sales: 0 }; // Initialize if not already present
-          }
-          corporationTotals[corporation].sales += data.sales;
-        });
-      }
-    });
+  states.forEach((state) => {
+    const stateData = staticDataStore.allSales[state];
+    if (stateData) {
+      Object.entries(stateData).forEach(([corporation, data]) => {
+        if (!corporationTotals[corporation]) {
+          corporationTotals[corporation] = { sales: 0 }; // Initialize if not already present
+        }
+        corporationTotals[corporation].sales += data.sales;
+      });
+    }
+  });
 
-    const totalSales = Object.values(corporationTotals).reduce((sum, corp) => sum + corp.sales, 0);
+  const totalSales = Object.values(corporationTotals).reduce(
+    (sum, corp) => sum + corp.sales,
+    0
+  );
 
-    const sortedArray = Object.entries(corporationTotals).sort((a, b) => b[1].sales - a[1].sales);
-    sortedArray.forEach(([corporation, data]) => {
-      data.percent = (data.sales / totalSales); 
-    });
-    const sortedCorporationTotals = Object.fromEntries(sortedArray);
+  const sortedArray = Object.entries(corporationTotals).sort(
+    (a, b) => b[1].sales - a[1].sales
+  );
+  sortedArray.forEach(([corporation, data]) => {
+    data.percent = data.sales / totalSales;
+  });
+  const sortedCorporationTotals = Object.fromEntries(sortedArray);
 
-    filteredDataStore.filteredSales = sortedCorporationTotals;
-    filteredDataStore.totalSales = totalSales;
-  }
+  filteredDataStore.filteredSales = sortedCorporationTotals;
+  filteredDataStore.totalSales = totalSales;
+}
 
 function calculateCapturedBarns() {
   const counts = {
@@ -113,7 +116,10 @@ function calculateCapturedBarns() {
 
   // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
   filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
-    const plantAccess = feature.properties.integrator_access === 4 ? 3 : (feature.properties.integrator_access || 0); // convert 4 to 3, default to 0 if null
+    const plantAccess =
+      feature.properties.integrator_access === 4
+        ? 3
+        : feature.properties.integrator_access || 0; // convert 4 to 3, default to 0 if null
     accumulator.totalFarms += 1;
     // Only count farms in captive draw areas
     if (plantAccess != 0) {
@@ -146,7 +152,8 @@ function calculateHHI() {
 
     // calculate HHI
     return Object.values(filteredDataStore.filteredSales).reduce(
-      (acc, item) => acc + Math.pow((item.sales * 100) / filteredDataStore.totalSales, 2),
+      (acc, item) =>
+        acc + Math.pow((item.sales * 100) / filteredDataStore.totalSales, 2),
       0
     );
   } else {
@@ -175,7 +182,7 @@ function updateMapZoom(filteredStates) {
   );
 
   console.log("boundingBox", boundingBox);
-  console.log("fittedViewport", fittedViewport)
+  console.log("fittedViewport", fittedViewport);
 
   const currentLatLonZoom = fittedViewport.fitBounds(
     [
@@ -200,7 +207,7 @@ function updateMapZoom(filteredStates) {
 }
 
 // export const updateFilteredData = async (stateData) => {
-  export function updateFilteredData(stateData) {
+export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
