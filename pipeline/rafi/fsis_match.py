@@ -372,6 +372,7 @@ def fsis_match(
     )
 
     # Select top match for each plant
+    # TODO: How should we handle ties here?
     output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
 
     def calculate_sales(row, avg_sales, overall_median_sales, threshold=1000):

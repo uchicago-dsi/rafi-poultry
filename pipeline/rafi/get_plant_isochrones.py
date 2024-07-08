@@ -11,7 +11,7 @@ from constants import CLEAN_DIR
 from shapely.geometry import Polygon
 from tqdm import tqdm
 
-from pipeline.rafi.utils import save_file
+from rafi.utils import save_file
 
 # TODO: uh...
 MAPBOX_KEY = os.getenv("MAPBOX_API")

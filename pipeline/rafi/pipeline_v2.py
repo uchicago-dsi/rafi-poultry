@@ -12,7 +12,7 @@ from filter_barns import filter_barns
 from fsis_match import clean_fsis, clean_nets, fsis_match
 from get_plant_isochrones import get_plant_isochrones
 
-from pipeline.rafi.utils import save_file
+from rafi.utils import save_file
 
 
 def pipeline(

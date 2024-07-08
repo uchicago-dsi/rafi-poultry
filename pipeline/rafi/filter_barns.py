@@ -1,5 +1,6 @@
+"""Filter barns from Microsoft's computer vision model based on various criteria."""
+
 import argparse
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -59,8 +60,20 @@ CITIES = {
 
 
 # TODO: This is probably a util also...
-def load_geography(filepath, states=GDF_STATES, state=None):
-    _, file_extension = os.path.splitext(filepath)
+def load_geography(
+    filepath: str, states: gpd.GeoDataFrame = GDF_STATES, state: str = None
+) -> gpd.GeoDataFrame:
+    """Load geographic data from a file and optionally filter by state.
+
+    Args:
+        filepath: Path to the geographic file.
+        states: GeoDataFrame of states.
+        state: State to filter the geographic data.
+
+    Returns:
+        The loaded and optionally filtered geographic data.
+    """
+    file_extension = Path(filepath).suffix
     if file_extension.lower() == ".parquet":
         gdf = gpd.read_parquet(filepath)
     else:
@@ -76,7 +89,21 @@ def load_geography(filepath, states=GDF_STATES, state=None):
     return gdf
 
 
-def get_state_info(gdf, valid_states=None, gdf_states=GDF_STATES):
+def get_state_info(
+    gdf: gpd.GeoDataFrame,
+    valid_states: list = None,
+    gdf_states: gpd.GeoDataFrame = GDF_STATES,
+) -> gpd.GeoDataFrame:
+    """Get state information for a GeoDataFrame.
+
+    Args:
+        gdf: Input GeoDataFrame.
+        valid_states: List of valid state abbreviations.
+        gdf_states: GeoDataFrame of states.
+
+    Returns:
+        GeoDataFrame with state information.
+    """
     if valid_states is not None:
         gdf_states = gdf_states[gdf_states["ABBREV"].isin(valid_states)]
     gdf_states = gdf_states.to_crs(gdf.crs)
@@ -100,8 +127,29 @@ def get_state_info(gdf, valid_states=None, gdf_states=GDF_STATES):
 
 
 def filter_on_membership(
-    gdf, gdf_exclude, how="inside", buffer=0, tolerance=0.1, filter_on_state=True
-):
+    gdf: gpd.GeoDataFrame,
+    gdf_exclude: gpd.GeoDataFrame,
+    how: str = "inside",
+    buffer: float = 0,
+    tolerance: float = 0.1,
+    filter_on_state: bool = True,
+) -> gpd.GeoDataFrame:
+    """Filter a GeoDataFrame based on membership in exclusion geometries.
+
+    Args:
+        gdf: Input GeoDataFrame.
+        gdf_exclude: GeoDataFrame of exclusion geometries.
+        how: Method of filtering ("inside" or "outside").
+        buffer: Buffer distance for exclusion geometries.
+        tolerance: Tolerance for geometry simplification.
+        filter_on_state: Whether to filter based on state information.
+
+    Returns:
+        Filtered GeoDataFrame.
+    """
+    if gdf.index.duplicated().any():
+        print("Warning: Duplicate indices detected in input GeoDataFrame")
+
     # Simplify geometries to speed up processing
     gdf_exclude["geometry"] = gdf_exclude["geometry"].simplify(
         tolerance, preserve_topology=True
@@ -146,13 +194,29 @@ def filter_on_membership(
 
     joined = joined.drop(columns=["index_right"])
 
+    # Ensure unique indices
+    if joined.index.duplicated().any():
+        joined = joined.groupby(joined.index).first()
+
     # update original dataframe with newly excluded barns
     gdf.loc[joined.index, "exclude"] = joined["exclude"]
 
     return gdf
 
 
-def filter_barns_handler(gdf_barns, filter_configs, data_dir=SHAPEFILE_DIR):
+def filter_barns_handler(
+    gdf_barns: gpd.GeoDataFrame, filter_configs: list, data_dir: Path = SHAPEFILE_DIR
+) -> gpd.GeoDataFrame:
+    """Apply a series of filters to exclude barns based on various criteria.
+
+    Args:
+        gdf_barns: GeoDataFrame of barns.
+        filter_configs: List of filter configurations.
+        data_dir: Directory containing shapefiles.
+
+    Returns:
+        Filtered GeoDataFrame of barns.
+    """
     # Exclude barns in major cities
     # Note: Do this separately from the filters in config since we need to aggregate the cities
     print("Excluding barns in major cities...")
@@ -180,7 +244,19 @@ def filter_barns_handler(gdf_barns, filter_configs, data_dir=SHAPEFILE_DIR):
     return gdf_barns
 
 
-def apply_filters(gdf, filter_configs, shapefile_dir=SHAPEFILE_DIR):
+def apply_filters(
+    gdf: gpd.GeoDataFrame, filter_configs: list, shapefile_dir: Path = SHAPEFILE_DIR
+) -> gpd.GeoDataFrame:
+    """Apply a series of spatial filters to a GeoDataFrame.
+
+    Args:
+        gdf: Input GeoDataFrame.
+        filter_configs: List of filter configurations.
+        shapefile_dir: Directory containing shapefiles.
+
+    Returns:
+        Filtered GeoDataFrame.
+    """
     for config in filter_configs:
         description = config["description"]
         exclude_gdf_path = shapefile_dir / config["filename"]
@@ -208,13 +284,26 @@ def apply_filters(gdf, filter_configs, shapefile_dir=SHAPEFILE_DIR):
 
 
 def filter_barns(
-    gdf_barns,
-    gdf_isochrones,
-    shapefile_dir=SHAPEFILE_DIR,
-    nearest_neighbor=50,
-    smoke_test=False,
-    filter_barns=True,
-):
+    gdf_barns: gpd.GeoDataFrame,
+    gdf_isochrones: gpd.GeoDataFrame,
+    shapefile_dir: Path = SHAPEFILE_DIR,
+    nearest_neighbor: int = 50,
+    smoke_test: bool = False,
+    filter_barns: bool = True,
+) -> gpd.GeoDataFrame:
+    """Filter barns based on various criteria and return the filtered GeoDataFrame.
+
+    Args:
+        gdf_barns: GeoDataFrame of barns.
+        gdf_isochrones: GeoDataFrame of isochrones.
+        shapefile_dir: Directory containing shapefiles.
+        nearest_neighbor: Distance to check for nearest neighbor in meters.
+        smoke_test: Flag to run in smoke test mode with a smaller sample size.
+        filter_barns: Flag to apply geospatial filtering on barns.
+
+    Returns:
+        Filtered GeoDataFrame of barns.
+    """
     if smoke_test:
         n = 10000
         gdf_barns = gdf_barns.sample(n=n)
@@ -238,7 +327,9 @@ def filter_barns(
     )
     # Drop the barns that don't have a nearest neighbor here to save computation time on other steps
     gdf_barns = gdf_barns[~gdf_barns["exclude"]]
-    gdf_barns["exclude"] = gdf_barns["exclude"].astype(int)  # Dashboard expects int
+    gdf_barns["exclude"] = gdf_barns["exclude"].astype(
+        int
+    )  # Dashboard expects int dtype
 
     # Project to latitude and longitude
     gdf_barns = gdf_barns.to_crs(WGS84)
@@ -247,8 +338,13 @@ def filter_barns(
     print("Checking integrator access...")
     gdf_barns["integrator_access"] = 0
     gdf_single_corp = gdf_isochrones[gdf_isochrones["corp_access"] == 1]
-    gdf_two_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 2]
-    gdf_three_plus_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 3]
+    gdf_two_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 2]  #  noqa
+    gdf_three_plus_corps = gdf_isochrones[gdf_isochrones["corp_access"] == 3]  #  noqa
+
+    # Buffer to fix invalid geometries
+    gdf_single_corp["geometry"] = gdf_single_corp.geometry.buffer(0)
+    gdf_two_corps["geometry"] = gdf_two_corps.geometry.buffer(0)
+    gdf_three_plus_corps["geometry"] = gdf_three_plus_corps.geometry.buffer(0)
 
     fsis_union = gpd.GeoDataFrame(
         geometry=[gdf_single_corp.geometry.unary_union], crs=gdf_barns.crs
@@ -257,12 +353,12 @@ def filter_barns(
     # TODO: can prob do this as a function
     # Note: I think I'm preprocessing for the barn calculation here?
     gdf_barns = gpd.sjoin(gdf_barns, fsis_union, how="left", predicate="within")
-    gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 1
+    gdf_barns.loc[gdf_barns["index_right"].notna(), "integrator_access"] = 1
     # TODO: is this the right dataframe here...
     gdf_barns["parent_corporation"] = gdf_barns.progress_apply(
         lambda row: (
             gdf_single_corp.loc[row["index_right"], "Parent Corporation"]
-            if pd.notnull(row["index_right"])
+            if pd.notna(row["index_right"])
             else None
         ),
         axis=1,
@@ -271,13 +367,13 @@ def filter_barns(
     gdf_barns = gdf_barns.drop("index_right", axis=1)
 
     gdf_barns = gpd.sjoin(gdf_barns, gdf_two_corps, how="left", predicate="within")
-    gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 2
+    gdf_barns.loc[gdf_barns["index_right"].notna(), "integrator_access"] = 2
     gdf_barns = gdf_barns.drop("index_right", axis=1)
 
     gdf_barns = gpd.sjoin(
         gdf_barns, gdf_three_plus_corps, how="left", predicate="within"
     )
-    gdf_barns.loc[gdf_barns["index_right"].notnull(), "integrator_access"] = 3
+    gdf_barns.loc[gdf_barns["index_right"].notna(), "integrator_access"] = 3
     gdf_barns = gdf_barns.drop("index_right", axis=1)
 
     # TODO: add a flag for excluding barns without integrator access
@@ -288,9 +384,16 @@ def filter_barns(
     print("Getting states for all barns...")
     gdf_barns = get_state_info(gdf_barns)
 
+    # Choose the first barn in each group of duplicates
+    # Note: This happens with joins on messy buffered geometries
+    if gdf_barns.index.duplicated().any():
+        original_crs = gdf_barns.crs
+        gdf_barns = gdf_barns.groupby(gdf_barns.index).first()
+        gdf_barns = gdf_barns.set_crs(original_crs)
+
     print(f"Barns before filtering on shapefiles: {len(gdf_barns)}")
 
-    with open(CONFIG_FILENAME) as f:
+    with Path.open(CONFIG_FILENAME) as f:
         filter_configs = yaml.safe_load(f)
 
     filter_configs = filter_configs["filters"]
