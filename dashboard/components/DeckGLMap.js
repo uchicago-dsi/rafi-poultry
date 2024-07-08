@@ -14,7 +14,6 @@ import { useMapData } from "@/lib/useMapData";
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-
 const plantColorPalette = {
   "One Integrator": [251, 128, 114, 150],
   "Two Integrators": [255, 255, 179, 150],
@@ -36,7 +35,7 @@ export function DeckGLMap() {
     timestamp,
     filteredBarns,
     filteredIsochrones,
-    allPlants
+    allPlants,
   } = useMapData();
 
   // Don't render the component until the data is loaded
@@ -45,7 +44,7 @@ export function DeckGLMap() {
   }
 
   const plantAccessLayer = new GeoJsonLayer({
-    data:filteredIsochrones,
+    data: filteredIsochrones,
 
     pickable: true,
     onHover: ({ x, y, object }) => {
@@ -147,8 +146,9 @@ export function DeckGLMap() {
     >
       <Map
         mapStyle="mapbox://styles/mapbox/satellite-v9"
-        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}>
-          <ScaleControl unit="imperial" position="top-right" />
+        mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
+      >
+        <ScaleControl unit="imperial" position="top-right" />
       </Map>
 
       <div id="legend">
