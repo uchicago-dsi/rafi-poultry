@@ -7,11 +7,8 @@ import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
 export default function PieChart() {
-  const {
-    isDataLoaded,
-    percentCapturedBarns,
-    totalCapturedBarns
-  } = useMapData();
+  const { isDataLoaded, percentCapturedBarns, totalCapturedBarns } =
+    useMapData();
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
     if (!isDataLoaded) {
@@ -20,7 +17,9 @@ export default function PieChart() {
         cleanedChartLabels: [],
       };
     }
-    const values = Object.entries(percentCapturedBarns).map(([key, value]) => value * 100);
+    const values = Object.entries(percentCapturedBarns).map(
+      ([key, value]) => value * 100
+    );
     return {
       cleanedChartData: values,
       cleanedChartLabels: ["1 Integrator", "2 Integrators", "3+ Integrators"],

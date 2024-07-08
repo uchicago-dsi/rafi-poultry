@@ -1,13 +1,16 @@
-import pandas as pd
-import geopandas as gpd
-from fuzzywuzzy import fuzz
+"""Matches FSIS plants to NETS records using geospatial and string matching"""
+
 from datetime import datetime
-import os
-from tqdm import tqdm
-from typing import List, Tuple
+from pathlib import Path
+
+import geopandas as gpd
+import pandas as pd
+from fuzzywuzzy import fuzz
 from shapely.geometry import Point
-from pipeline.constants import RAW_DIR, CLEAN_DIR
-from pipeline.rafi.utils import save_file
+from tqdm import tqdm
+
+from rafi.constants import CLEAN_DIR, RAW_DIR
+from rafi.utils import save_file
 
 # Enable pandas progress bars for apply functions
 tqdm.pandas()
@@ -21,17 +24,84 @@ FSIS2NETS_CORPS = {
     "Perdue Foods, LLC": "PERDUE FARMS INC",
 }
 
+TURKEY_CORPS = {"Butterball", "Jennie-O"}
+EXCLUDE_STRINGS_NETS = {
+    "turkey",
+    "cattle",
+    "hatchery",
+    "beef",
+    "pig",
+    "dlisted",
+    "hog",
+    "livestock exch",
+    "pork",
+    "saw sharpening",
+    "livestock auction",
+    "darling ingredients",
+    "wehrmann genetics",
+    "back road trucking",
+}
 
-def clean_fsis(df):
-    df = df.dropna(subset=["activities"])
-    df = df[df.activities.str.lower().str.contains("poultry slaughter")]
-    df = df[df["size"] == "Large"]
-    df["duns_number"] = df["duns_number"].str.replace("-", "")
-    df["matched"] = False
-    return df
+
+def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.DataFrame:
+    """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
+
+    Args:
+        df_fsis: The FSIS DataFrame to clean.
+        turkey_corps: Set of corporations known to process turkey to exclude. Defaults to TURKEY_CORPS.
+
+    Returns:
+        The cleaned FSIS DataFrame.
+    """
+    df_fsis = df_fsis.dropna(subset=["activities"])
+    df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry slaughter")]
+    df_fsis = df_fsis[
+        ~df_fsis["establishment_name"].str.contains("|".join(turkey_corps), case=False)
+    ]
+    df_fsis = df_fsis[df_fsis["size"] == "Large"]
+    df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
+    df_fsis["matched"] = False
+    return df_fsis
 
 
-def get_geospatial_matches(row, gdf_child, buffer=1000):
+def clean_nets(
+    df_nets: pd.DataFrame,
+    exclude_strings: set = EXCLUDE_STRINGS_NETS,
+    most_recent_year: int = 22,
+) -> pd.DataFrame:
+    """Cleans the NETS data by dropping rows containing excluded strings.
+
+    Args:
+        df_nets: The NETS DataFrame to clean.
+        exclude_strings: Set of strings to exclude. Defaults to EXCLUDE_STRINGS_NETS.
+        most_recent_year: The most recent year of NAICS data for filtering closed businesses
+
+    Returns:
+        The cleaned NETS DataFrame.
+    """
+    most_recent_year_col = f"Sales{most_recent_year}"
+    df_nets = df_nets[~(df_nets[most_recent_year_col].isna())]
+    exclude_pattern = "|".join(exclude_strings)
+    df_nets = df_nets[
+        ~df_nets["Company"].str.contains(exclude_pattern, case=False)
+        & ~df_nets["TradeName"].str.contains(exclude_pattern, case=False)
+    ]
+    return df_nets
+
+
+def get_geospatial_matches(
+    row: pd.Series, gdf_child: gpd.GeoDataFrame, buffer: int = 1000
+) -> pd.Series:
+    """Finds geospatial matches for a given row in the FSIS DataFrame within a specified buffer distance.
+
+    Args:
+        row: The row of the FSIS DataFrame.
+        gdf_child: The GeoDataFrame of NETS records.
+        buffer: The buffer distance in meters. Defaults to 1000.
+
+    Returns:
+        The row with added geospatial match information.
+    """
     # TODO: wait...where do I use the buffer?
     # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
     # Then check whether they intersect with the buffered geometry
@@ -47,7 +117,18 @@ def get_geospatial_matches(row, gdf_child, buffer=1000):
     return row
 
 
-def spatial_index_match(row, gdf_child):
+def spatial_index_match(
+    row: pd.Series, gdf_child: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    """Finds all spatial matches for a given row in the FSIS DataFrame.
+
+    Args:
+        row: The row of the FSIS DataFrame.
+        gdf_child: The GeoDataFrame of NETS records.
+
+    Returns:
+        The GeoDataFrame of possible matches.
+    """
     # For geospatial matching, get all NETS records in the bounding box of the FSIS plant
     # Then check whether they intersect with the buffered geometry
     possible_matches_index = list(gdf_child.sindex.intersection(row["buffered"].bounds))
@@ -58,8 +139,21 @@ def spatial_index_match(row, gdf_child):
     return spatial_matches
 
 
-def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
-    # Return if no matched NETS record
+def get_string_matches(
+    row: pd.Series,
+    company_threshold: float = 50,
+    address_threshold: float = 70,
+) -> pd.Series:
+    """Finds string matches for a given row in the FSIS DataFrame based on company and address similarity.
+
+    Args:
+        row: The row of the FSIS DataFrame.
+        company_threshold: The threshold for company name matching.
+        address_threshold: The threshold for address matching.
+
+    Returns:
+        The row with added string match information.
+    """  # Return if no matched NETS record
     if pd.isna(row["Company"]):
         return row
 
@@ -88,8 +182,18 @@ def get_string_matches(row, company_threshold=0.7, address_threshold=0.7):
     return row
 
 
-def fsis_match(gdf_fsis, gdf_nets):
-    # Note: rows are filtered geospatially so can set address and company threshold somewhat low
+def fsis_match(
+    gdf_fsis: gpd.GeoDataFrame, gdf_nets: gpd.GeoDataFrame
+) -> tuple[gpd.GeoDataFrame, pd.DataFrame, pd.DataFrame]:
+    """Matches FSIS plants to NETS records using geospatial and string matching.
+
+    Args:
+        gdf_fsis: The GeoDataFrame of FSIS plants.
+        gdf_nets: The GeoDataFrame of NETS records.
+
+    Returns:
+        The matched GeoDataFrame, unmatched DataFrame, and full match DataFrame.
+    """  # Note: rows are filtered geospatially so can set address and company threshold somewhat low
     gdf_nets = gdf_nets.to_crs(9822)
     gdf_fsis = gdf_fsis.to_crs(9822)
     buffer = 1000  # TODO...
@@ -178,7 +282,7 @@ def fsis_match(gdf_fsis, gdf_nets):
         "Cargill": "Cargill",
         "Foster Farms": "Foster Farms",
         "Peco Foods": "Peco Foods",
-        "Sechler": "Sechler Family Foods, Inc.",
+        "Sechler": "Sechler Family Foods",
         "Raeford": "House of Raeford",
         "Koch Foods": "Koch Foods",
         "Perdue": "Perdue",
@@ -189,22 +293,38 @@ def fsis_match(gdf_fsis, gdf_nets):
         "Harim": "Harim Group",
         "Costco": "Costco",
         "Aterian": "Aterian Investment Partners",
-        "Pilgrim's Pride": "Pilgrim's Pride",
+        "Pilgrim's Pride": "Pilgrim's Pride (JBS)",
         "Mountaire": "Mountaire",
         "Bachoco": "Bachoco OK Foods",
-        "Wayne Farms": "Wayne Farms",
+        "Wayne Farms": "Wayne-Sanderson (Cargill)",
         "Hillshire": "Hillshire",
         "Butterball": "Butterball",
         "Case Farms": "Case Farms",
         "Foster": "Foster Poultry Farms",
-        "Sanderson": "Sanderson Farms, Inc.",
-        "Harrison": "Harrison Poultry, Inc.",
-        "Farbest": "Farbest Foods, Inc.",
+        "Sanderson": "Wayne-Sanderson (Cargill)",
+        "Harrison": "Harrison Poultry",
+        "Farbest": "Farbest Foods",
         "Jennie-O": "Jennie-O",
         "Keystone": "Keystone",
-        "Simmons": "Simmons Prepared Foods, Inc.",
-        "JCG": "Cagles, Inc.",
-        "Norman": "Norman W. Fries, Inc.",
+        "Simmons": "Simmons Prepared Foods",
+        "JCG": "Cagles",
+        "Norman": "Norman W. Fries",
+        # Other corps?
+        "Soulshine": "Soulshine Farms",
+        "Lincoln": "Lincoln Premium Poultry",
+        "Ozark": "Ozark Mountain Poultry",
+        "Prestage": "Prestage Foods",
+        "Pitman": "Pitman Farms",
+        "Plainville": "Plainville Brands",
+        "Tip Top": "Tip Top Poultry",
+        "West Liberty": "West Liberty Foods",
+        "Agri Star": "Agri Star Meat & Poultry",
+        "Cooper": "Cooper Farms Processing",
+        "Dakota": "Dakota Provisions",
+        "Farmers Pride": "Farmers Pride",
+        "Gerber": "Gerber Poultry",
+        "Kraft Heinz": "Kraft Heinz",
+        "Empire Kosher": "Empire Kosher Poultry",
     }
 
     # TODO: Move to utils?
@@ -252,16 +372,17 @@ def fsis_match(gdf_fsis, gdf_nets):
     )
 
     # Select top match for each plant
+    # TODO: How should we handle ties here?
     output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
 
-    def calculate_sales(row, avg_sales, overall_median_sales):
+    def calculate_sales(row, avg_sales, overall_median_sales, threshold=1000):
         if pd.isna(row["sales_here_nets"]):
             row["display_sales"] = avg_sales[row["parent_corp_manual"]]
         else:
             row["display_sales"] = row["sales_here_nets"]
 
         # Handle zero, unreasonably low, or missing sales data
-        if row["display_sales"] < 1000 or pd.isna(row["display_sales"]):
+        if row["display_sales"] < threshold or pd.isna(row["display_sales"]):
             row["display_sales"] = overall_median_sales  # TODO: Is this ok?
         return row
 
@@ -294,8 +415,12 @@ def fsis_match(gdf_fsis, gdf_nets):
     }
     output_geojson = output_geojson.rename(columns=GEOJSON_RENAME_COLS)
 
-    GEOJSON_COLS = [col for col in GEOJSON_RENAME_COLS.values()] + ["geometry"]
+    GEOJSON_COLS = list(GEOJSON_RENAME_COLS.values()) + ["geometry"]
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
+    # Remove ZIP+4 from ZIP code when present
+    output_geojson["Zip"] = output_geojson["Zip"].str.replace(
+        r"-\d{4}$", "", regex=True
+    )
     output_geojson = output_geojson[GEOJSON_COLS]
 
     # TODO: Has to be a better way...
@@ -306,7 +431,7 @@ def fsis_match(gdf_fsis, gdf_nets):
 
 if __name__ == "__main__":
     RUN_DIR = CLEAN_DIR / f"fsis_match_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    os.makedirs(RUN_DIR, exist_ok=True)
+    Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
     # TODO: set filename in config for data files
     FSIS_PATH = RAW_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
@@ -326,7 +451,8 @@ if __name__ == "__main__":
         dtype={"DunsNumber": str},
         low_memory=False,
     )
-    df_nets = pd.merge(df_nets, df_nets_naics, on="DunsNumber", how="left")
+    df_nets = df_nets.merge(df_nets_naics, on="DunsNumber", how="left")
+    df_nets = clean_nets(df_nets)
     gdf_nets = gpd.GeoDataFrame(
         df_nets,
         geometry=gpd.points_from_xy(-df_nets.Longitude, df_nets.Latitude),
@@ -357,8 +483,4 @@ if __name__ == "__main__":
         file_format="csv",
     )
 
-    save_file(
-        full_match,
-        RUN_DIR / "full_match.csv",
-        file_format="csv",
-    )
+    save_file(full_match, RUN_DIR / "full_match.csv", file_format="csv", index=True)
