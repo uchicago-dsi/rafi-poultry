@@ -6,7 +6,6 @@ import { abb2state } from "@/lib/constants";
 
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
-
 export default function ControlPanel() {
   const snapshot = useSnapshot(state.data);
   const [expanded, setExpanded] = useState(true);
