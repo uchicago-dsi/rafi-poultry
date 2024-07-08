@@ -371,14 +371,6 @@ def fsis_match(
         ascending=[True, True, False, False],
     )
 
-    # merged = merged.sort_values(
-    #     ["match_score", "sales_here_nets"], ascending=[False, False]
-    # )
-
-    # # Handle fragmented dataframe warning
-    # merged = pd.concat([merged], axis=1).copy()
-
-    # output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
     # Select top match for each plant, handling ties by max sales
     output = merged.groupby(
         ["establishment_name_fsis", "street_fsis"], as_index=False
