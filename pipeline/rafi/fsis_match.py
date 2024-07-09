@@ -22,6 +22,7 @@ FSIS2NETS_CORPS = {
     "Mar-Jac Poultry-AL": "MARSHALL DURBIN FOOD CORP",
     "Mar-Jac Poultry-MS": "MARSHALL DURBIN FOOD CORP",
     "Perdue Foods, LLC": "PERDUE FARMS INC",
+    "Cargill Meat Solutions": "CARGILL INCORPORATED",
 }
 
 EXCLUDE_CORPS = {
@@ -150,7 +151,7 @@ def spatial_index_match(
 
 def get_string_matches(
     row: pd.Series,
-    company_threshold: float = 50,
+    company_threshold: float = 60,
     address_threshold: float = 70,
 ) -> pd.Series:
     """Finds string matches for a given row in the FSIS DataFrame based on company and address similarity.
