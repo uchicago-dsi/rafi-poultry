@@ -22,9 +22,17 @@ FSIS2NETS_CORPS = {
     "Mar-Jac Poultry-AL": "MARSHALL DURBIN FOOD CORP",
     "Mar-Jac Poultry-MS": "MARSHALL DURBIN FOOD CORP",
     "Perdue Foods, LLC": "PERDUE FARMS INC",
+    "Cargill Meat Solutions": "CARGILL INCORPORATED",
 }
 
-TURKEY_CORPS = {"Butterball", "Jennie-O"}
+EXCLUDE_CORPS = {
+    "Butterball",
+    "Jennie-O",
+    "Kraft Heinz",
+    "West Liberty",
+    "Dakota Provisions",
+    "Cooper Farms",
+}
 EXCLUDE_STRINGS_NETS = {
     "turkey",
     "cattle",
@@ -43,12 +51,14 @@ EXCLUDE_STRINGS_NETS = {
 }
 
 
-def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.DataFrame:
+def clean_fsis(
+    df_fsis: pd.DataFrame, exclude_corps: set = EXCLUDE_CORPS
+) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
 
     Args:
         df_fsis: The FSIS DataFrame to clean.
-        turkey_corps: Set of corporations known to process turkey to exclude. Defaults to TURKEY_CORPS.
+        exclude_corps: Set of corporations to exclude. These are known to be turkey, hatcheries, etc.
 
     Returns:
         The cleaned FSIS DataFrame.
@@ -56,7 +66,7 @@ def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.Da
     df_fsis = df_fsis.dropna(subset=["activities"])
     df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry slaughter")]
     df_fsis = df_fsis[
-        ~df_fsis["establishment_name"].str.contains("|".join(turkey_corps), case=False)
+        ~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)
     ]
     df_fsis = df_fsis[df_fsis["size"] == "Large"]
     df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
@@ -141,7 +151,7 @@ def spatial_index_match(
 
 def get_string_matches(
     row: pd.Series,
-    company_threshold: float = 50,
+    company_threshold: float = 60,
     address_threshold: float = 70,
 ) -> pd.Series:
     """Finds string matches for a given row in the FSIS DataFrame based on company and address similarity.
@@ -367,13 +377,14 @@ def fsis_match(
     ]
 
     merged = merged.sort_values(
-        by=["establishment_name_fsis", "street_fsis", "match_score"],
-        ascending=[True, True, False],
+        by=["establishment_name_fsis", "street_fsis", "match_score", "sales_here_nets"],
+        ascending=[True, True, False, False],
     )
 
-    # Select top match for each plant
-    # TODO: How should we handle ties here?
-    output = merged.groupby(["establishment_name_fsis", "street_fsis"]).head(1).copy()
+    # Select top match for each plant, handling ties by max sales
+    output = merged.groupby(
+        ["establishment_name_fsis", "street_fsis"], as_index=False
+    ).first()
 
     def calculate_sales(row, avg_sales, overall_median_sales, threshold=1000):
         if pd.isna(row["sales_here_nets"]):
