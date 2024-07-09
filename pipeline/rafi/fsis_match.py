@@ -24,7 +24,14 @@ FSIS2NETS_CORPS = {
     "Perdue Foods, LLC": "PERDUE FARMS INC",
 }
 
-TURKEY_CORPS = {"Butterball", "Jennie-O"}
+EXCLUDE_CORPS = {
+    "Butterball",
+    "Jennie-O",
+    "Kraft Heinz",
+    "West Liberty",
+    "Dakota Provisions",
+    "Cooper Farms",
+}
 EXCLUDE_STRINGS_NETS = {
     "turkey",
     "cattle",
@@ -43,12 +50,14 @@ EXCLUDE_STRINGS_NETS = {
 }
 
 
-def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.DataFrame:
+def clean_fsis(
+    df_fsis: pd.DataFrame, exclude_corps: set = EXCLUDE_CORPS
+) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
 
     Args:
         df_fsis: The FSIS DataFrame to clean.
-        turkey_corps: Set of corporations known to process turkey to exclude. Defaults to TURKEY_CORPS.
+        exclude_corps: Set of corporations to exclude. These are known to be turkey, hatcheries, etc.
 
     Returns:
         The cleaned FSIS DataFrame.
@@ -56,7 +65,7 @@ def clean_fsis(df_fsis: pd.DataFrame, turkey_corps: set = TURKEY_CORPS) -> pd.Da
     df_fsis = df_fsis.dropna(subset=["activities"])
     df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry slaughter")]
     df_fsis = df_fsis[
-        ~df_fsis["establishment_name"].str.contains("|".join(turkey_corps), case=False)
+        ~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)
     ]
     df_fsis = df_fsis[df_fsis["size"] == "Large"]
     df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
