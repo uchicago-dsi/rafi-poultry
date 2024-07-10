@@ -163,7 +163,8 @@ def get_string_matches(
 
     Returns:
         The row with added string match information.
-    """  # Return if no matched NETS record
+    """
+    # Return if no matched NETS record
     if pd.isna(row["Company"]):
         return row
 
@@ -299,6 +300,7 @@ def fsis_match(
         "Fieldale": "Fieldale Farms Corporation",
         "Amick": "Amick",
         "George's": "George's",
+        "Ozark": "George's",
         "Mar-Jac": "Mar-Jac",
         "Harim": "Harim Group",
         "Costco": "Costco",
@@ -308,13 +310,11 @@ def fsis_match(
         "Bachoco": "Bachoco OK Foods",
         "Wayne Farms": "Wayne-Sanderson (Cargill)",
         "Hillshire": "Hillshire",
-        "Butterball": "Butterball",
         "Case Farms": "Case Farms",
         "Foster": "Foster Poultry Farms",
         "Sanderson": "Wayne-Sanderson (Cargill)",
         "Harrison": "Harrison Poultry",
         "Farbest": "Farbest Foods",
-        "Jennie-O": "Jennie-O",
         "Keystone": "Keystone",
         "Simmons": "Simmons Prepared Foods",
         "JCG": "Cagles",
@@ -322,19 +322,21 @@ def fsis_match(
         # Other corps?
         "Soulshine": "Soulshine Farms",
         "Lincoln": "Lincoln Premium Poultry",
-        "Ozark": "Ozark Mountain Poultry",
         "Prestage": "Prestage Foods",
         "Pitman": "Pitman Farms",
         "Plainville": "Plainville Brands",
         "Tip Top": "Tip Top Poultry",
-        "West Liberty": "West Liberty Foods",
         "Agri Star": "Agri Star Meat & Poultry",
-        "Cooper": "Cooper Farms Processing",
-        "Dakota": "Dakota Provisions",
         "Farmers Pride": "Farmers Pride",
         "Gerber": "Gerber Poultry",
-        "Kraft Heinz": "Kraft Heinz",
         "Empire Kosher": "Empire Kosher Poultry",
+        # Excluded corps
+        "Kraft Heinz": "Kraft Heinz",
+        "West Liberty": "West Liberty Foods",
+        "Dakota": "Dakota Provisions",
+        "Butterball": "Butterball",
+        "Jennie-O": "Jennie-O",
+        "Cooper": "Cooper Farms Processing",
     }
 
     # TODO: Move to utils?
