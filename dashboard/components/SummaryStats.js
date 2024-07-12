@@ -1,6 +1,7 @@
 "use client";
 import { useMapData } from "@/lib/useMapData";
 import PieChart from "./PieChart";
+import PieChartSales from "@/components/PieChartSales";
 
 export function SummaryStats() {
   const {
@@ -45,6 +46,9 @@ export function SummaryStats() {
       ) : (
         ""
       )}
+      <div className="flex flex-row justify-center h-[25vh]">
+        <PieChartSales />
+      </div>
       {HHI ? (
         <div className="m-2">
           <h2 className="text-2xl font-bold text-center">

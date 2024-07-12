@@ -1,5 +1,4 @@
 "use client";
-// app.js
 import React, { useState } from "react";
 import { useSnapshot } from "valtio";
 import { abb2state } from "@/lib/constants";
@@ -48,7 +47,7 @@ export default function ControlPanel() {
   };
 
   return (
-    <div className="w-full max-w-xs mx-auto">
+    <div className="w-full max-w-xs mx-auto flex flex-col h-full">
       <p className="text-center">Select States</p>
       <div className="flex justify-center">
         <button
@@ -58,41 +57,41 @@ export default function ControlPanel() {
           {expanded ? "Collapse Menu" : "Show Menu"}
         </button>
       </div>
-      <div
-        className={`form-control h-0 overflow-hidden ${
-          expanded && "h-auto overflow-auto max-h-full"
-        }`}
-      >
-        <div className="divider m-0"></div>
-        <div className="join justify-center">
-          <button
-            className="btn join-item btn-sm normal-case"
-            onClick={selectAll}
-          >
-            All
-          </button>
-          <button
-            className="btn join-item btn-sm normal-case"
-            onClick={selectNone}
-          >
-            None
-          </button>
+      <div className="divider m-0"></div>
+      <div className="flex flex-col flex-grow">
+        <div className={`overflow-auto ${expanded ? "flex-grow" : "h-0"}`}>
+          {staticDataStore.allStates.map((option, index) => (
+            <label key={index} className="label cursor-pointer py-1">
+              <span className="block label-text">{abb2state[option]}</span>
+              <input
+                className="checkbox checkbox-xs block"
+                value={option}
+                type="checkbox"
+                checked={snapshot.selectedStates.includes(option)}
+                onChange={handleCheckboxChange}
+              />
+            </label>
+          ))}
         </div>
-        {staticDataStore.allStates.map((option, index) => (
-          <label key={index} className="label cursor-pointer py-1">
-            <span className="block label-text">{abb2state[option]}</span>
-            <input
-              className="checkbox checkbox-xs block"
-              value={option}
-              type="checkbox"
-              checked={snapshot.selectedStates.includes(option)}
-              onChange={handleCheckboxChange}
-            />
-          </label>
-        ))}
       </div>
-      <div>
-        <button onClick={updateFarmDisplay}>Change Farm Display</button>
+      <div className="join justify-center">
+        <button
+          className="btn join-item btn-sm normal-case"
+          onClick={selectAll}
+        >
+          All
+        </button>
+        <button
+          className="btn join-item btn-sm normal-case"
+          onClick={selectNone}
+        >
+          None
+        </button>
+      </div>
+      <div className="mt-4">
+        <button className="btn" onClick={updateFarmDisplay}>
+          Change Farm Display
+        </button>
       </div>
     </div>
   );

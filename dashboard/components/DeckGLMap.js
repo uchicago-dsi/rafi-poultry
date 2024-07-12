@@ -1,5 +1,4 @@
 "use client";
-// app.js
 import React from "react";
 
 import DeckGL from "@deck.gl/react";
