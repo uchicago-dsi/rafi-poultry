@@ -7,7 +7,6 @@ import { state } from "../lib/state";
 import { DeckGLMap } from "../components/DeckGLMap";
 import { SummaryStats } from "../components/SummaryStats";
 import ControlPanel from "../components/ControlPanel";
-import PieChart from "../components/PieChart";
 import Tooltip from "../components/Tooltip";
 
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -43,12 +42,12 @@ export default function Home() {
 
   return (
     <div>
-      <main className="flex w-full h-[100vh] relative flex">
-        <div className="relative w-3/4" ref={containerRef}>
+      <main className="flex w-full h-[100vh] relative">
+        <div className="relative w-3/4 h-full" ref={containerRef}>
           <Tooltip />
           <DeckGLMap />
         </div>
-        <div className="absolute left-4 top-4 bg-white p-2">
+        <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-full overflow-auto">
           <ControlPanel />
         </div>
         <div className="flex flex-col w-1/4 h-[100vh] overflow-hidden">

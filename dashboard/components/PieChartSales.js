@@ -1,25 +1,23 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { useSnapshot } from "valtio";
-
-import { state } from "../lib/state";
+import React, { useMemo } from "react";
+import { useMapData } from "@/lib/useMapData";
 
 import { Pie } from "react-chartjs-2";
 import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
 export default function PieChart() {
-  const snapshot = useSnapshot(state.data);
+  const { isDataLoaded, filteredSales } = useMapData();
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
-    if (!snapshot.isDataLoaded) {
+    if (!isDataLoaded) {
       return {
         cleanedChartData: [],
         cleanedChartLabels: [],
       };
     }
 
-    const data = Object.entries(snapshot.filteredSales);
+    const data = Object.entries(filteredSales);
     const top4 = data.slice(0, 3);
     const labels = top4.map(([key, value]) => key);
     const values = top4.map(([key, value]) => value.percent * 100);
@@ -33,9 +31,9 @@ export default function PieChart() {
       cleanedChartData: [...values, remaining],
       cleanedChartLabels: [...labels, "Other"],
     };
-  }, [snapshot.filteredSales]);
+  }, [isDataLoaded, filteredSales]);
 
-  if (!snapshot.isDataLoaded) {
+  if (!isDataLoaded) {
     return "";
   }
 
@@ -56,7 +54,10 @@ export default function PieChart() {
     ],
   };
 
-  return snapshot.filteredCaptureAreas.length ? (
+  console.log("filteredSales", filteredSales);
+  console.log("chartData", chartData);
+
+  return Object.keys(filteredSales).length ? (
     <Pie
       data={chartData}
       options={{
