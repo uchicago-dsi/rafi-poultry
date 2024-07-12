@@ -4,7 +4,7 @@ import {
   filterTimestampStore,
   filteredDataStore,
   staticDataStore,
-} from "./state";
+} from "@/lib/state";
 
 export const useMapData = () => {
   const { data: stateData, map: stateMapSettings } = useSnapshot(state);
