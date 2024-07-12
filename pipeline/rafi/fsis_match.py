@@ -438,8 +438,9 @@ def fsis_match(
 
     # TODO: Has to be a better way...
     full_match = merged[KEEP_COLS]
+    final_matched_plants = output[KEEP_COLS]
 
-    return output_geojson, unmatched, full_match
+    return output_geojson, unmatched, full_match, final_matched_plants
 
 
 if __name__ == "__main__":
@@ -482,7 +483,9 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    gdf_fsis, unmatched, full_match = fsis_match(gdf_fsis, gdf_nets)
+    gdf_fsis, unmatched, full_match, final_matched_plants = fsis_match(
+        gdf_fsis, gdf_nets
+    )
 
     save_file(
         gdf_fsis,
@@ -497,3 +500,9 @@ if __name__ == "__main__":
     )
 
     save_file(full_match, RUN_DIR / "full_match.csv", file_format="csv", index=True)
+
+    save_file(
+        final_matched_plants,
+        RUN_DIR / "final_matched_plants.csv",
+        file_format="csv",
+    )
