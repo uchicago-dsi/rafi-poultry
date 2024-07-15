@@ -48,33 +48,14 @@ export default function ControlPanel() {
 
   return (
     <div className="w-full max-w-xs mx-auto flex flex-col h-full">
-      <p className="text-center">Select States</p>
-      <div className="flex justify-center">
-        <button
-          className="btn btn-sm normal-case"
-          onClick={() => setExpanded((e) => !e)}
-        >
-          {expanded ? "Collapse Menu" : "Show Menu"}
+      <div>
+        <button className="btn btn-sm normal-case" onClick={updateFarmDisplay}>
+          Change Farm Display
         </button>
       </div>
       <div className="divider m-0"></div>
-      <div className="flex flex-col flex-grow">
-        <div className={`overflow-auto ${expanded ? "flex-grow" : "h-0"}`}>
-          {staticDataStore.allStates.map((option, index) => (
-            <label key={index} className="label cursor-pointer py-1">
-              <span className="block label-text">{abb2state[option]}</span>
-              <input
-                className="checkbox checkbox-xs block"
-                value={option}
-                type="checkbox"
-                checked={snapshot.selectedStates.includes(option)}
-                onChange={handleCheckboxChange}
-              />
-            </label>
-          ))}
-        </div>
-      </div>
-      <div className="join justify-center">
+      <p className="text-center">Select States</p>
+      <div className="join justify-center my-2">
         <button
           className="btn join-item btn-sm normal-case"
           onClick={selectAll}
@@ -88,9 +69,30 @@ export default function ControlPanel() {
           None
         </button>
       </div>
-      <div className="mt-4">
-        <button className="btn" onClick={updateFarmDisplay}>
-          Change Farm Display
+      <div
+        className={`overflow-auto flex-grow px-4 ${
+          expanded ? "max-h-[400px]" : "h-0"
+        }`}
+      >
+        {staticDataStore.allStates.map((option, index) => (
+          <label key={index} className="label cursor-pointer py-1">
+            <span className="block label-text">{abb2state[option]}</span>
+            <input
+              className="checkbox checkbox-xs block"
+              value={option}
+              type="checkbox"
+              checked={snapshot.selectedStates.includes(option)}
+              onChange={handleCheckboxChange}
+            />
+          </label>
+        ))}
+      </div>
+      <div className="flex justify-center mt-3">
+        <button
+          className="btn btn-sm normal-case"
+          onClick={() => setExpanded((e) => !e)}
+        >
+          {expanded ? "Collapse State Menu" : "Show State Menu"}
         </button>
       </div>
     </div>
