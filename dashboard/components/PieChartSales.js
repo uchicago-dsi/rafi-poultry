@@ -33,10 +33,6 @@ export default function PieChart() {
         .map(([key, value]) => value.percent)
         .reduce((a, b) => a + b, 0) * 100;
 
-    console.log("labels", labels);
-    console.log("values", values);
-    console.log("remaining", remaining);
-
     return {
       cleanedChartData: [...values, remaining],
       cleanedChartLabels: [...labels, "Other"],

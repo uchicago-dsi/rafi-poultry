@@ -47,7 +47,7 @@ export default function Home() {
           <Tooltip />
           <DeckGLMap />
         </div>
-        <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-full overflow-auto">
+        <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-[75%] overflow-hidden">
           <ControlPanel />
         </div>
         <div className="flex flex-col w-1/3 h-[100vh] overflow-hidden">
