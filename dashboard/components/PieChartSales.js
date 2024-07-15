@@ -18,9 +18,14 @@ export default function PieChart() {
     }
 
     const data = Object.entries(filteredSales);
-    const top4 = data.slice(0, 4);
-    const labels = top4.map(([key, value]) => key);
-    const values = top4.map(([key, value]) => value.percent * 100);
+    const { labels, values } = data.slice(0, 4).reduce(
+      (acc, [key, value]) => {
+        acc.labels.push(key);
+        acc.values.push(value.percent * 100);
+        return acc;
+      },
+      { labels: [], values: [] }
+    );
 
     const remaining =
       data
@@ -28,7 +33,6 @@ export default function PieChart() {
         .map(([key, value]) => value.percent)
         .reduce((a, b) => a + b, 0) * 100;
 
-    console.log("top4", top4);
     console.log("labels", labels);
     console.log("values", values);
     console.log("remaining", remaining);
