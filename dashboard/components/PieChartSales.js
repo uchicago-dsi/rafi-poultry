@@ -18,14 +18,20 @@ export default function PieChart() {
     }
 
     const data = Object.entries(filteredSales);
-    const top4 = data.slice(0, 3);
+    const top4 = data.slice(0, 4);
     const labels = top4.map(([key, value]) => key);
     const values = top4.map(([key, value]) => value.percent * 100);
 
-    const remaining = data
-      .slice(3)
-      .map(([key, value]) => value.percent)
-      .reduce((a, b) => a + b, 0);
+    const remaining =
+      data
+        .slice(4)
+        .map(([key, value]) => value.percent)
+        .reduce((a, b) => a + b, 0) * 100;
+
+    console.log("top4", top4);
+    console.log("labels", labels);
+    console.log("values", values);
+    console.log("remaining", remaining);
 
     return {
       cleanedChartData: [...values, remaining],
@@ -39,23 +45,22 @@ export default function PieChart() {
 
   const chartData = {
     labels: cleanedChartLabels,
-    // TODO: need to standardize the colors used
     datasets: [
       {
         data: cleanedChartData,
         backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-          // Add more colors as needed
+          "rgba(255, 99, 132, 0.6)", // red
+          "rgba(54, 162, 235, 0.6)", // blue
+          "rgba(255, 206, 86, 0.6)", // yellow
+          "rgba(75, 192, 192, 0.6)", // teal
+          "rgba(153, 102, 255, 0.6)", // purple
         ],
       },
     ],
   };
 
-  console.log("filteredSales", filteredSales);
-  console.log("chartData", chartData);
+  // console.log("filteredSales", filteredSales);
+  // console.log("chartData", chartData);
 
   return Object.keys(filteredSales).length ? (
     <Pie
