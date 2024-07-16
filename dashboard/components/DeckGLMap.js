@@ -149,9 +149,9 @@ export function DeckGLMap() {
         <ScaleControl unit="imperial" position="top-right" />
       </Map>
 
-      <div id="legend">
+      <div id="legend" className="mb-5 mr-1">
         {Object.entries(plantColorPalette).map(([key, color]) => (
-          <div key={key} className="flex items-center">
+          <div key={key} className="flex items-center pl-2">
             <div
               className="swatch"
               style={{
