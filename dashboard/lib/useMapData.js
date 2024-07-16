@@ -7,7 +7,9 @@ import {
 } from "@/lib/state";
 
 export const useMapData = () => {
-  const { data: stateData, map: stateMapSettings } = useSnapshot(state);
+  const stateMapSettings = useSnapshot(state.map);
+  const stateData = useSnapshot(state.data);
+
   const { timestamp } = useSnapshot(filterTimestampStore);
   const {
     filteredBarns,
