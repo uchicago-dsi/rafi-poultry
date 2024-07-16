@@ -25,18 +25,25 @@ export const filteredDataStore = {
   HHI: 0,
 };
 
+export const tooltipState = proxy({
+  x: undefined,
+  y: undefined,
+  hoveredObject: undefined,
+});
+
 export const state = proxy({
   data: {
     isDataLoaded: false,
     selectedStates: [],
   },
 
-  map: {
-    // cursor state
-    x: undefined,
-    y: undefined,
-    hoveredObject: undefined,
+  // tooltip: {
+  //   x: undefined,
+  //   y: undefined,
+  //   hoveredObject: undefined,
+  // },
 
+  map: {
     // display options
     displayFarms: false,
 

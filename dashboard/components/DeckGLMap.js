@@ -5,9 +5,7 @@ import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer } from "deck.gl";
 import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
 import { Map, ScaleControl } from "react-map-gl";
-
-// TODO: fix the imports here so they make sense - should I use @/lib/state??
-import { state } from "../lib/state";
+import { tooltipState } from "@/lib/state";
 import { useMapData } from "@/lib/useMapData";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
@@ -28,10 +26,11 @@ const markerPalette = {
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
 export function DeckGLMap() {
+  console.log("I'm the DeckGLMap component and I rendered");
+
   const {
     isDataLoaded,
     stateMapSettings,
-    timestamp,
     filteredBarns,
     filteredIsochrones,
     allPlants,
@@ -47,9 +46,9 @@ export function DeckGLMap() {
 
     pickable: true,
     onHover: ({ x, y, object }) => {
-      state.map.x = x;
-      state.map.y = y;
-      state.map.hoveredObject = object;
+      tooltipState.x = x;
+      tooltipState.y = y;
+      tooltipState.hoveredObject = object;
     },
 
     getFillColor: function (dataRow) {
@@ -103,9 +102,9 @@ export function DeckGLMap() {
     pickable: true,
     // TODO: tooltip should probably be split out for performance eventually
     onHover: ({ x, y, object }) => {
-      state.map.x = x;
-      state.map.y = y;
-      state.map.hoveredObject = object;
+      tooltipState.x = x;
+      tooltipState.y = y;
+      tooltipState.hoveredObject = object;
     },
   });
 
@@ -124,9 +123,9 @@ export function DeckGLMap() {
     getRadius: (d) => 100,
     getFillColor: [0, 0, 0, 0],
     onHover: ({ x, y, object }) => {
-      state.map.x = x;
-      state.map.y = y;
-      state.map.hoveredObject = object;
+      tooltipState.x = x;
+      tooltipState.y = y;
+      tooltipState.hoveredObject = object;
     },
   });
 
