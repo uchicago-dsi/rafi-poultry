@@ -4,7 +4,7 @@ import React from "react";
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer } from "deck.gl";
 import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import { Map, ScaleControl } from "react-map-gl";
+import { Map, ScaleControl, NavigationControl } from "react-map-gl";
 import { tooltipState } from "@/lib/state";
 import { useMapData } from "@/lib/useMapData";
 
@@ -147,6 +147,7 @@ export function DeckGLMap() {
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
       >
         <ScaleControl unit="imperial" position="top-right" />
+        {/* <NavigationControl position="top-right" /> TODO: This is "under" the Deck map... */}
       </Map>
 
       <div id="legend" className="mb-5 mr-1">
