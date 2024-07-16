@@ -6,10 +6,10 @@ import { abb2state } from "@/lib/constants";
 import { state, updateFilteredData, staticDataStore } from "../lib/state";
 
 export default function ControlPanel() {
-  const snapshot = useSnapshot(state.data);
+  const snap = useSnapshot(state.data);
   const [expanded, setExpanded] = useState(true);
 
-  if (!snapshot.isDataLoaded) {
+  if (!snap.isDataLoaded) {
     return <div>Loading...</div>;
   }
 
@@ -55,38 +55,6 @@ export default function ControlPanel() {
       </div>
       <div className="divider m-0"></div>
       <p className="text-center">Select States</p>
-      <div className="join justify-center my-2">
-        <button
-          className="btn join-item btn-sm normal-case"
-          onClick={selectAll}
-        >
-          All
-        </button>
-        <button
-          className="btn join-item btn-sm normal-case"
-          onClick={selectNone}
-        >
-          None
-        </button>
-      </div>
-      <div
-        className={`overflow-auto flex-grow px-4 ${
-          expanded ? "max-h-[400px]" : "h-0"
-        }`}
-      >
-        {staticDataStore.allStates.map((option, index) => (
-          <label key={index} className="label cursor-pointer py-1">
-            <span className="block label-text">{abb2state[option]}</span>
-            <input
-              className="checkbox checkbox-xs block"
-              value={option}
-              type="checkbox"
-              checked={snapshot.selectedStates.includes(option)}
-              onChange={handleCheckboxChange}
-            />
-          </label>
-        ))}
-      </div>
       <div className="flex justify-center mt-3">
         <button
           className="btn btn-sm normal-case"
@@ -94,6 +62,42 @@ export default function ControlPanel() {
         >
           {expanded ? "Collapse State Menu" : "Show State Menu"}
         </button>
+      </div>
+      <div
+        className={`overflow-auto flex-grow px-4 ${
+          expanded ? "max-h-[400px]" : "h-0"
+        }`}
+      >
+        <div className="divider m-0"></div>
+        {staticDataStore.allStates.map((option, index) => (
+          <label key={index} className="label cursor-pointer py-1">
+            <span className="block label-text">{abb2state[option]}</span>
+            <input
+              className="checkbox checkbox-xs block"
+              value={option}
+              type="checkbox"
+              checked={snap.selectedStates.includes(option)}
+              onChange={handleCheckboxChange}
+            />
+          </label>
+        ))}
+      </div>
+      <div className={`${expanded ? "mx-auto" : "h-0"}`}>
+        <div className="divider m-0"></div>
+        <div className="join my-2">
+          <button
+            className="btn join-item btn-sm normal-case"
+            onClick={selectAll}
+          >
+            All
+          </button>
+          <button
+            className="btn join-item btn-sm normal-case"
+            onClick={selectNone}
+          >
+            None
+          </button>
+        </div>
       </div>
     </div>
   );
