@@ -2,7 +2,7 @@
 import React from "react";
 import { useSnapshot } from "valtio";
 
-import { state, tooltipState } from "@/lib/state";
+import { tooltipState } from "@/lib/state";
 
 //TODO: should I just use the snapshot here or pass as args?
 export default function Tooltip() {
