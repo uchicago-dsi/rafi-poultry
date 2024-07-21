@@ -4,13 +4,7 @@ import PieChart from "@/components/PieChart";
 import PieChartSales from "@/components/PieChartSales";
 
 export function SummaryStats() {
-  const {
-    isDataLoaded,
-    filteredSales,
-    percentCapturedBarns,
-    totalCapturedBarns,
-    HHI,
-  } = useMapData();
+  const { isDataLoaded, filteredSales, HHI } = useMapData();
 
   if (!isDataLoaded) {
     return "";

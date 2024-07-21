@@ -5,11 +5,17 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
+import yaml
+
+#  TODO: this should maybe come from the config file
+from constants import (
+    CLEAN_DIR,
+    RAW_DIR,
+)
 from fuzzywuzzy import fuzz
 from shapely.geometry import Point
 from tqdm import tqdm
 
-from rafi.constants import CLEAN_DIR, RAW_DIR
 from rafi.utils import save_file
 
 # Enable pandas progress bars for apply functions
@@ -54,6 +60,7 @@ KEEP_PLANT_IDS = {"P7374"}
 
 def clean_fsis(
     df_fsis: pd.DataFrame,
+    df_fsis_demo: pd.DataFrame,
     exclude_corps: set = EXCLUDE_CORPS,
     keep_plant_ids: set = KEEP_PLANT_IDS,
 ) -> pd.DataFrame:
@@ -61,16 +68,23 @@ def clean_fsis(
 
     Args:
         df_fsis: The FSIS DataFrame to clean.
+        df_fsis_demo: The FSIS demographic DataFrame.
         exclude_corps: Set of corporations to exclude. These are known to be turkey, hatcheries, etc.
         keep_plant_ids: Set of Plant IDs to keep (even if they are excluded by some criteria).
 
     Returns:
         The cleaned FSIS DataFrame.
     """
+    df_fsis = df_fsis.merge(
+        df_fsis_demo, on="establishment_number", how="left", suffixes=("", "_right")
+    )
+    dupe_cols = [col for col in df_fsis.columns if col.endswith("_right")]
+    df_fsis = df_fsis.drop(columns=dupe_cols)
+
     df_keep_plants = df_fsis[df_fsis["establishment_number"].isin(keep_plant_ids)]
 
-    df_fsis = df_fsis.dropna(subset=["activities"])
-    df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry slaughter")]
+    # TODO: If we do exclude turkey processing, we'd do it here
+    df_fsis = df_fsis[df_fsis["poultry_slaughter"] == "Yes"]
     df_fsis = df_fsis[
         ~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)
     ]
@@ -456,10 +470,16 @@ if __name__ == "__main__":
     RUN_DIR = CLEAN_DIR / f"fsis_match_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
-    # TODO: set filename in config for data files
-    FSIS_PATH = RAW_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
-    NETS_PATH = RAW_DIR / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
-    NETS_NAICS_PATH = RAW_DIR / "nets" / "NAICS2022_RAFI.csv"
+    current_dir = Path(__file__).parent
+    config_file = current_dir / "config_filepaths.yaml"
+
+    with Path.open(config_file) as file:
+        config = yaml.safe_load(file)
+
+    FSIS_PATH = RAW_DIR / config["input"]["fsis"]
+    FSIS_DEMO_PATH = RAW_DIR / config["input"]["fsis_demo"]
+    NETS_PATH = RAW_DIR / "nets" / config["input"]["nets"]
+    NETS_NAICS_PATH = RAW_DIR / "nets" / config["input"]["nets_naics"]
 
     # TODO: Make a function for this
     df_nets = pd.read_csv(
@@ -484,7 +504,8 @@ if __name__ == "__main__":
 
     # TODO: and this...
     df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
-    df_fsis = clean_fsis(df_fsis)
+    df_fsis_demo = pd.read_csv(FSIS_DEMO_PATH)
+    df_fsis = clean_fsis(df_fsis, df_fsis_demo)
 
     gdf_fsis = gpd.GeoDataFrame(
         df_fsis,

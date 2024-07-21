@@ -49,6 +49,7 @@ export const abb2state = {
   WV: "West Virginia",
   WI: "Wisconsin",
   WY: "Wyoming",
+  PR: "Puerto Rico",
 };
 
 export const state2abb = {
@@ -90,6 +91,7 @@ export const state2abb = {
   Oklahoma: "OK",
   Oregon: "OR",
   Pennsylvania: "PA",
+  "Puerto Rico": "PR",
   "Rhode Island": "RI",
   "South Carolina": "SC",
   "South Dakota": "SD",

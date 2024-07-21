@@ -6,6 +6,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
+import yaml
 from calculate_captured_areas import calculate_captured_areas
 from constants import CLEAN_DIR, RAW_DIR
 from filter_barns import filter_barns
@@ -47,11 +48,17 @@ if __name__ == "__main__":
     )
     Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
-    # TODO: set filename in config for data files
-    FSIS_PATH = RAW_DIR / "MPI_Directory_by_Establishment_Name_29_04_24.csv"
-    NETS_PATH = RAW_DIR / "nets" / "NETSData2022_RAFI(WithAddresses).txt"
-    NETS_NAICS_PATH = RAW_DIR / "nets" / "NAICS2022_RAFI.csv"
-    BARNS_PATH = RAW_DIR / "full-usa-3-13-2021_filtered_deduplicated.gpkg"
+    current_dir = Path(__file__).parent
+    config_file = current_dir / "config_filepaths.yaml"
+
+    with Path.open(config_file) as file:
+        config = yaml.safe_load(file)
+
+    FSIS_PATH = RAW_DIR / config["input"]["fsis"]
+    FSIS_DEMO_PATH = RAW_DIR / config["input"]["fsis_demo"]
+    NETS_PATH = RAW_DIR / "nets" / config["input"]["nets"]
+    NETS_NAICS_PATH = RAW_DIR / "nets" / config["input"]["nets_naics"]
+    BARNS_PATH = RAW_DIR / config["input"]["barns"]
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke_test", action="store_true")
@@ -82,7 +89,8 @@ if __name__ == "__main__":
     )
 
     df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
-    df_fsis = clean_fsis(df_fsis)
+    df_fsis_demo = pd.read_csv(FSIS_DEMO_PATH)
+    df_fsis = clean_fsis(df_fsis, df_fsis_demo)
 
     gdf_fsis = gpd.GeoDataFrame(
         df_fsis,
