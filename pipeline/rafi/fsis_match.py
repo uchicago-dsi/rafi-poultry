@@ -324,7 +324,7 @@ def fsis_match(
         "Sanderson": "Wayne-Sanderson (Cargill)",
         "Harrison": "Harrison Poultry",
         "Farbest": "Farbest Foods",
-        "Keystone": "Keystone",
+        "Keystone": "Tyson",
         "Simmons": "Simmons Prepared Foods",
         "JCG": "Cagles",
         "Norman": "Norman W. Fries",
