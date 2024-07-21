@@ -33,7 +33,7 @@ def pipeline(
         A tuple of GeoDataFrames: (gdf_fsis, gdf_fsis_isochrones, gdf_isochrones, gdf_barns).
     """
     # TODO: Do I want to also return and save intermediate files?
-    gdf_fsis, _, _ = fsis_match(gdf_fsis, gdf_nets)
+    gdf_fsis, _, _, _ = fsis_match(gdf_fsis, gdf_nets)
     gdf_fsis_isochrones = get_plant_isochrones(gdf_fsis)
     gdf_isochrones = calculate_captured_areas(gdf_fsis_isochrones)
     # TODO: maybe add something to skip filtering for testing
