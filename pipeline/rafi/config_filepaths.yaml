@@ -1,7 +1,9 @@
 input:
-  fsis:
-  nets:
-  nets_naics:
+  fsis: "MPI_Directory_by_Establishment_Name_29_04_24.csv"
+  fsis_demo: "Dataset_Establishment_Demographic_Data.csv"
+  nets: "NETSData2022_RAFI(WithAddresses).txt"
+  nets_naics: "NAICS2022_RAFI.csv"
+  barns: "full-usa-3-13-2021_filtered_deduplicated.gpkg"
 output:
   plants:
   # TODO...

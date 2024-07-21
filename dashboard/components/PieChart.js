@@ -73,6 +73,6 @@ export default function PieChart() {
       }}
     />
   ) : (
-    ""
+    "No barns data in selected states"
   );
 }
