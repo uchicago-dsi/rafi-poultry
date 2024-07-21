@@ -49,26 +49,35 @@ EXCLUDE_STRINGS_NETS = {
     "wehrmann genetics",
     "back road trucking",
 }
+KEEP_PLANT_IDS = {"P7374"}
 
 
 def clean_fsis(
-    df_fsis: pd.DataFrame, exclude_corps: set = EXCLUDE_CORPS
+    df_fsis: pd.DataFrame,
+    exclude_corps: set = EXCLUDE_CORPS,
+    keep_plant_ids: set = KEEP_PLANT_IDS,
 ) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
 
     Args:
         df_fsis: The FSIS DataFrame to clean.
         exclude_corps: Set of corporations to exclude. These are known to be turkey, hatcheries, etc.
+        keep_plant_ids: Set of Plant IDs to keep (even if they are excluded by some criteria).
 
     Returns:
         The cleaned FSIS DataFrame.
     """
+    df_keep_plants = df_fsis[df_fsis["establishment_number"].isin(keep_plant_ids)]
+
     df_fsis = df_fsis.dropna(subset=["activities"])
     df_fsis = df_fsis[df_fsis.activities.str.lower().str.contains("poultry slaughter")]
     df_fsis = df_fsis[
         ~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)
     ]
     df_fsis = df_fsis[df_fsis["size"] == "Large"]
+
+    df_fsis = pd.concat([df_fsis, df_keep_plants]).drop_duplicates()
+
     df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
     df_fsis["matched"] = False
     return df_fsis
