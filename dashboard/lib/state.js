@@ -16,13 +16,10 @@ export const staticDataStore = {
 export const filteredDataStore = {
   filteredPlants: [],
   filteredBarns: [],
-  filteredBarnCounts: [],
+  filteredBarnPercents: {},
   filteredSales: [],
   filteredIsochrones: [],
 
-  // TODO: These names are confusing
-  percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
-  totalCapturedBarns: [],
   totalSales: 0,
   HHI: 0,
 };
@@ -131,45 +128,6 @@ function updateFilteredSales(states) {
   filteredDataStore.totalSales = totalSales;
 }
 
-function calculateCapturedBarns() {
-  const counts = {
-    totalFarms: 0,
-    totalCapturedBarns: 0,
-    plantAccessCounts: {
-      0: 0, // '0' represents NaN or no access
-      1: 0,
-      2: 0,
-      3: 0,
-    },
-  };
-
-  // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
-  filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
-    const plantAccess =
-      feature.properties.integrator_access === 4
-        ? 3
-        : feature.properties.integrator_access || 0; // convert 4 to 3, default to 0 if null
-    accumulator.totalFarms += 1;
-    // Only count farms in captive draw areas
-    if (plantAccess != 0) {
-      accumulator.totalCapturedBarns += 1;
-    }
-    accumulator.plantAccessCounts[plantAccess] += 1;
-    return accumulator;
-  }, counts);
-
-  let percentCapturedBarns = {};
-  Object.keys(counts.plantAccessCounts).forEach((key) => {
-    if (key != "0") {
-      percentCapturedBarns[key] =
-        counts.plantAccessCounts[key] / counts.totalCapturedBarns;
-    }
-  });
-
-  filteredDataStore.totalCapturedBarns = counts.totalCapturedBarns;
-  filteredDataStore.percentCapturedBarns = percentCapturedBarns;
-}
-
 function calculateHHI() {
   if (Object.keys(filteredDataStore.filteredSales).length) {
     return Object.values(filteredDataStore.filteredSales).reduce(
@@ -227,11 +185,12 @@ function updateMapZoom(filteredStates) {
   };
 }
 
-// export const updateFilteredData = async (stateData) => {
 export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
+
+  // TODO: What's the right way to do this? Should these return things or update in place?
   updateFilteredPlants(stateData.selectedStates);
   updateFilteredIsochrones(stateData.selectedStates);
   updateFilteredSales(stateData.selectedStates);
@@ -239,8 +198,6 @@ export function updateFilteredData(stateData) {
   updateFilteredBarnPercents(stateData.selectedStates);
   updateMapZoom(stateData.selectedStates);
 
-  // TODO: What's the right way to do this? Should these return things or update in place?
-  calculateCapturedBarns();
   filteredDataStore.HHI = calculateHHI();
 
   return performance.now();
