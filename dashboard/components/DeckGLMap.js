@@ -26,8 +26,6 @@ const markerPalette = {
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
 export function DeckGLMap() {
-  console.log("I'm the DeckGLMap component and I rendered");
-
   const {
     isDataLoaded,
     stateMapSettings,
