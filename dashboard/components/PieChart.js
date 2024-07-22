@@ -7,8 +7,11 @@ import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
 export default function PieChart() {
-  const { isDataLoaded, percentCapturedBarns, totalCapturedBarns } =
-    useMapData();
+  const { isDataLoaded, filteredBarnPercents } = useMapData();
+
+  if (!isDataLoaded) {
+    return "";
+  }
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
     if (!isDataLoaded) {
@@ -17,18 +20,14 @@ export default function PieChart() {
         cleanedChartLabels: [],
       };
     }
-    const values = Object.entries(percentCapturedBarns).map(
+    const values = Object.entries(filteredBarnPercents).map(
       ([key, value]) => value * 100
     );
     return {
       cleanedChartData: values,
       cleanedChartLabels: ["1 Integrator", "2 Integrators", "3+ Integrators"],
     };
-  }, [percentCapturedBarns]);
-
-  if (!isDataLoaded) {
-    return "";
-  }
+  }, [filteredBarnPercents]);
 
   const chartData = {
     labels: cleanedChartLabels,
@@ -37,18 +36,15 @@ export default function PieChart() {
       {
         data: cleanedChartData,
         backgroundColor: [
-          "rgba(251, 128, 114, 0.6)",
-          "rgba(255, 255, 179, 0.6)",
-          "rgba(141, 211, 150, 0.6)",
-          //   "One Corporation": [251, 128, 114, 150],
-          //   "Two Corporations": [255, 255, 179, 150],
-          //   "3+ Corporations": [141, 211, 199, 150],
+          "rgba(251, 128, 114, 0.6)", // One Corporation
+          "rgba(255, 255, 179, 0.6)", // Two Corporations
+          "rgba(141, 211, 150, 0.6)", // Three+ Corporations
         ],
       },
     ],
   };
 
-  return totalCapturedBarns ? (
+  return isDataLoaded ? (
     <Pie
       data={chartData}
       options={{
@@ -62,9 +58,8 @@ export default function PieChart() {
           tooltip: {
             callbacks: {
               label: function (context) {
-                console.log(context);
+                // console.log(context);
                 const value = context.dataset.data[context.dataIndex];
-                console.log("Tooltip value:", value);
                 return context.label + ": " + value.toFixed(1) + "%";
               },
             },

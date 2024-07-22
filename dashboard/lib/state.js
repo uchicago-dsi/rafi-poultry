@@ -7,6 +7,7 @@ import { derive } from "valtio/utils";
 export const staticDataStore = {
   allPlants: [],
   allBarns: [],
+  allBarnCounts: [],
   allSales: [],
   allIsochrones: [],
   allStates: [],
@@ -15,6 +16,7 @@ export const staticDataStore = {
 export const filteredDataStore = {
   filteredPlants: [],
   filteredBarns: [],
+  filteredBarnCounts: [],
   filteredSales: [],
   filteredIsochrones: [],
 
@@ -25,6 +27,7 @@ export const filteredDataStore = {
   HHI: 0,
 };
 
+// Note: Separate tooltip state from the main state to avoid re-renders
 export const tooltipState = proxy({
   x: undefined,
   y: undefined,
@@ -36,12 +39,6 @@ export const state = proxy({
     isDataLoaded: false,
     selectedStates: [],
   },
-
-  // tooltip: {
-  //   x: undefined,
-  //   y: undefined,
-  //   hoveredObject: undefined,
-  // },
 
   map: {
     // display options
@@ -70,11 +67,36 @@ function updateFilteredIsochrones(states) {
 }
 
 function updateFilteredBarns(states) {
-  // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
-  // const stateabbrevs = states.map((state) => state2abb[state]);
   filteredDataStore.filteredBarns = staticDataStore.allBarns.features.filter(
     (row) => states.includes(row.properties.state)
   );
+}
+
+function updateFilteredBarnPercents(states) {
+  let filteredBarnCounts = {
+    Total: 0,
+    1: 0,
+    2: 0,
+    3: 0,
+  };
+  Object.keys(staticDataStore.allBarnCounts)
+    .filter((state) => states.includes(state))
+    .forEach((state) => {
+      const barns = staticDataStore.allBarnCounts[state];
+      filteredBarnCounts["Total"] += barns.totalBarns;
+      filteredBarnCounts[1] += barns.plantAccessCounts[1];
+      filteredBarnCounts[2] += barns.plantAccessCounts[2];
+      filteredBarnCounts[3] += barns.plantAccessCounts[3];
+    }, {});
+
+  let filteredBarnPercents = {};
+  Object.keys(filteredBarnCounts).forEach((key) => {
+    if (key != "Total") {
+      filteredBarnPercents[key] =
+        filteredBarnCounts[key] / filteredBarnCounts["Total"];
+    }
+  });
+  filteredDataStore.filteredBarnPercents = filteredBarnPercents;
 }
 
 function updateFilteredSales(states) {
@@ -214,6 +236,7 @@ export function updateFilteredData(stateData) {
   updateFilteredIsochrones(stateData.selectedStates);
   updateFilteredSales(stateData.selectedStates);
   updateFilteredBarns(stateData.selectedStates);
+  updateFilteredBarnPercents(stateData.selectedStates);
   updateMapZoom(stateData.selectedStates);
 
   // TODO: What's the right way to do this? Should these return things or update in place?
