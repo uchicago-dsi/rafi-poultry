@@ -23,7 +23,8 @@ export const updateStaticDataStore = async () => {
   try {
     const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
       fetchData("/api/plants/plants"),
-      fetchGzip(BARNS),
+      // fetchGzip(BARNS),
+      fetchData("/api/barns"),
       fetchGzip(ISOCHRONES),
       fetchData("/api/plants/sales"),
     ]);
@@ -37,7 +38,6 @@ export const updateStaticDataStore = async () => {
       .sort();
 
     // Filter barns data to only include farms that are not excluded and have plant access
-    console.log("rawBarns", rawBarns);
     const processedBarns = {
       type: "FeatureCollection",
       features: rawBarns.features.filter(
@@ -48,14 +48,9 @@ export const updateStaticDataStore = async () => {
     };
     staticDataStore.allBarns = processedBarns;
 
-    console.log("processedBarns", processedBarns);
-    console.log("rawSales", rawSales);
-
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;
     staticDataStore.allIsochrones = rawIsochrones;
-
-    console.log("rawIsochrones", rawIsochrones);
   } catch (error) {
     console.error(error);
   }

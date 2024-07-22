@@ -149,15 +149,7 @@ function calculateCapturedBarns() {
 }
 
 function calculateHHI() {
-  // TODO: should probably make total sales part of the state
-  // calculate total sales in selected area
   if (Object.keys(filteredDataStore.filteredSales).length) {
-    // let totalSales = Object.values(filteredDataStore.filteredSales).reduce(
-    //   (acc, item) => acc + item.sales,
-    //   0
-    // );
-
-    // calculate HHI
     return Object.values(filteredDataStore.filteredSales).reduce(
       (acc, item) =>
         acc + Math.pow((item.sales * 100) / filteredDataStore.totalSales, 2),
