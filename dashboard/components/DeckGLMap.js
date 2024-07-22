@@ -11,6 +11,10 @@ import { useMapData } from "@/lib/useMapData";
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
+const deepClone = (obj) => {
+  return JSON.parse(JSON.stringify(obj));
+};
+
 const plantColorPalette = {
   "One Integrator": [251, 128, 114, 150],
   "Two Integrators": [255, 255, 179, 150],
@@ -133,9 +137,12 @@ export function DeckGLMap() {
     displayLayers.push(barnsLayer);
   }
 
+  // Note: Prevents extensibility error with DeckGL
+  const clonedMapSettings = deepClone(stateMapSettings);
+
   const deck = (
     <DeckGL
-      initialViewState={stateMapSettings.mapZoom} // TODO: is there a way to have an initial state and still dynamically update the view?
+      initialViewState={clonedMapSettings.mapZoom} // TODO: is there a way to have an initial state and still dynamically update the view?
       controller={true}
       layers={displayLayers}
       pickingRadius={50} //TODO: This behaves strangely and only works when zoomed out?
@@ -145,7 +152,6 @@ export function DeckGLMap() {
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
       >
         <ScaleControl unit="imperial" position="top-right" />
-        {/* <NavigationControl position="top-right" /> TODO: This is "under" the Deck map... */}
       </Map>
 
       <div id="legend" className="mb-5 mr-1">
