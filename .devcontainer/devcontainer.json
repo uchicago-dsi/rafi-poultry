@@ -19,8 +19,8 @@
                     }
                 },
                 "python.defaultInterpreterPath": "/usr/local/bin/python3",
-                "python.languageServer": "Pylance",
-                "editor.defaultFormatter": "ms-python.black-formatter",
+                // "python.languageServer": "Pylance",
+                // "editor.defaultFormatter": "ms-python.black-formatter",
                 "editor.formatOnSave": true,
                 "editor.codeActionsOnSave": {
                     "source.organizeImports": true
@@ -40,13 +40,10 @@
             },
             "extensions": [
                 "ms-python.python",
-                "ms-python.vscode-pylance",
-                "ms-python.flake8",
-                "ms-python.black-formatter",
-                "ms-python.isort",
+                "ms-python.ruff",
                 "ms-vscode-remote.remote-containers",
                 "ms-toolsai.jupyter",
-                "ms-toolsai.jupyter-renderers"
+                "ms-toolsai.jupyter-renderers",
             ]
         }
     },

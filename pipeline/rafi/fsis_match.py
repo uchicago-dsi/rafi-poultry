@@ -227,7 +227,8 @@ def fsis_match(
 
     Returns:
         The matched GeoDataFrame, unmatched DataFrame, and full match DataFrame.
-    """  # Note: rows are filtered geospatially so can set address and company threshold somewhat low
+    """
+    # Note: rows are filtered geospatially so can set address and company threshold somewhat low
     gdf_nets = gdf_nets.to_crs(9822)
     gdf_fsis = gdf_fsis.to_crs(9822)
     buffer = 1000  # TODO...
@@ -393,6 +394,7 @@ def fsis_match(
         "hq_duns_nets",
         "hq_company_nets",
         "sales_here_nets",
+        "EmpHere",
         "spatial_match",
         "company_match",
         "address_match",
@@ -411,6 +413,8 @@ def fsis_match(
         ["establishment_name_fsis", "street_fsis"], as_index=False
     ).first()
 
+    # TODO: This threshold should be larger
+    # Should also use 500 employee threshold as an option here
     def calculate_sales(row, avg_sales, overall_median_sales, threshold=1000):
         if pd.isna(row["sales_here_nets"]):
             row["display_sales"] = avg_sales[row["parent_corp_manual"]]
@@ -458,6 +462,8 @@ def fsis_match(
         r"-\d{4}$", "", regex=True
     )
     output_geojson = output_geojson[GEOJSON_COLS]
+
+    breakpoint()
 
     # TODO: Has to be a better way...
     full_match = merged[KEEP_COLS]
