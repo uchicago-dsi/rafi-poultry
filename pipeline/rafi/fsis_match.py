@@ -75,9 +75,7 @@ def clean_fsis(
     Returns:
         The cleaned FSIS DataFrame.
     """
-    df_fsis = df_fsis.merge(
-        df_fsis_demo, on="establishment_number", how="left", suffixes=("", "_right")
-    )
+    df_fsis = df_fsis.merge(df_fsis_demo, on="establishment_number", how="left", suffixes=("", "_right"))
     dupe_cols = [col for col in df_fsis.columns if col.endswith("_right")]
     df_fsis = df_fsis.drop(columns=dupe_cols)
 
@@ -85,9 +83,7 @@ def clean_fsis(
 
     # TODO: If we do exclude turkey processing, we'd do it here
     df_fsis = df_fsis[df_fsis["poultry_slaughter"] == "Yes"]
-    df_fsis = df_fsis[
-        ~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)
-    ]
+    df_fsis = df_fsis[~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)]
     df_fsis = df_fsis[df_fsis["size"] == "Large"]
 
     df_fsis = pd.concat([df_fsis, df_keep_plants]).drop_duplicates()
@@ -122,9 +118,7 @@ def clean_nets(
     return df_nets
 
 
-def get_geospatial_matches(
-    row: pd.Series, gdf_child: gpd.GeoDataFrame, buffer: int = 1000
-) -> pd.Series:
+def get_geospatial_matches(row: pd.Series, gdf_child: gpd.GeoDataFrame, buffer: int = 1000) -> pd.Series:
     """Finds geospatial matches for a given row in the FSIS DataFrame within a specified buffer distance.
 
     Args:
@@ -140,9 +134,7 @@ def get_geospatial_matches(
     # Then check whether they intersect with the buffered geometry
     possible_matches_index = list(gdf_child.sindex.intersection(row["buffered"].bounds))
     possible_matches = gdf_child.iloc[possible_matches_index]
-    spatial_match_index = possible_matches[
-        possible_matches.geometry.intersects(row["buffered"])
-    ].index.to_list()
+    spatial_match_index = possible_matches[possible_matches.geometry.intersects(row["buffered"])].index.to_list()
     spatial_match = len(spatial_match_index) > 0
     # Handle unmatched plants — save -1 so they still show up in merge later
     row["spatial_match_index"] = spatial_match_index if spatial_match else [-1]
@@ -150,9 +142,7 @@ def get_geospatial_matches(
     return row
 
 
-def spatial_index_match(
-    row: pd.Series, gdf_child: gpd.GeoDataFrame
-) -> gpd.GeoDataFrame:
+def spatial_index_match(row: pd.Series, gdf_child: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """Finds all spatial matches for a given row in the FSIS DataFrame.
 
     Args:
@@ -166,9 +156,7 @@ def spatial_index_match(
     # Then check whether they intersect with the buffered geometry
     possible_matches_index = list(gdf_child.sindex.intersection(row["buffered"].bounds))
     possible_matches = gdf_child.iloc[possible_matches_index]
-    spatial_matches = possible_matches[
-        possible_matches.geometry.intersects(row["buffered"])
-    ]
+    spatial_matches = possible_matches[possible_matches.geometry.intersects(row["buffered"])]
     return spatial_matches
 
 
@@ -192,13 +180,9 @@ def get_string_matches(
         return row
 
     row["company_match"] = (
-        fuzz.token_sort_ratio(row["establishment_name"].upper(), row["Company"].upper())
-        > company_threshold
+        fuzz.token_sort_ratio(row["establishment_name"].upper(), row["Company"].upper()) > company_threshold
     )
-    row["address_match"] = (
-        fuzz.token_sort_ratio(row["street"].upper(), row["Address"].upper())
-        > address_threshold
-    )
+    row["address_match"] = fuzz.token_sort_ratio(row["street"].upper(), row["Address"].upper()) > address_threshold
     # Initialize since not all establishments are in PARENT_CORPS
     alt_name_match = False
     if row["establishment_name"] in FSIS2NETS_CORPS:
@@ -210,9 +194,7 @@ def get_string_matches(
             > company_threshold
         )
     row["alt_name_match"] = alt_name_match
-    row["matched"] = (
-        row["company_match"] or row["address_match"] or row["establishment_name"]
-    )
+    row["matched"] = row["company_match"] or row["address_match"] or row["establishment_name"]
     return row
 
 
@@ -235,9 +217,7 @@ def fsis_match(
     gdf_fsis["buffered"] = gdf_fsis.geometry.buffer(buffer)
 
     print("Getting geospatial matches...")
-    gdf_fsis = gdf_fsis.progress_apply(
-        lambda row: get_geospatial_matches(row, gdf_nets), axis=1
-    )
+    gdf_fsis = gdf_fsis.progress_apply(lambda row: get_geospatial_matches(row, gdf_nets), axis=1)
 
     # Reset geospatial index to WGS84
     gdf_fsis = gdf_fsis.to_crs(4326)
@@ -265,9 +245,7 @@ def fsis_match(
     merged = merged.apply(lambda row: get_string_matches(row), axis=1)
 
     # Note: Roundabout way of doing this to prevent fragmented DataFrame warning
-    duns_match = pd.DataFrame(
-        {"duns_match": merged["duns_number"] == merged["DunsNumber"]}
-    )
+    duns_match = pd.DataFrame({"duns_match": merged["duns_number"] == merged["DunsNumber"]})
     merged = pd.concat([merged, duns_match], axis=1)
     merged["match_score"] = (
         merged[
@@ -370,9 +348,7 @@ def fsis_match(
                 return corp_mapping[key]
         return "Other"
 
-    merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(
-        map_to_corporation
-    )
+    merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(map_to_corporation)
 
     # TODO: Move to config/constants
     KEEP_COLS = [
@@ -408,31 +384,47 @@ def fsis_match(
         ascending=[True, True, False, False],
     )
 
+    merged["sales_per_emp"] = merged["sales_here_nets"] / merged["EmpHere"]
+
+    # Note: HQ is direct NETS data, parent is manual RAFI mapping
+    # TODO: What should we do with Tip Top issue?
+    hq_sales_per_emp = merged.groupby("hq_company_nets")["sales_per_emp"].median()
+    parent_sales_per_emp = merged.groupby("parent_corp_manual")["sales_per_emp"].median()
+
     # Select top match for each plant, handling ties by max sales
-    output = merged.groupby(
-        ["establishment_name_fsis", "street_fsis"], as_index=False
-    ).first()
+    output = merged.groupby(["establishment_name_fsis", "street_fsis"], as_index=False).first()
 
-    # TODO: This threshold should be larger
-    # Should also use 500 employee threshold as an option here
-    def calculate_sales(row, avg_sales, overall_median_sales, threshold=1000):
-        if pd.isna(row["sales_here_nets"]):
-            row["display_sales"] = avg_sales[row["parent_corp_manual"]]
-        else:
+    def calculate_sales(row, hq_sales_per_emp, parent_sales_per_emp, overall_median_sales, employee_threshold=500):
+        """TODO: Add more info
+
+        FSIS large plants have minimum of 500 employees
+        TODO: Puerto Rico plant is smaller...how to handle?
+        """
+        # If employees are larger than threshold, use NETS sales data
+        if row["EmpHere"] > employee_threshold:
+            print("EmpHere", row["EmpHere"])
             row["display_sales"] = row["sales_here_nets"]
+        # Otherwise, assume 500 employees and use average sales for parent corporation
+        else:
+            hq_company_nets = row["hq_company_nets"]
+            parent_corp_manual = row["parent_corp_manual"]
+            if hq_company_nets in hq_sales_per_emp and hq_company_nets != "DLISTED":
+                sales_per_emp = hq_sales_per_emp[hq_company_nets]
+            else:
+                sales_per_emp = parent_sales_per_emp[parent_corp_manual]
+            # TODO: Add a threshold here...if it's more than...something then use the overall median sales?
+            row["display_sales"] = employee_threshold * sales_per_emp
 
-        # Handle zero, unreasonably low, or missing sales data
-        if row["display_sales"] < threshold or pd.isna(row["display_sales"]):
+        # Handle missing sales data
+        if pd.isna(row["display_sales"]):
             row["display_sales"] = overall_median_sales  # TODO: Is this ok?
         return row
 
-    # Get average sales for each parent corporation
-    avg_sales = output.groupby("parent_corp_manual")["sales_here_nets"].median()
     overall_median_sales = output["sales_here_nets"].median()
 
     # Calculate display sales data
     output = output.apply(
-        lambda row: calculate_sales(row, avg_sales, overall_median_sales), axis=1
+        lambda row: calculate_sales(row, hq_sales_per_emp, parent_sales_per_emp, overall_median_sales), axis=1
     )
 
     # Save unmatched plants separately for review
@@ -440,9 +432,7 @@ def fsis_match(
     unmatched = unmatched[KEEP_COLS]
 
     output_geojson = output.copy()
-    output_geojson["geometry"] = output.apply(
-        lambda row: Point(row["longitude_fsis"], row["latitude_fsis"]), axis=1
-    )
+    output_geojson["geometry"] = output.apply(lambda row: Point(row["longitude_fsis"], row["latitude_fsis"]), axis=1)
 
     GEOJSON_RENAME_COLS = {
         "parent_corp_manual": "Parent Corporation",
@@ -457,13 +447,9 @@ def fsis_match(
 
     GEOJSON_COLS = list(GEOJSON_RENAME_COLS.values()) + ["geometry"]
     output_geojson = gpd.GeoDataFrame(output_geojson, geometry=output_geojson.geometry)
-    # Remove ZIP+4 from ZIP code when present
-    output_geojson["Zip"] = output_geojson["Zip"].str.replace(
-        r"-\d{4}$", "", regex=True
-    )
+    # Note: Remove ZIP+4 from ZIP code when present
+    output_geojson["Zip"] = output_geojson["Zip"].str.replace(r"-\d{4}$", "", regex=True)
     output_geojson = output_geojson[GEOJSON_COLS]
-
-    breakpoint()
 
     # TODO: Has to be a better way...
     full_match = merged[KEEP_COLS]
@@ -519,14 +505,18 @@ if __name__ == "__main__":
         crs=4326,
     )
 
-    gdf_fsis, unmatched, full_match, final_matched_plants = fsis_match(
-        gdf_fsis, gdf_nets
-    )
+    gdf_fsis, unmatched, full_match, final_matched_plants = fsis_match(gdf_fsis, gdf_nets)
 
     save_file(
         gdf_fsis,
         RUN_DIR / "plants.csv",
         file_format="csv",
+    )
+
+    save_file(
+        gdf_fsis,
+        RUN_DIR / "plants.geojson",
+        file_format="geojson",
     )
 
     save_file(
