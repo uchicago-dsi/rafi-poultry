@@ -38,6 +38,9 @@ EXCLUDE_CORPS = {
     "West Liberty",
     "Dakota Provisions",
     "Cooper Farms",
+    "Farbest Foods",
+    "Hillshire",
+    "Plainville",
 }
 EXCLUDE_STRINGS_NETS = {
     "turkey",
@@ -55,13 +58,87 @@ EXCLUDE_STRINGS_NETS = {
     "wehrmann genetics",
     "back road trucking",
 }
-KEEP_PLANT_IDS = {"P7374"}
+TURKEY_PLANT_IDS = {
+    "P850",  # Prestage
+    "P18",  # Cargill
+    "M13289+P963",  # Cargill
+    "P286",  # Perdue
+    "M89A+P9147",  # Hillshire
+    "M18909+P157",  # Foster
+}
+KEEP_PLANT_IDS = {
+    "P7374"  # Puerto Rico plant
+}
+CORP2PARENT = {
+    "Tyson": "Tyson",
+    "JBS": "JBS",
+    "Cargill": "Cargill",
+    "Foster Farms": "Foster Farms",
+    "Peco Foods": "Peco Foods",
+    "Sechler": "Sechler Family Foods",
+    "Raeford": "House of Raeford",
+    "Koch Foods": "Koch Foods",
+    "Perdue": "Perdue",
+    "Fieldale": "Fieldale Farms Corporation",
+    "Amick": "Amick",
+    "George's": "George's",
+    "Ozark": "George's",
+    "Mar-Jac": "Mar-Jac",
+    "Harim": "Harim Group",
+    "Costco": "Costco",
+    "Aterian": "Aterian Investment Partners",
+    "Pilgrim's Pride": "Pilgrim's Pride (JBS)",
+    "To-Ricos": "Pilgrim's Pride (JBS)",
+    "Mountaire": "Mountaire",
+    "Bachoco": "Bachoco OK Foods",
+    "Wayne Farms": "Wayne-Sanderson (Cargill)",
+    "Hillshire": "Hillshire",
+    "Case Farms": "Case Farms",
+    "Foster": "Foster Poultry Farms",
+    "Sanderson": "Wayne-Sanderson (Cargill)",
+    "Harrison": "Harrison Poultry",
+    "Farbest": "Farbest Foods",
+    "Keystone": "Tyson",
+    "Simmons": "Simmons Prepared Foods",
+    "JCG": "Cagles",
+    "Norman": "Norman W. Fries",
+    # Other corps?
+    "Soulshine": "Soulshine Farms",
+    "Lincoln": "Lincoln Premium Poultry",
+    "Prestage": "Prestage Foods",
+    "Pitman": "Pitman Farms",
+    "Plainville": "Plainville Brands",
+    "Tip Top": "Tip Top Poultry",
+    "Agri Star": "Agri Star Meat & Poultry",
+    "Bell & Evans": "Bell & Evans",
+    "Gerber": "Gerber Poultry",
+    "Empire Kosher": "Empire Kosher Poultry",
+    # Excluded corps
+    "Kraft Heinz": "Kraft Heinz",
+    "West Liberty": "West Liberty Foods",
+    "Dakota": "Dakota Provisions",
+    "Butterball": "Butterball",
+    "Jennie-O": "Jennie-O",
+    "Cooper": "Cooper Farms Processing",
+}
+
+
+# TODO: Move to utils?
+def map_to_corporation(name, corp_mapping=CORP2PARENT):
+    for key in corp_mapping:
+        if key.lower() in name.lower():
+            return corp_mapping[key]
+    return "Other"
+
+
+# merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(map_to_corporation)
 
 
 def clean_fsis(
     df_fsis: pd.DataFrame,
     df_fsis_demo: pd.DataFrame,
     exclude_corps: set = EXCLUDE_CORPS,
+    exclude_plant_ids: set = TURKEY_PLANT_IDS,
     keep_plant_ids: set = KEEP_PLANT_IDS,
 ) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
@@ -70,6 +147,7 @@ def clean_fsis(
         df_fsis: The FSIS DataFrame to clean.
         df_fsis_demo: The FSIS demographic DataFrame.
         exclude_corps: Set of corporations to exclude. These are known to be turkey, hatcheries, etc.
+        exclude_plant_ids: Set of Plant IDs to exclude
         keep_plant_ids: Set of Plant IDs to keep (even if they are excluded by some criteria).
 
     Returns:
@@ -79,18 +157,31 @@ def clean_fsis(
     dupe_cols = [col for col in df_fsis.columns if col.endswith("_right")]
     df_fsis = df_fsis.drop(columns=dupe_cols)
 
-    df_keep_plants = df_fsis[df_fsis["establishment_number"].isin(keep_plant_ids)]
-
-    # TODO: If we do exclude turkey processing, we'd do it here
+    # TODO: If we do exclude turkey processing, we'd do it here - ie processing_only_species == "Turkey"
     df_fsis = df_fsis[df_fsis["poultry_slaughter"] == "Yes"]
     df_fsis = df_fsis[~df_fsis["establishment_name"].str.contains("|".join(exclude_corps), case=False)]
-    df_fsis = df_fsis[df_fsis["size"] == "Large"]
+    df_fsis["parent_corp_manual"] = df_fsis["establishment_name"].apply(map_to_corporation)
 
-    df_fsis = pd.concat([df_fsis, df_keep_plants]).drop_duplicates()
+    df_fsis_clean = df_fsis.copy()
 
-    df_fsis["duns_number"] = df_fsis["duns_number"].str.replace("-", "")
-    df_fsis["matched"] = False
-    return df_fsis
+    # df_keep_plants = df_fsis_clean[df_fsis_clean["establishment_number"].isin(keep_plant_ids)]
+    df_fsis_clean = df_fsis_clean[~df_fsis_clean["establishment_number"].isin(exclude_plant_ids)]
+
+    df_fsis_clean = df_fsis_clean[df_fsis_clean["size"] == "Large"]
+    # Note: Include plants not classified as large if they are part of a parent corporation that has large plants
+    df_fsis_other_plants = df_fsis[
+        (
+            df_fsis["parent_corp_manual"].isin(set(df_fsis_clean["parent_corp_manual"].unique()))
+            & (df_fsis["size"] != "Large")
+        )
+    ]
+
+    df_fsis_clean = pd.concat([df_fsis_clean, df_fsis_other_plants]).drop_duplicates()
+
+    df_fsis_clean["duns_number"] = df_fsis_clean["duns_number"].str.replace("-", "")
+    df_fsis_clean["matched"] = False
+
+    return df_fsis_clean
 
 
 def clean_nets(
@@ -289,67 +380,6 @@ def fsis_match(
     }
     merged = merged.rename(columns=RENAME_DICT)
 
-    CORP2PARENT = {
-        "Tyson": "Tyson",
-        "JBS": "JBS",
-        "Cargill": "Cargill",
-        "Foster Farms": "Foster Farms",
-        "Peco Foods": "Peco Foods",
-        "Sechler": "Sechler Family Foods",
-        "Raeford": "House of Raeford",
-        "Koch Foods": "Koch Foods",
-        "Perdue": "Perdue",
-        "Fieldale": "Fieldale Farms Corporation",
-        "Amick": "Amick",
-        "George's": "George's",
-        "Ozark": "George's",
-        "Mar-Jac": "Mar-Jac",
-        "Harim": "Harim Group",
-        "Costco": "Costco",
-        "Aterian": "Aterian Investment Partners",
-        "Pilgrim's Pride": "Pilgrim's Pride (JBS)",
-        "Mountaire": "Mountaire",
-        "Bachoco": "Bachoco OK Foods",
-        "Wayne Farms": "Wayne-Sanderson (Cargill)",
-        "Hillshire": "Hillshire",
-        "Case Farms": "Case Farms",
-        "Foster": "Foster Poultry Farms",
-        "Sanderson": "Wayne-Sanderson (Cargill)",
-        "Harrison": "Harrison Poultry",
-        "Farbest": "Farbest Foods",
-        "Keystone": "Tyson",
-        "Simmons": "Simmons Prepared Foods",
-        "JCG": "Cagles",
-        "Norman": "Norman W. Fries",
-        # Other corps?
-        "Soulshine": "Soulshine Farms",
-        "Lincoln": "Lincoln Premium Poultry",
-        "Prestage": "Prestage Foods",
-        "Pitman": "Pitman Farms",
-        "Plainville": "Plainville Brands",
-        "Tip Top": "Tip Top Poultry",
-        "Agri Star": "Agri Star Meat & Poultry",
-        "Farmers Pride": "Farmers Pride",
-        "Gerber": "Gerber Poultry",
-        "Empire Kosher": "Empire Kosher Poultry",
-        # Excluded corps
-        "Kraft Heinz": "Kraft Heinz",
-        "West Liberty": "West Liberty Foods",
-        "Dakota": "Dakota Provisions",
-        "Butterball": "Butterball",
-        "Jennie-O": "Jennie-O",
-        "Cooper": "Cooper Farms Processing",
-    }
-
-    # TODO: Move to utils?
-    def map_to_corporation(name, corp_mapping=CORP2PARENT):
-        for key in corp_mapping:
-            if key.lower() in name.lower():
-                return corp_mapping[key]
-        return "Other"
-
-    merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(map_to_corporation)
-
     # TODO: Move to config/constants
     KEEP_COLS = [
         "duns_number_fsis",
@@ -402,7 +432,6 @@ def fsis_match(
         """
         # If employees are larger than threshold, use NETS sales data
         if row["EmpHere"] > employee_threshold:
-            print("EmpHere", row["EmpHere"])
             row["display_sales"] = row["sales_here_nets"]
         # Otherwise, assume 500 employees and use average sales for parent corporation
         else:
@@ -441,7 +470,11 @@ def fsis_match(
         "city_fsis": "City",
         "state_fsis": "State",
         "zip_fsis": "Zip",
+        "size_fsis": "Size",
         "display_sales": "Sales",
+        "EmpHere": "Employees (NETS)",
+        "sales_here_nets": "Sales (NETS)",
+        "sales_per_emp": "Sales Per Employee",
     }
     output_geojson = output_geojson.rename(columns=GEOJSON_RENAME_COLS)
 
