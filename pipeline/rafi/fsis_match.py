@@ -65,9 +65,7 @@ TURKEY_PLANT_IDS = {
     "P286",  # Perdue
     "M89A+P9147",  # Hillshire
     "M18909+P157",  # Foster
-}
-KEEP_PLANT_IDS = {
-    "P7374"  # Puerto Rico plant
+    "M751+P1049",  # Pitman Farms/Moroni Turkey Processing
 }
 CORP2PARENT = {
     "Tyson": "Tyson",
@@ -78,6 +76,7 @@ CORP2PARENT = {
     "Sechler": "Sechler Family Foods",
     "Raeford": "House of Raeford",
     "Koch Foods": "Koch Foods",
+    "JCG Foods": "JCG Foods",
     "Perdue": "Perdue",
     "Fieldale": "Fieldale Farms Corporation",
     "Amick": "Amick",
@@ -139,7 +138,6 @@ def clean_fsis(
     df_fsis_demo: pd.DataFrame,
     exclude_corps: set = EXCLUDE_CORPS,
     exclude_plant_ids: set = TURKEY_PLANT_IDS,
-    keep_plant_ids: set = KEEP_PLANT_IDS,
 ) -> pd.DataFrame:
     """Cleans the FSIS data by dropping rows with missing activities, filtering for poultry slaughter and large size, and formatting DUNS numbers.
 
@@ -148,7 +146,6 @@ def clean_fsis(
         df_fsis_demo: The FSIS demographic DataFrame.
         exclude_corps: Set of corporations to exclude. These are known to be turkey, hatcheries, etc.
         exclude_plant_ids: Set of Plant IDs to exclude
-        keep_plant_ids: Set of Plant IDs to keep (even if they are excluded by some criteria).
 
     Returns:
         The cleaned FSIS DataFrame.
@@ -156,6 +153,7 @@ def clean_fsis(
     df_fsis = df_fsis.merge(df_fsis_demo, on="establishment_number", how="left", suffixes=("", "_right"))
     dupe_cols = [col for col in df_fsis.columns if col.endswith("_right")]
     df_fsis = df_fsis.drop(columns=dupe_cols)
+    df_fsis = df_fsis[~df_fsis["establishment_number"].isin(exclude_plant_ids)]
 
     # TODO: If we do exclude turkey processing, we'd do it here - ie processing_only_species == "Turkey"
     df_fsis = df_fsis[df_fsis["poultry_slaughter"] == "Yes"]
@@ -163,10 +161,6 @@ def clean_fsis(
     df_fsis["parent_corp_manual"] = df_fsis["establishment_name"].apply(map_to_corporation)
 
     df_fsis_clean = df_fsis.copy()
-
-    # df_keep_plants = df_fsis_clean[df_fsis_clean["establishment_number"].isin(keep_plant_ids)]
-    df_fsis_clean = df_fsis_clean[~df_fsis_clean["establishment_number"].isin(exclude_plant_ids)]
-
     df_fsis_clean = df_fsis_clean[df_fsis_clean["size"] == "Large"]
     # Note: Include plants not classified as large if they are part of a parent corporation that has large plants
     df_fsis_other_plants = df_fsis[
@@ -290,7 +284,9 @@ def get_string_matches(
 
 
 def fsis_match(
-    gdf_fsis: gpd.GeoDataFrame, gdf_nets: gpd.GeoDataFrame
+    gdf_fsis: gpd.GeoDataFrame,
+    gdf_nets: gpd.GeoDataFrame,
+    sales_lower_threshold=50000000,
 ) -> tuple[gpd.GeoDataFrame, pd.DataFrame, pd.DataFrame]:
     """Matches FSIS plants to NETS records using geospatial and string matching.
 
@@ -424,36 +420,44 @@ def fsis_match(
     # Select top match for each plant, handling ties by max sales
     output = merged.groupby(["establishment_name_fsis", "street_fsis"], as_index=False).first()
 
-    def calculate_sales(row, hq_sales_per_emp, parent_sales_per_emp, overall_median_sales, employee_threshold=500):
-        """TODO: Add more info
+    output_filtered_sales = output[output["sales_here_nets"] > sales_lower_threshold]
+    median_sales_small = output_filtered_sales[output_filtered_sales["size_fsis"] != "Large"][
+        "sales_here_nets"
+    ].median()
+    median_sales_large = output_filtered_sales[output_filtered_sales["size_fsis"] == "Large"][
+        "sales_here_nets"
+    ].median()
+    median_sales_large_by_corp = (
+        output_filtered_sales[output_filtered_sales["size_fsis"] == "Large"]
+        .groupby("parent_corp_manual")["sales_here_nets"]
+        .median()
+    )
 
-        FSIS large plants have minimum of 500 employees
-        TODO: Puerto Rico plant is smaller...how to handle?
-        """
-        # If employees are larger than threshold, use NETS sales data
-        if row["EmpHere"] > employee_threshold:
-            row["display_sales"] = row["sales_here_nets"]
-        # Otherwise, assume 500 employees and use average sales for parent corporation
-        else:
-            hq_company_nets = row["hq_company_nets"]
-            parent_corp_manual = row["parent_corp_manual"]
-            if hq_company_nets in hq_sales_per_emp and hq_company_nets != "DLISTED":
-                sales_per_emp = hq_sales_per_emp[hq_company_nets]
+    def calculate_sales(
+        row,
+        median_sales_large_by_corp,
+        median_sales_large,
+        median_sales_small,
+        sales_lower_threshold=sales_lower_threshold,
+    ):
+        """FSIS large plants have minimum of 500 employees"""
+        if row["size_fsis"] == "Large":
+            if row["sales_here_nets"] < sales_lower_threshold:
+                # Get the median sales for the parent corp, or default to median_sales_large if not found
+                parent_corp_sales = median_sales_large_by_corp.get(row["parent_corp_manual"], median_sales_large)
+                row["display_sales"] = parent_corp_sales
             else:
-                sales_per_emp = parent_sales_per_emp[parent_corp_manual]
-            # TODO: Add a threshold here...if it's more than...something then use the overall median sales?
-            row["display_sales"] = employee_threshold * sales_per_emp
-
-        # Handle missing sales data
-        if pd.isna(row["display_sales"]):
-            row["display_sales"] = overall_median_sales  # TODO: Is this ok?
+                row["display_sales"] = row["sales_here_nets"]
+        elif row["size_fsis"] == "Small":
+            row["display_sales"] = median_sales_small
+        else:
+            row["display_sales"] = row["sales_here_nets"]
         return row
 
-    overall_median_sales = output["sales_here_nets"].median()
-
+    output["sales_here_nets"] = output["sales_here_nets"].fillna(0)
     # Calculate display sales data
     output = output.apply(
-        lambda row: calculate_sales(row, hq_sales_per_emp, parent_sales_per_emp, overall_median_sales), axis=1
+        lambda row: calculate_sales(row, median_sales_large_by_corp, median_sales_large, median_sales_small), axis=1
     )
 
     # Save unmatched plants separately for review
