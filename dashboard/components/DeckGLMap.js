@@ -1,18 +1,19 @@
 "use client";
-// app.js
 import React from "react";
 
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer } from "deck.gl";
 import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import { Map, ScaleControl } from "react-map-gl";
-
-// TODO: fix the imports here so they make sense - should I use @/lib/state??
-import { state } from "../lib/state";
+import { Map, ScaleControl, NavigationControl } from "react-map-gl";
+import { tooltipState } from "@/lib/state";
 import { useMapData } from "@/lib/useMapData";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+const deepClone = (obj) => {
+  return JSON.parse(JSON.stringify(obj));
+};
 
 const plantColorPalette = {
   "One Integrator": [251, 128, 114, 150],
@@ -32,7 +33,6 @@ export function DeckGLMap() {
   const {
     isDataLoaded,
     stateMapSettings,
-    timestamp,
     filteredBarns,
     filteredIsochrones,
     allPlants,
@@ -48,9 +48,9 @@ export function DeckGLMap() {
 
     pickable: true,
     onHover: ({ x, y, object }) => {
-      state.map.x = x;
-      state.map.y = y;
-      state.map.hoveredObject = object;
+      tooltipState.x = x;
+      tooltipState.y = y;
+      tooltipState.hoveredObject = object;
     },
 
     getFillColor: function (dataRow) {
@@ -104,9 +104,9 @@ export function DeckGLMap() {
     pickable: true,
     // TODO: tooltip should probably be split out for performance eventually
     onHover: ({ x, y, object }) => {
-      state.map.x = x;
-      state.map.y = y;
-      state.map.hoveredObject = object;
+      tooltipState.x = x;
+      tooltipState.y = y;
+      tooltipState.hoveredObject = object;
     },
   });
 
@@ -125,9 +125,9 @@ export function DeckGLMap() {
     getRadius: (d) => 100,
     getFillColor: [0, 0, 0, 0],
     onHover: ({ x, y, object }) => {
-      state.map.x = x;
-      state.map.y = y;
-      state.map.hoveredObject = object;
+      tooltipState.x = x;
+      tooltipState.y = y;
+      tooltipState.hoveredObject = object;
     },
   });
 
@@ -137,9 +137,12 @@ export function DeckGLMap() {
     displayLayers.push(barnsLayer);
   }
 
+  // Note: Prevents extensibility error with DeckGL
+  const clonedMapSettings = deepClone(stateMapSettings);
+
   const deck = (
     <DeckGL
-      initialViewState={stateMapSettings.mapZoom} // TODO: is there a way to have an initial state and still dynamically update the view?
+      initialViewState={clonedMapSettings.mapZoom} // TODO: is there a way to have an initial state and still dynamically update the view?
       controller={true}
       layers={displayLayers}
       pickingRadius={50} //TODO: This behaves strangely and only works when zoomed out?
@@ -151,9 +154,9 @@ export function DeckGLMap() {
         <ScaleControl unit="imperial" position="top-right" />
       </Map>
 
-      <div id="legend">
+      <div id="legend" className="mb-5 mr-1">
         {Object.entries(plantColorPalette).map(([key, color]) => (
-          <div key={key} className="flex items-center">
+          <div key={key} className="flex items-center pl-2">
             <div
               className="swatch"
               style={{
