@@ -22,41 +22,17 @@ from rafi.utils import save_file
 tqdm.pandas()
 
 # TODO: move to config or constants
-CONFIG_FILENAME = Path(__file__).resolve().parent / "geospatial_filter_config.yaml"
+FILTERS_CONFIG_FILEPATH = Path(__file__).resolve().parent / "config_geo_filters.yaml"
+PIPELINE_CONFIG_FILEPATH = Path(__file__).resolve().parent / "config_pipeline.yaml"
 CITIES_PATH = SHAPEFILE_DIR / "municipalities___states.geoparquet"
-CITIES = {
-    "North Carolina": [
-        "Charlotte",
-        "Raleigh",
-        "Greensboro",
-        "Durham",
-        "Winston-Salem",
-        "Fayetteville",
-        "Cary",
-        "Wilmington",
-        "High Point",
-        "Concord",
-    ],
-    "Mississippi": [
-        "Jackson",
-        "Gulfport",
-        "Southaven",
-        "Biloxi",
-        "Hattiesburg",
-    ],
-    "Arkansas": [
-        "Little Rock",
-        "Fayetteville",
-        "Fort Smith",
-        "Springdale",
-        "Jonesboro",
-        "Rogers",
-        "Conway",
-        "North Little Rock",
-        "Bentonville",
-        "Pine Bluff",
-    ],
-}
+
+
+with Path.open(FILTERS_CONFIG_FILEPATH) as f:
+    filters_config = yaml.safe_load(f)
+
+with Path.open(PIPELINE_CONFIG_FILEPATH) as f:
+    pipeline_config = yaml.safe_load(f)
+    cities_by_state = pipeline_config["cities"]
 
 
 # TODO: This is probably a util also...
@@ -205,14 +181,18 @@ def filter_on_membership(
 
 
 def filter_barns_handler(
-    gdf_barns: gpd.GeoDataFrame, filter_configs: list, data_dir: Path = SHAPEFILE_DIR
+    gdf_barns: gpd.GeoDataFrame,
+    filters_config: list,
+    data_dir: Path = SHAPEFILE_DIR,
+    cities_by_state: dict = cities_by_state,
 ) -> gpd.GeoDataFrame:
     """Apply a series of filters to exclude barns based on various criteria.
 
     Args:
         gdf_barns: GeoDataFrame of barns.
-        filter_configs: List of filter configurations.
+        filters_config: List of filter configurations.
         data_dir: Directory containing shapefiles.
+        cities_by_state: Dictionary of major cities by state to exclude.
 
     Returns:
         Filtered GeoDataFrame of barns.
@@ -222,7 +202,7 @@ def filter_barns_handler(
     print("Excluding barns in major cities...")
     cities_all = gpd.read_parquet(CITIES_PATH)
     matches = []
-    for state, cities in CITIES.items():
+    for state, cities in cities_by_state.items():
         for city in cities:
             match = cities_all[
                 cities_all["name"].str.contains(city, case=False, na=False)
@@ -238,26 +218,26 @@ def filter_barns_handler(
     )
 
     # Apply all other filters from config
-    gdf_barns = apply_filters(gdf_barns, filter_configs, data_dir)
+    gdf_barns = apply_filters(gdf_barns, filters_config, data_dir)
 
     print(f"There are {len(gdf_barns[gdf_barns.exclude == 0])} barns remaining")
     return gdf_barns
 
 
 def apply_filters(
-    gdf: gpd.GeoDataFrame, filter_configs: list, shapefile_dir: Path = SHAPEFILE_DIR
+    gdf: gpd.GeoDataFrame, filters_config: list, shapefile_dir: Path = SHAPEFILE_DIR
 ) -> gpd.GeoDataFrame:
     """Apply a series of spatial filters to a GeoDataFrame.
 
     Args:
         gdf: Input GeoDataFrame.
-        filter_configs: List of filter configurations.
+        filters_config: List of filter configurations.
         shapefile_dir: Directory containing shapefiles.
 
     Returns:
         Filtered GeoDataFrame.
     """
-    for config in filter_configs:
+    for config in filters_config:
         description = config["description"]
         exclude_gdf_path = shapefile_dir / config["filename"]
         buffer = config.get("buffer", 0)
@@ -393,14 +373,14 @@ def filter_barns(
 
     print(f"Barns before filtering on shapefiles: {len(gdf_barns)}")
 
-    with Path.open(CONFIG_FILENAME) as f:
-        filter_configs = yaml.safe_load(f)
+    with Path.open(FILTERS_CONFIG_FILEPATH) as f:
+        filters_config = yaml.safe_load(f)
 
-    filter_configs = filter_configs["filters"]
+    filters = filters_config["filters"]
 
     # Note: Option for skipping geospatial filtering on barns for faster runs
     if filter_barns:
-        gdf_barns = filter_barns_handler(gdf_barns, filter_configs, shapefile_dir)
+        gdf_barns = filter_barns_handler(gdf_barns, filters, shapefile_dir)
 
     # TODO: Maybe put this in a config
     OUTPUT_COLS = [

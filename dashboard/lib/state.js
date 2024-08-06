@@ -7,6 +7,7 @@ import { derive } from "valtio/utils";
 export const staticDataStore = {
   allPlants: [],
   allBarns: [],
+  allBarnCounts: [],
   allSales: [],
   allIsochrones: [],
   allStates: [],
@@ -15,15 +16,20 @@ export const staticDataStore = {
 export const filteredDataStore = {
   filteredPlants: [],
   filteredBarns: [],
+  filteredBarnPercents: {},
   filteredSales: [],
   filteredIsochrones: [],
 
-  // TODO: These names are confusing
-  percentCapturedBarns: [], // Refers to the percentage of area with access to integrators
-  totalCapturedBarns: [],
   totalSales: 0,
   HHI: 0,
 };
+
+// Note: Separate tooltip state from the main state to avoid re-renders
+export const tooltipState = proxy({
+  x: undefined,
+  y: undefined,
+  hoveredObject: undefined,
+});
 
 export const state = proxy({
   data: {
@@ -32,11 +38,6 @@ export const state = proxy({
   },
 
   map: {
-    // cursor state
-    x: undefined,
-    y: undefined,
-    hoveredObject: undefined,
-
     // display options
     displayFarms: false,
 
@@ -63,11 +64,36 @@ function updateFilteredIsochrones(states) {
 }
 
 function updateFilteredBarns(states) {
-  // TODO: Do we need to actually do this? Should we change the barns data so it comes in with the state already?
-  // const stateabbrevs = states.map((state) => state2abb[state]);
   filteredDataStore.filteredBarns = staticDataStore.allBarns.features.filter(
     (row) => states.includes(row.properties.state)
   );
+}
+
+function updateFilteredBarnPercents(states) {
+  let filteredBarnCounts = {
+    Total: 0,
+    1: 0,
+    2: 0,
+    3: 0,
+  };
+  Object.keys(staticDataStore.allBarnCounts)
+    .filter((state) => states.includes(state))
+    .forEach((state) => {
+      const barns = staticDataStore.allBarnCounts[state];
+      filteredBarnCounts["Total"] += barns.totalBarns;
+      filteredBarnCounts[1] += barns.plantAccessCounts[1];
+      filteredBarnCounts[2] += barns.plantAccessCounts[2];
+      filteredBarnCounts[3] += barns.plantAccessCounts[3];
+    }, {});
+
+  let filteredBarnPercents = {};
+  Object.keys(filteredBarnCounts).forEach((key) => {
+    if (key != "Total") {
+      filteredBarnPercents[key] =
+        filteredBarnCounts[key] / filteredBarnCounts["Total"];
+    }
+  });
+  filteredDataStore.filteredBarnPercents = filteredBarnPercents;
 }
 
 function updateFilteredSales(states) {
@@ -102,55 +128,8 @@ function updateFilteredSales(states) {
   filteredDataStore.totalSales = totalSales;
 }
 
-function calculateCapturedBarns() {
-  const counts = {
-    totalFarms: 0,
-    totalCapturedBarns: 0,
-    plantAccessCounts: {
-      0: 0, // '0' represents NaN or no access
-      1: 0,
-      2: 0,
-      3: 0,
-    },
-  };
-
-  // TODO: filteredBarns and allBarns should be the same format...decide if they should be a list or a geojson
-  filteredDataStore.filteredBarns.reduce((accumulator, feature) => {
-    const plantAccess =
-      feature.properties.integrator_access === 4
-        ? 3
-        : feature.properties.integrator_access || 0; // convert 4 to 3, default to 0 if null
-    accumulator.totalFarms += 1;
-    // Only count farms in captive draw areas
-    if (plantAccess != 0) {
-      accumulator.totalCapturedBarns += 1;
-    }
-    accumulator.plantAccessCounts[plantAccess] += 1;
-    return accumulator;
-  }, counts);
-
-  let percentCapturedBarns = {};
-  Object.keys(counts.plantAccessCounts).forEach((key) => {
-    if (key != "0") {
-      percentCapturedBarns[key] =
-        counts.plantAccessCounts[key] / counts.totalCapturedBarns;
-    }
-  });
-
-  filteredDataStore.totalCapturedBarns = counts.totalCapturedBarns;
-  filteredDataStore.percentCapturedBarns = percentCapturedBarns;
-}
-
 function calculateHHI() {
-  // TODO: should probably make total sales part of the state
-  // calculate total sales in selected area
   if (Object.keys(filteredDataStore.filteredSales).length) {
-    // let totalSales = Object.values(filteredDataStore.filteredSales).reduce(
-    //   (acc, item) => acc + item.sales,
-    //   0
-    // );
-
-    // calculate HHI
     return Object.values(filteredDataStore.filteredSales).reduce(
       (acc, item) =>
         acc + Math.pow((item.sales * 100) / filteredDataStore.totalSales, 2),
@@ -206,19 +185,19 @@ function updateMapZoom(filteredStates) {
   };
 }
 
-// export const updateFilteredData = async (stateData) => {
 export function updateFilteredData(stateData) {
   if (!stateData?.isDataLoaded) {
     return;
   }
+
+  // TODO: What's the right way to do this? Should these return things or update in place?
   updateFilteredPlants(stateData.selectedStates);
   updateFilteredIsochrones(stateData.selectedStates);
   updateFilteredSales(stateData.selectedStates);
   updateFilteredBarns(stateData.selectedStates);
+  updateFilteredBarnPercents(stateData.selectedStates);
   updateMapZoom(stateData.selectedStates);
 
-  // TODO: What's the right way to do this? Should these return things or update in place?
-  calculateCapturedBarns();
   filteredDataStore.HHI = calculateHHI();
 
   return performance.now();
