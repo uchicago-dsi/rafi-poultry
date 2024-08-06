@@ -3,7 +3,6 @@ import pako from "pako";
 import { state, staticDataStore, updateFilteredData } from "../lib/state";
 
 const ISOCHRONES = "../data/v2/isochrones.geojson.gz";
-const BARNS = "../data/v2/barns.geojson.gz";
 
 const fetchData = async (url) => {
   const response = await fetch(url);
@@ -21,12 +20,14 @@ const fetchGzip = async (url) => {
 
 export const updateStaticDataStore = async () => {
   try {
-    const [rawPlants, rawBarns, rawIsochrones, rawSales] = await Promise.all([
-      fetchData("/api/plants/plants"),
-      fetchGzip(BARNS),
-      fetchGzip(ISOCHRONES),
-      fetchData("/api/plants/sales"),
-    ]);
+    const [rawPlants, allBarns, allBarnCounts, rawIsochrones, rawSales] =
+      await Promise.all([
+        fetchData("/api/plants/plants"),
+        fetchData("/api/barns/barns"),
+        fetchData("/api/barns/counts"),
+        fetchGzip(ISOCHRONES),
+        fetchData("/api/plants/sales"),
+      ]);
 
     staticDataStore.allPlants = rawPlants;
 
@@ -36,26 +37,13 @@ export const updateStaticDataStore = async () => {
       .filter((value, index, array) => array.indexOf(value) === index)
       .sort();
 
-    // Filter barns data to only include farms that are not excluded and have plant access
-    console.log("rawBarns", rawBarns);
-    const processedBarns = {
-      type: "FeatureCollection",
-      features: rawBarns.features.filter(
-        (feature) =>
-          feature.properties.exclude === 0 &&
-          feature.properties.integrator_access !== null
-      ),
-    };
-    staticDataStore.allBarns = processedBarns;
-
-    console.log("processedBarns", processedBarns);
-    console.log("rawSales", rawSales);
+    // Note: barns are processed in API call
+    staticDataStore.allBarns = allBarns;
+    staticDataStore.allBarnCounts = allBarnCounts;
 
     // Sales and isochrones can be used directly from the API call
     staticDataStore.allSales = rawSales;
     staticDataStore.allIsochrones = rawIsochrones;
-
-    console.log("rawIsochrones", rawIsochrones);
   } catch (error) {
     console.error(error);
   }

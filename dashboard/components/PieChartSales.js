@@ -1,62 +1,68 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { useSnapshot } from "valtio";
-
-import { state } from "../lib/state";
+import React, { useMemo } from "react";
+import { useMapData } from "@/lib/useMapData";
 
 import { Pie } from "react-chartjs-2";
 import { Chart, ArcElement, Legend, Tooltip } from "chart.js";
 Chart.register(ArcElement, Legend, Tooltip);
 
 export default function PieChart() {
-  const snapshot = useSnapshot(state.data);
+  const { isDataLoaded, filteredSales } = useMapData();
 
   const { cleanedChartData, cleanedChartLabels } = useMemo(() => {
-    if (!snapshot.isDataLoaded) {
+    if (!isDataLoaded) {
       return {
         cleanedChartData: [],
         cleanedChartLabels: [],
       };
     }
 
-    const data = Object.entries(snapshot.filteredSales);
-    const top4 = data.slice(0, 3);
-    const labels = top4.map(([key, value]) => key);
-    const values = top4.map(([key, value]) => value.percent * 100);
+    const data = Object.entries(filteredSales);
+    const { labels, values } = data.slice(0, 4).reduce(
+      (acc, [key, value]) => {
+        acc.labels.push(key);
+        acc.values.push(value.percent * 100);
+        return acc;
+      },
+      { labels: [], values: [] }
+    );
 
-    const remaining = data
-      .slice(3)
-      .map(([key, value]) => value.percent)
-      .reduce((a, b) => a + b, 0);
+    const remaining =
+      data
+        .slice(4)
+        .map(([key, value]) => value.percent)
+        .reduce((a, b) => a + b, 0) * 100;
 
     return {
       cleanedChartData: [...values, remaining],
       cleanedChartLabels: [...labels, "Other"],
     };
-  }, [snapshot.filteredSales]);
+  }, [isDataLoaded, filteredSales]);
 
-  if (!snapshot.isDataLoaded) {
+  if (!isDataLoaded) {
     return "";
   }
 
   const chartData = {
     labels: cleanedChartLabels,
-    // TODO: need to standardize the colors used
     datasets: [
       {
         data: cleanedChartData,
         backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-          // Add more colors as needed
+          "rgba(255, 99, 132, 0.6)", // red
+          "rgba(54, 162, 235, 0.6)", // blue
+          "rgba(255, 206, 86, 0.6)", // yellow
+          "rgba(75, 192, 192, 0.6)", // teal
+          "rgba(153, 102, 255, 0.6)", // purple
         ],
       },
     ],
   };
 
-  return snapshot.filteredCaptureAreas.length ? (
+  // console.log("filteredSales", filteredSales);
+  // console.log("chartData", chartData);
+
+  return Object.keys(filteredSales).length ? (
     <Pie
       data={chartData}
       options={{

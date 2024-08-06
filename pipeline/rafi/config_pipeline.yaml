@@ -1,0 +1,368 @@
+cities:
+  Alabama:
+    - Huntsville
+    - Birmingham
+    - Montgomery
+    - Mobile
+    - Tuscaloosa
+    - Hoover
+    - Auburn
+    - Dothan
+    - Madison
+    - Decatur
+  Arkansas:
+    - Little Rock
+    - Fayetteville
+    - Fort Smith
+    - Springdale
+    - Jonesboro
+    - Rogers
+    - Conway
+    - North Little Rock
+    - Bentonville
+  California:
+    - Los Angeles
+    - San Diego
+    - San Jose
+    - San Francisco
+    - Fresno
+    - Sacramento
+    - Long Beach
+    - Oakland
+    - Bakersfield
+    - Anaheim
+  Delaware:
+    - Wilmington
+    - Dover
+    - Newark
+  Florida:
+    - Jacksonville
+    - Miami
+    - Tampa
+    - Orlando
+    - St. Petersburg
+    - Port St. Lucie
+    - Hialeah
+    - Tallahassee
+    - Fort Lauderdale
+    - Cape Coral
+  Georgia:
+    - Atlanta
+    - Augusta
+    - Columbus
+    - Macon
+    - Savannah
+    - Athens
+    - South Fulton
+    - Sandy Springs
+    - Roswell
+    - Warner Robins
+    - Johns Creek
+    - Albany
+  Iowa:
+    - Des Moines
+    - Cedar Rapids
+    - Davenport
+    - Sioux City
+    - Ankeny
+    - Iowa City
+    - West Des Moines
+    - Waterloo
+    - Council Bluffs
+    - Ames
+    - Dubuque
+  Indiana:
+    - Indianapolis
+    - Fort Wayne
+    - Evansville
+    - Fishers
+    - South Bend
+    - Carmel
+    - Bloomington
+    - Hammond
+    - Noblesville
+    - Lafayette
+    - Gary
+    - Greenwood
+    - Muncie
+    - Westfield
+    - Kokomo
+    - Anderson
+    - Terra Haute
+  Kentucky:
+    - Louisville
+    - Lexington
+    - Bowling Green
+    - Owensboro
+    - Covington
+  Louisiana:
+    - New Orleans
+    - Baton Rouge
+    - Shreveport
+    - Metairie
+    - Lafayette
+    - Lake Charles
+    - Kenner
+    - Bossier City
+    - Monroe
+    - Alexandria
+  Maryland:
+    - Baltimore
+    - Columbia
+    - Germantown
+    - Frederick
+    - Waldorf
+    - Silver Spring
+    - Ellicott City
+    - Glen Burnie
+    - Gaithersburg
+    - Rockville
+    - Bethesda
+    - Dundalk
+    - Severn
+    - Towson
+    - Bel Air South
+    - Bowie
+    - Aspen Hill
+    - Wheaton
+  Minnesota:
+    - Minneapolis
+    - St. Paul
+    - Rochester
+    - Duluth
+    - Bloomington
+    - Woodbury
+    - Brooklyn Park
+    - Lakeville
+    - Plymouth
+    - Blaine
+    - Maple Grove
+    - St. Cloud
+    - Eagan
+    - Burnsville
+    - Coon Rapids
+    - Eden Prairie
+    - Apple Valley
+    - Edina
+    - Minnetonka
+  Missouri:
+    - Kansas City
+    - St. Louis
+    - Springfield
+    - Independence
+    - Columbia
+    - Lee's Summit
+    - O'Fallon
+    - St. Joseph
+    - St. Charles
+    - Blue Springs
+    - St. Peters
+    - Joplin
+    - Florissant
+  Mississippi:
+    - Jackson
+    - Gulfport
+    - Southaven
+    - Biloxi
+    - Hattiesburg
+    - Olive Branch
+  North Carolina:
+    - Charlotte
+    - Raleigh
+    - Greensboro
+    - Durham
+    - Winston-Salem
+    - Fayetteville
+    - Cary
+    - Wilmington
+    - High Point
+    - Concord
+    - Asheville
+    - Greenville
+    - Gastonia
+    - Apex
+    - Jacksonville
+    - Huntersville
+    - Chapel Hill
+    - Burlington
+    - Kannapolis
+    - Wake Forst
+    - Mooresville
+    - Rocky Mount
+  Nebraska:
+    - Omaha
+    - Lincoln
+    - Bellevue
+    - Grand Island
+  Ohio:
+    - Columbus
+    - Cleveland
+    - Cincinnati
+    - Toledo
+    - Akron
+    - Dayton
+    - Parma
+    - Canton
+    - Lorain
+    - Hamilton
+    - Youngstown
+    - Springfield
+    - Kettering
+    - Elyria
+    - Middletown
+    - Cuyahoga Falls
+  Oklahoma:
+    - Oklahoma City
+    - Tulsa
+    - Norman
+    - Broken Arrow
+    - Lawton
+    - Edmond
+    - Moore
+    - Midwest City
+    - Enid
+    - Stillwater
+    - Owasso
+  Pennsylvania:
+    - Philadelphia
+    - Pittsburgh
+    - Allentown
+    - Erie
+    - Reading
+    - Upper Derby
+    - Scranton
+    - Bethlehem
+    - Lower Merion
+    - Bensalem
+    - Abington
+    - Lancaster
+    - Harrisburg
+    - Lower Paxton
+    - Levittown
+    - Haverford
+  South Carolina:
+    - Columbia
+    - Charleston
+    - North Charleston
+    - Mount Pleasant
+    - Rock Hill
+    - Greenville
+    - Summerville
+    - Goose Creek
+    - Greer
+    - Sumter
+    - Myrtle Beach
+    - Florence
+  Tennessee:
+    - Memphis
+    - Nashville
+    - Knoxville
+    - Chattanooga
+    - Clarksville
+    - Murfreesboro
+    - Franklin
+    - Johnson City
+    - Jackson
+    - Hendersonville
+    - Spring Hill
+    - Smyrna
+    - Kingsport
+    - Bartlett
+    - Gallatin
+    - Collierville
+    - Lebanon
+  Texas:
+    - Houston
+    - San Antonio
+    - Dallas
+    - Fort Worth
+    - Austin
+    - El Paso
+    - Arlington
+    - Corpus Christi
+    - Plano
+    - Lubbock
+    - Laredo
+    - Irving
+    - Garland
+    - Frisco
+    - McKinney
+    - Grand Prairie
+    - Amarillo
+    - Brownsille
+    - Denton
+    - Killeen
+    - McAllen
+    - Mesquite
+    - Waco
+    - Pasadena
+    - Midland
+    - Lewisville
+    - Round Rock
+    - Carrollton
+    - Abilene
+    - Pearland
+    - College Station
+    - The Woodlands
+    - New Braunfels
+    - League City
+    - Richardson
+    - Odessa
+    - Conroe
+    - Allen
+    - Tyler
+    - Beaumont
+    - Sugar Land
+    - Edinburg
+    - Georgetown
+    - Wichita Falls
+  Virginia:
+    - Virginia Beach
+    - Chesapeake
+    - Arlington
+    - Richmond
+    - Norfolk
+    - Newport News
+    - Alexandria
+    - Hampton
+    - Suffolk
+    - Portsmouth
+    - Roanoke
+    - Lynchburg
+    - Dale City
+    - Centreville
+    - Reston
+    - Harrisonburg
+    - McLean
+  Washington:
+    - Seattle
+    - Spokane
+    - Tacoma
+    - Vancouver
+    - Bellevue
+    - Kent
+    - Everett
+    - Spokane Valley
+    - Renton
+    - Yakima
+    - Federal Way
+    - Bellingham
+    - Kirkland
+    - Kennewick
+    - Auburn
+    - Redmond
+    - Pasco
+    - Marysville
+    - South Hill
+    - Richland
+    - Sammamish
+    - Shoreline
+    - Lakewood
+    - Lacey
+    - Olympia
+    - Bothell
+    - Burien
+  West Virginia:
+    - Charleston
+    - Huntington
+    - Morgantown
