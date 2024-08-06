@@ -120,6 +120,70 @@ CORP2PARENT = {
     "Jennie-O": "Jennie-O",
     "Cooper": "Cooper Farms Processing",
 }
+GEOJSON_RENAME_COLS = {
+    "parent_corp_manual": "Parent Corporation",
+    "establishment_name_fsis": "Establishment Name",
+    "street_fsis": "Address",
+    "city_fsis": "City",
+    "state_fsis": "State",
+    "zip_fsis": "Zip",
+    "size_fsis": "Size",
+    "display_sales": "Sales",
+    "EmpHere": "Employees (NETS)",
+    "sales_here_nets": "Sales (NETS)",
+    "sales_per_emp": "Sales Per Employee",
+}
+KEEP_COLS = [
+    "duns_number_fsis",
+    "duns_number_nets",
+    "parent_corp_manual",
+    "establishment_name_fsis",
+    "company_nets",
+    "street_fsis",
+    "address_nets",
+    "city_fsis",
+    "city_nets",
+    "state_fsis",
+    "state_nets",
+    "activities_fsis",
+    "dbas_fsis",
+    "size_fsis",
+    "trade_name_nets",
+    "hq_duns_nets",
+    "hq_company_nets",
+    "sales_here_nets",
+    "EmpHere",
+    "spatial_match",
+    "company_match",
+    "address_match",
+    "alt_name_match",
+    "duns_match",
+    "match_score",
+]
+RENAME_DICT = {
+    # FSIS columns
+    "establishment_name": "establishment_name_fsis",
+    "duns_number": "duns_number_fsis",
+    "street": "street_fsis",
+    "city": "city_fsis",
+    "state": "state_fsis",
+    "zip": "zip_fsis",
+    "activities": "activities_fsis",
+    "dbas": "dbas_fsis",
+    "size": "size_fsis",
+    "latitude": "latitude_fsis",
+    "longitude": "longitude_fsis",
+    # NETS columns
+    "DunsNumber": "duns_number_nets",
+    "Company": "company_nets",
+    "TradeName": "trade_name_nets",
+    "Address": "address_nets",
+    "City": "city_nets",
+    "State": "state_nets",
+    "HQDuns": "hq_duns_nets",
+    "HQCompany": "hq_company_nets",
+    "SalesHere": "sales_here_nets",
+}
 
 
 # TODO: Move to utils?
@@ -128,9 +192,6 @@ def map_to_corporation(name, corp_mapping=CORP2PARENT):
         if key.lower() in name.lower():
             return corp_mapping[key]
     return "Other"
-
-
-# merged["parent_corp_manual"] = merged["establishment_name_fsis"].apply(map_to_corporation)
 
 
 def clean_fsis(
@@ -347,75 +408,13 @@ def fsis_match(
         .fillna(False)
         .sum(axis=1)
     )
-
-    # TODO: Move to config/constants
-    # Column renaming dictionary
-    RENAME_DICT = {
-        # FSIS columns
-        "establishment_name": "establishment_name_fsis",
-        "duns_number": "duns_number_fsis",
-        "street": "street_fsis",
-        "city": "city_fsis",
-        "state": "state_fsis",
-        "zip": "zip_fsis",
-        "activities": "activities_fsis",
-        "dbas": "dbas_fsis",
-        "size": "size_fsis",
-        "latitude": "latitude_fsis",
-        "longitude": "longitude_fsis",
-        # NETS columns
-        "DunsNumber": "duns_number_nets",
-        "Company": "company_nets",
-        "TradeName": "trade_name_nets",
-        "Address": "address_nets",
-        "City": "city_nets",
-        "State": "state_nets",
-        "HQDuns": "hq_duns_nets",
-        "HQCompany": "hq_company_nets",
-        "SalesHere": "sales_here_nets",
-    }
     merged = merged.rename(columns=RENAME_DICT)
-
-    # TODO: Move to config/constants
-    KEEP_COLS = [
-        "duns_number_fsis",
-        "duns_number_nets",
-        "parent_corp_manual",
-        "establishment_name_fsis",
-        "company_nets",
-        "street_fsis",
-        "address_nets",
-        "city_fsis",
-        "city_nets",
-        "state_fsis",
-        "state_nets",
-        "activities_fsis",
-        "dbas_fsis",
-        "size_fsis",
-        "trade_name_nets",
-        "hq_duns_nets",
-        "hq_company_nets",
-        "sales_here_nets",
-        "EmpHere",
-        "spatial_match",
-        "company_match",
-        "address_match",
-        "alt_name_match",
-        "duns_match",
-        "match_score",
-    ]
 
     merged = merged.sort_values(
         by=["establishment_name_fsis", "street_fsis", "match_score", "sales_here_nets"],
         ascending=[True, True, False, False],
     )
-
     merged["sales_per_emp"] = merged["sales_here_nets"] / merged["EmpHere"]
-
-    # Note: HQ is direct NETS data, parent is manual RAFI mapping
-    # TODO: What should we do with Tip Top issue?
-    hq_sales_per_emp = merged.groupby("hq_company_nets")["sales_per_emp"].median()
-    parent_sales_per_emp = merged.groupby("parent_corp_manual")["sales_per_emp"].median()
 
     # Select top match for each plant, handling ties by max sales
     output = merged.groupby(["establishment_name_fsis", "street_fsis"], as_index=False).first()
@@ -467,19 +466,6 @@ def fsis_match(
     output_geojson = output.copy()
     output_geojson["geometry"] = output.apply(lambda row: Point(row["longitude_fsis"], row["latitude_fsis"]), axis=1)
 
-    GEOJSON_RENAME_COLS = {
-        "parent_corp_manual": "Parent Corporation",
-        "establishment_name_fsis": "Establishment Name",
-        "street_fsis": "Address",
-        "city_fsis": "City",
-        "state_fsis": "State",
-        "zip_fsis": "Zip",
-        "size_fsis": "Size",
-        "display_sales": "Sales",
-        "EmpHere": "Employees (NETS)",
-        "sales_here_nets": "Sales (NETS)",
-        "sales_per_emp": "Sales Per Employee",
-    }
     output_geojson = output_geojson.rename(columns=GEOJSON_RENAME_COLS)
 
     GEOJSON_COLS = list(GEOJSON_RENAME_COLS.values()) + ["geometry"]
@@ -487,6 +473,7 @@ def fsis_match(
     # Note: Remove ZIP+4 from ZIP code when present
     output_geojson["Zip"] = output_geojson["Zip"].str.replace(r"-\d{4}$", "", regex=True)
     output_geojson = output_geojson[GEOJSON_COLS]
+    output_geojson = output_geojson.sort_values(by="Parent Corporation")
 
     # TODO: Has to be a better way...
     full_match = merged[KEEP_COLS]
