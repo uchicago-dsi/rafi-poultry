@@ -8,8 +8,8 @@
     position: absolute;
     padding: 4px;
     margin: 8px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
+    color: rgba(0, 0, 0, 0.8);
+    background: #fff;
     max-width: 300px;
     font-size: 10px;
     z-index: 9;
