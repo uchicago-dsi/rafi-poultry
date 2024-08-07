@@ -48,12 +48,12 @@ export default function ControlPanel() {
 
   return (
     <div className="w-full max-w-xs mx-auto flex flex-col h-full">
-      <div>
+      {/* <div>
         <button className="btn btn-sm normal-case" onClick={updateFarmDisplay}>
           Change Farm Display
         </button>
-      </div>
-      <div className="divider m-0"></div>
+      </div> 
+      <div className="divider m-0"></div> */}
       <p className="text-center">Select States</p>
       <div className="flex justify-center mt-3">
         <button
