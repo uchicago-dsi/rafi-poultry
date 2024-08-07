@@ -11,15 +11,14 @@ import Tooltip from "@/components/Tooltip";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/styles.css";
-// import styles from "./page.module.css"; //TODO: unsure about styles import
 
 export default function Home() {
-  // load staticDataStore on page load
+  // Note: load staticDataStore on page load
   useEffect(() => {
     updateStaticDataStore();
   }, []);
 
-  // Handling resizing of container to dynamically update map bounding box
+  // Note: Handling resizing of container to dynamically update map bounding box
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -42,18 +41,23 @@ export default function Home() {
 
   return (
     <div>
-      <main className="flex w-full h-[100vh] relative">
-        <div className="relative w-[666px] h-full" ref={containerRef}>
-          <Tooltip />
-          <DeckGLMap />
-        </div>
-        <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-[75%] overflow-hidden">
-          <ControlPanel />
-        </div>
-        <div className="flex flex-col h-[100vh] w-[334px] overflow-hidden">
-          <SummaryStats />
-        </div>
-      </main>
+      <div className="block lg:hidden">
+        Please use a device that is at least 1000px wide to view
+      </div>
+      <div className="hidden lg:block">
+        <main className="flex w-full h-[100vh] relative">
+          <div className="relative w-[666px] h-full" ref={containerRef}>
+            <Tooltip />
+            <DeckGLMap />
+          </div>
+          <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-[75%] overflow-hidden">
+            <ControlPanel />
+          </div>
+          <div className="flex flex-col h-[100vh] w-[334px] overflow-hidden">
+            <SummaryStats />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
