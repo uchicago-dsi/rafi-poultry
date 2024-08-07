@@ -4,7 +4,7 @@ import PieChart from "@/components/PieChart";
 import PieChartSales from "@/components/PieChartSales";
 
 export function SummaryStats() {
-  const { isDataLoaded, filteredSales, HHI } = useMapData();
+  const { isDataLoaded, filteredSales, HHI, filteredBarns } = useMapData();
 
   if (!isDataLoaded) {
     return "";
@@ -61,7 +61,7 @@ export function SummaryStats() {
           </div>
         </div>
       ) : (
-        <p className="text-center ml-4">No sales data available</p>
+        <p className="text-center ml-4">No data available</p>
       )}
     </div>
   );
