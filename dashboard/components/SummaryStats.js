@@ -24,7 +24,7 @@ export function SummaryStats() {
               </div>
             </div>
           ) : (
-            <p className="text-center ml-4">No barn available</p>
+            <p className="text-center ml-4">No barn data available</p>
           )}
           <div className="m-2">
             <h2 className="text-2xl font-bold text-center">
