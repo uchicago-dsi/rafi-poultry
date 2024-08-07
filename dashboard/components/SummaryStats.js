@@ -11,12 +11,12 @@ export function SummaryStats() {
   }
 
   return (
-    <div className="overflow-y-auto flex flex-row py-2 my-2">
+    <div className="overflow-y-auto flex flex-row py-2 my-2  overflow-x-hidden">
       {filteredSales && Object.keys(filteredSales).length > 0 ? (
-        <div className="p-2">
+        <div className="p-2 w-[334px]">
           {filteredBarns && Object.keys(filteredBarns).length > 0 ? (
             <div>
-              <h2 className="text-center text-xl font-bold">
+              <h2 className="text-center text-xl font-bold px-3">
                 Percentage of Barns in Captured Areas in Selected States
               </h2>
               <div className="flex flex-row justify-center h-[25vh]">
@@ -38,20 +38,22 @@ export function SummaryStats() {
           <div className="flex flex-row justify-center h-[25vh]">
             <PieChartSales />
           </div>
-          <div className="max-h-[50vh] overflow-y-auto">
+          <div className="max-h-[50vh] overflow-y-scroll">
             <table className="table table-sm">
               <thead className="sticky">
                 <tr>
-                  <th>Company</th>
-                  <th>Sales</th>
-                  <th>Percent of Sales</th>
+                  <th className="max-w-xs whitespace-normal">Company</th>
+                  <th className="max-w-xs whitespace-normal">Sales</th>
+                  <th className="max-w-xs whitespace-normal">
+                    Percent of Sales
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(filteredSales).map(([key, item]) => (
                   <tr key={key}>
-                    <td>{key}</td>
-                    <td>
+                    <td className="break-words max-w-xs">{key}</td>
+                    <td className="break-words max-w-xs">
                       {item.sales.toLocaleString("en-US", {
                         style: "currency",
                         currency: "USD",
@@ -63,7 +65,6 @@ export function SummaryStats() {
                 ))}
               </tbody>
             </table>
-            )
           </div>
         </div>
       ) : (

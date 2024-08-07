@@ -43,17 +43,15 @@ export default function Home() {
   return (
     <div>
       <main className="flex w-full h-[100vh] relative">
-        <div className="relative w-2/3 h-full" ref={containerRef}>
+        <div className="relative w-[666px] h-full" ref={containerRef}>
           <Tooltip />
           <DeckGLMap />
         </div>
         <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-[75%] overflow-hidden">
           <ControlPanel />
         </div>
-        <div className="flex flex-col w-1/3 h-[100vh] overflow-hidden">
-          <div>
-            <SummaryStats />
-          </div>
+        <div className="flex flex-col h-[100vh] w-[334px] overflow-hidden">
+          <SummaryStats />
         </div>
       </main>
     </div>
