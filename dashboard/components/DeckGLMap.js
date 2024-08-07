@@ -157,7 +157,8 @@ export function DeckGLMap() {
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
       >
         <ScaleControl unit="imperial" position="top-right" />
-        <FullscreenControl position="top-right" />
+        {/* TODO: This doesn't work since it's "under" the deck component */}
+        {/* <FullscreenControl position="top-right" containerId="report-widget" /> */}
       </Map>
 
       <div id="legend" className="mb-5 mr-1">
