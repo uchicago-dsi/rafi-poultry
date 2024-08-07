@@ -43,9 +43,7 @@ def pipeline(
 
 
 if __name__ == "__main__":
-    RUN_DIR = (
-        CLEAN_DIR / f"full_pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    )
+    RUN_DIR = CLEAN_DIR / f"full_pipeline_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     Path.mkdir(RUN_DIR, exist_ok=True, parents=True)
 
     current_dir = Path(__file__).parent
@@ -104,12 +102,10 @@ if __name__ == "__main__":
     gdf_barns = gpd.read_file(BARNS_PATH)
 
     gdf_fsis, gdf_fsis_isochrones, gdf_isochrones, gdf_barns = pipeline(
-        gdf_fsis, gdf_nets, gdf_barns, SMOKE_TEST
+        gdf_fsis, gdf_nets, gdf_barns, smoke_test=SMOKE_TEST
     )
 
     save_file(gdf_fsis, RUN_DIR / "plants.geojson")
     save_file(gdf_isochrones, RUN_DIR / "isochrones.geojson", gzip_file=True)
-    save_file(
-        gdf_fsis_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip_file=True
-    )
+    save_file(gdf_fsis_isochrones, RUN_DIR / "plants_with_isochrones.geojson", gzip_file=True)
     save_file(gdf_barns, RUN_DIR / "barns.geojson", gzip_file=True)
