@@ -42,18 +42,19 @@ export default function Home() {
   return (
     <div>
       <div className="block lg:hidden">
-        Please use a device that is at least 1000px wide to view
+        Please use a device that is at least 1024 pixels wide to view the
+        poultry dashboard.
       </div>
       <div className="hidden lg:block">
         <main className="flex w-full h-[100vh] relative">
-          <div className="relative w-[666px] h-full" ref={containerRef}>
+          <div className="relative w-[682px] h-full" ref={containerRef}>
             <Tooltip />
             <DeckGLMap />
           </div>
           <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-[75%] overflow-hidden">
             <ControlPanel />
           </div>
-          <div className="flex flex-col h-[100vh] w-[334px] overflow-hidden">
+          <div className="flex flex-col h-[100vh] w-[342px] overflow-hidden">
             <SummaryStats />
           </div>
         </main>
