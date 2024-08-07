@@ -45,7 +45,7 @@ export default function Home() {
         Please use a device that is at least 1024 pixels wide to view the
         poultry dashboard.
       </div>
-      <div className="hidden lg:block">
+      <div className="hidden lg:block" id="report-widget">
         <main className="flex w-full h-[100vh] relative">
           <div className="relative w-[682px] h-full" ref={containerRef}>
             <Tooltip />

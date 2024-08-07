@@ -63,12 +63,12 @@ export default function ControlPanel() {
           {expanded ? "Collapse State Menu" : "Show State Menu"}
         </button>
       </div>
+      <div className="divider m-0"></div>
       <div
         className={`overflow-auto flex-grow px-4 ${
           expanded ? "max-h-[400px]" : "h-0"
         }`}
       >
-        <div className="divider m-0"></div>
         {staticDataStore.allStates.map((option, index) => (
           <label key={index} className="label cursor-pointer py-1">
             <span className="block label-text">{abb2state[option]}</span>
@@ -82,8 +82,8 @@ export default function ControlPanel() {
           </label>
         ))}
       </div>
+      <div className="divider m-0"></div>
       <div className={`${expanded ? "mx-auto" : "h-0"}`}>
-        <div className="divider m-0"></div>
         <div className="join my-2">
           <button
             className="btn join-item btn-sm normal-case"
