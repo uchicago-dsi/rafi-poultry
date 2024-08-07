@@ -14,12 +14,18 @@ export function SummaryStats() {
     <div className="overflow-y-auto flex flex-row py-2 my-2">
       {filteredSales && Object.keys(filteredSales).length > 0 ? (
         <div className="p-2">
-          <h2 className="text-center text-xl font-bold">
-            Percentage of Barns in Captured Areas in Selected States
-          </h2>
-          <div className="flex flex-row justify-center h-[25vh]">
-            <PieChart />
-          </div>
+          {filteredBarns && Object.keys(filteredBarns).length > 0 ? (
+            <div>
+              <h2 className="text-center text-xl font-bold">
+                Percentage of Barns in Captured Areas in Selected States
+              </h2>
+              <div className="flex flex-row justify-center h-[25vh]">
+                <PieChart />
+              </div>
+            </div>
+          ) : (
+            <p className="text-center ml-4">No barn available</p>
+          )}
           <div className="m-2">
             <h2 className="text-2xl font-bold text-center">
               HHI for Selected States
