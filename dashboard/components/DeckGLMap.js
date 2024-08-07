@@ -4,7 +4,12 @@ import React from "react";
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer } from "deck.gl";
 import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import { Map, ScaleControl, NavigationControl } from "react-map-gl";
+import {
+  Map,
+  ScaleControl,
+  NavigationControl,
+  FullscreenControl,
+} from "react-map-gl";
 import { tooltipState } from "@/lib/state";
 import { useMapData } from "@/lib/useMapData";
 
@@ -142,16 +147,17 @@ export function DeckGLMap() {
 
   const deck = (
     <DeckGL
-      initialViewState={clonedMapSettings.mapZoom} // TODO: is there a way to have an initial state and still dynamically update the view?
+      initialViewState={clonedMapSettings.mapZoom}
       controller={true}
       layers={displayLayers}
-      pickingRadius={50} //TODO: This behaves strangely and only works when zoomed out?
+      pickingRadius={50}
     >
       <Map
         mapStyle="mapbox://styles/mapbox/satellite-v9"
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
       >
         <ScaleControl unit="imperial" position="top-right" />
+        <FullscreenControl position="top-right" />
       </Map>
 
       <div id="legend" className="mb-5 mr-1">
