@@ -11,9 +11,9 @@ export function SummaryStats() {
   }
 
   return (
-    <div className="overflow-y-auto flex flex-row py-2 my-2  overflow-x-hidden">
+    <div className="overflow-y-scroll overflow-x-hidden flex flex-row py-2 my-2">
       {filteredSales && Object.keys(filteredSales).length > 0 ? (
-        <div className="p-2 w-[334px]">
+        <div className="p-2 w-[342px]">
           {filteredBarns && Object.keys(filteredBarns).length > 0 ? (
             <div>
               <h2 className="text-center text-xl font-bold px-3">
@@ -38,7 +38,7 @@ export function SummaryStats() {
           <div className="flex flex-row justify-center h-[25vh]">
             <PieChartSales />
           </div>
-          <div className="max-h-[50vh] overflow-y-scroll">
+          <div className="max-h-[50vh]">
             <table className="table table-sm">
               <thead className="sticky">
                 <tr>
