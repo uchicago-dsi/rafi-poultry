@@ -440,15 +440,13 @@ def fsis_match(
         sales_lower_threshold=sales_lower_threshold,
     ):
         """FSIS large plants have minimum of 500 employees"""
-        if row["size_fsis"] == "Large":
-            if row["sales_here_nets"] < sales_lower_threshold:
+        if row["sales_here_nets"] < sales_lower_threshold:
+            if row["size_fsis"] == "Large":
                 # Get the median sales for the parent corp, or default to median_sales_large if not found
                 parent_corp_sales = median_sales_large_by_corp.get(row["parent_corp_manual"], median_sales_large)
                 row["display_sales"] = parent_corp_sales
-            else:
-                row["display_sales"] = row["sales_here_nets"]
-        elif row["size_fsis"] == "Small":
-            row["display_sales"] = median_sales_small
+            elif row["size_fsis"] == "Small":
+                row["display_sales"] = median_sales_small
         else:
             row["display_sales"] = row["sales_here_nets"]
         return row
