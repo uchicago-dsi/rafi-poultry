@@ -158,7 +158,7 @@ export function DeckGLMap() {
       >
         <ScaleControl unit="imperial" position="top-right" />
         {/* TODO: This doesn't work since it's "under" the deck component */}
-        {/* <FullscreenControl position="top-right" containerId="report-widget" /> */}
+        <FullscreenControl position="top-right" containerId="report-widget" />
       </Map>
 
       <div id="legend" className="mb-5 mr-1">
