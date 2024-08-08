@@ -55,7 +55,7 @@ export default function ControlPanel() {
       </div> 
       <div className="divider m-0"></div> */}
       <p className="text-center">Select States</p>
-      <div className="flex justify-center mt-3">
+      <div className="flex justify-center mt-3 mb-1">
         <button
           className="btn btn-sm normal-case"
           onClick={() => setExpanded((e) => !e)}
@@ -63,7 +63,7 @@ export default function ControlPanel() {
           {expanded ? "Collapse State Menu" : "Show State Menu"}
         </button>
       </div>
-      <div className="divider m-0"></div>
+      <div className={`${expanded ? "divider m-0" : "h-0"}`}></div>
       <div
         className={`overflow-auto flex-grow px-4 ${
           expanded ? "max-h-[400px]" : "h-0"
@@ -82,7 +82,7 @@ export default function ControlPanel() {
           </label>
         ))}
       </div>
-      <div className="divider m-0"></div>
+      <div className={`${expanded ? "divider m-0" : "h-0"}`}></div>
       <div className={`${expanded ? "mx-auto" : "h-0"}`}>
         <div className="join my-2">
           <button
