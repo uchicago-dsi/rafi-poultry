@@ -445,7 +445,7 @@ def fsis_match(
                 # Get the median sales for the parent corp, or default to median_sales_large if not found
                 parent_corp_sales = median_sales_large_by_corp.get(row["parent_corp_manual"], median_sales_large)
                 row["display_sales"] = parent_corp_sales
-            elif row["size_fsis"] == "Small":
+            else:
                 row["display_sales"] = median_sales_small
         else:
             row["display_sales"] = row["sales_here_nets"]
