@@ -146,16 +146,20 @@ export function DeckGLMap() {
   const clonedMapSettings = deepClone(stateMapSettings);
 
   const deck = (
-    <DeckGL
-      initialViewState={clonedMapSettings.mapZoom}
-      controller={true}
-      layers={displayLayers}
-      pickingRadius={50}
-    >
+    // <DeckGL
+    //   initialViewState={clonedMapSettings.mapZoom}
+    //   controller={true}
+    //   layers={displayLayers}
+    //   pickingRadius={50}
+
+    // >
+    <>
       <Map
+        initialViewState={clonedMapSettings.mapZoom}
         mapStyle="mapbox://styles/mapbox/satellite-v9"
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
       >
+        <DeckGLOverlay layers={displayLayers} interleaved={true} />
         <ScaleControl unit="imperial" position="top-right" />
         {/* TODO: This doesn't work since it's "under" the deck component */}
         <FullscreenControl position="top-right" containerId="report-widget" />
@@ -164,20 +168,30 @@ export function DeckGLMap() {
       <div id="legend" className="mb-5 mr-1">
         {Object.entries(plantColorPalette).map(([key, color]) => (
           <div key={key} className="flex items-center pl-2">
-            <div
-              className="swatch"
-              style={{
-                background: `rgb(${color.slice(0, 3).join(",")},${
-                  color[3] / 255
-                })`,
+          <div
+          className="swatch"
+          style={{
+            background: `rgb(${color.slice(0, 3).join(",")},${
+              color[3] / 255
+              })`,
               }}
-            ></div>
-            <div className="label">{key}</div>
-          </div>
-        ))}
-      </div>
-    </DeckGL>
+              ></div>
+              <div className="label">{key}</div>
+              </div>
+              ))}
+              </div>
+    </>
+    // </DeckGL>
   );
 
   return deck;
+}
+
+import { MapboxOverlay, MapboxOverlayProps } from "@deck.gl/mapbox/typed";
+import { useControl } from "react-map-gl";
+
+export function DeckGLOverlay(props) {
+  const overlay = useControl(() => new MapboxOverlay(props));
+  overlay.setProps(props);
+  return null;
 }
