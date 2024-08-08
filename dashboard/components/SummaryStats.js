@@ -11,7 +11,7 @@ export function SummaryStats() {
   }
 
   return (
-    <div className="overflow-y-scroll overflow-x-hidden flex flex-row py-2 my-2">
+    <div className="overflow-y-scroll overflow-x-hidden flex flex-row pb-2 mb-2">
       {filteredSales && Object.keys(filteredSales).length > 0 ? (
         <div className="p-2 w-[342px]">
           {filteredBarns && Object.keys(filteredBarns).length > 0 ? (
