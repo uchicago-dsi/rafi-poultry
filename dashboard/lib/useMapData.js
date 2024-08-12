@@ -31,13 +31,6 @@ export const useMapData = (mapRef) => {
     };
 
     flyToSelection();
-
-    // handleResize();
-    // window.addEventListener("resize", handleResize);
-
-    // return () => {
-    //   window.removeEventListener("resize", handleResize);
-    // };
   }, [stateMapSettings, mapRef]);
 
   const { timestamp } = useSnapshot(filterTimestampStore);

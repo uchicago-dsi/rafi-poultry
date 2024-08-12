@@ -68,7 +68,7 @@ export function SummaryStats() {
           </div>
         </div>
       ) : (
-        <p className="text-center ml-4">No data available</p>
+        <p className="text-center ml-4 mt-4">No data available</p>
       )}
     </div>
   );
