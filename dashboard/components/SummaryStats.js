@@ -11,7 +11,7 @@ export function SummaryStats() {
   }
 
   return (
-    <div className="overflow-y-scroll overflow-x-hidden flex flex-row pb-2 mb-2">
+    <div className="overflow-y-scroll overflow-x-hidden flex flex-row pb-2 mb-2 bg-white">
       {filteredSales && Object.keys(filteredSales).length > 0 ? (
         <div className="p-2 w-[342px]">
           {filteredBarns && Object.keys(filteredBarns).length > 0 ? (
@@ -38,7 +38,7 @@ export function SummaryStats() {
           <div className="flex flex-row justify-center h-[25vh]">
             <PieChartSales />
           </div>
-          <div className="max-h-[50vh]">
+          <div>
             <table className="table table-sm">
               <thead className="sticky">
                 <tr>
@@ -68,7 +68,7 @@ export function SummaryStats() {
           </div>
         </div>
       ) : (
-        <p className="text-center ml-4">No data available</p>
+        <p className="text-center ml-4 mt-4">No data available</p>
       )}
     </div>
   );

@@ -141,6 +141,10 @@ function calculateHHI() {
 }
 
 function updateMapZoom(filteredStates) {
+  if (!state.map.containerHeight || !state.map.containerWidth) {
+    return;
+  }
+
   // default zoom state is everything (handles the case of no selection)
   var zoomGeoJSON = staticDataStore.allIsochrones.features;
 
@@ -153,6 +157,9 @@ function updateMapZoom(filteredStates) {
     type: "FeatureCollection",
     features: zoomGeoJSON,
   };
+
+  console.log("containerHeight", state.map.containerHeight);
+  console.log("containerWidth", state.map.containerWidth);
 
   const boundingBox = bbox(currentGeojson);
   const fittedViewport = new WebMercatorViewport(

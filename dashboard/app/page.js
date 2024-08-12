@@ -41,21 +41,25 @@ export default function Home() {
 
   return (
     <div>
-      <div className="block lg:hidden">
-        Please use a device that is at least 1024 pixels wide to view the
-        poultry dashboard.
+      <div className="lg:hidden h-[100vh] flex items-center align-center  justify-center">
+        <h3>
+          Please use a device that is at least 1024 pixels wide to view the
+          poultry dashboard.
+        </h3>
       </div>
       <div className="hidden lg:block" id="report-widget">
-        <main className="flex w-full h-[100vh] relative">
-          <div className="relative w-[682px] h-full" ref={containerRef}>
+        <main className="flex w-full h-[100vh] relative bg-white">
+          <div className="relative size-full" ref={containerRef}>
             <Tooltip />
             <DeckGLMap />
           </div>
-          <div className="absolute left-4 top-4 bg-white p-2 max-w-[75%] max-h-[75%] overflow-hidden">
+          <div className="absolute left-4 top-4 p-2 max-w-[75%] max-h-[75%] overflow-hidden bg-white">
             <ControlPanel />
           </div>
-          <div className="flex flex-col h-[100vh] w-[342px] overflow-hidden">
-            <SummaryStats />
+          <div className="flex-none w-[342px] h-full overflow-x-hidden">
+            <div className="flex flex-col">
+              <SummaryStats />
+            </div>
           </div>
         </main>
       </div>

@@ -1,17 +1,11 @@
 "use client";
 import React from "react";
 
-import DeckGL from "@deck.gl/react";
-import { ScatterplotLayer } from "deck.gl";
-import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import {
-  Map,
-  ScaleControl,
-  NavigationControl,
-  FullscreenControl,
-} from "react-map-gl";
 import { tooltipState } from "@/lib/state";
 import { useMapData } from "@/lib/useMapData";
+import { GeoJsonLayer, IconLayer } from "@deck.gl/layers";
+import { ScatterplotLayer } from "deck.gl";
+import Map, { FullscreenControl, ScaleControl } from "react-map-gl";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -35,13 +29,15 @@ const markerPalette = {
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
 export function DeckGLMap() {
+  const mapRef = React.useRef(null);
+
   const {
     isDataLoaded,
     stateMapSettings,
     filteredBarns,
     filteredIsochrones,
     allPlants,
-  } = useMapData();
+  } = useMapData(mapRef);
 
   // Don't render the component until the data is loaded
   if (!isDataLoaded) {
@@ -146,16 +142,21 @@ export function DeckGLMap() {
   const clonedMapSettings = deepClone(stateMapSettings);
 
   const deck = (
-    <DeckGL
-      initialViewState={clonedMapSettings.mapZoom}
-      controller={true}
-      layers={displayLayers}
-      pickingRadius={50}
-    >
+    // <DeckGL
+    //   initialViewState={clonedMapSettings.mapZoom}
+    //   controller={true}
+    //   layers={displayLayers}
+    //   pickingRadius={50}
+
+    // >
+    <>
       <Map
+        initialViewState={clonedMapSettings.mapZoom}
         mapStyle="mapbox://styles/mapbox/satellite-v9"
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
+        ref={mapRef}
       >
+        <DeckGLOverlay layers={displayLayers} interleaved={true} />
         <ScaleControl unit="imperial" position="top-right" />
         {/* TODO: This doesn't work since it's "under" the deck component */}
         <FullscreenControl position="top-right" containerId="report-widget" />
@@ -176,8 +177,18 @@ export function DeckGLMap() {
           </div>
         ))}
       </div>
-    </DeckGL>
+    </>
+    // </DeckGL>
   );
 
   return deck;
+}
+
+import { MapboxOverlay } from "@deck.gl/mapbox/typed";
+import { useControl } from "react-map-gl";
+
+export function DeckGLOverlay(props) {
+  const overlay = useControl(() => new MapboxOverlay(props));
+  overlay.setProps(props);
+  return null;
 }
