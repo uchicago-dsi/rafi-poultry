@@ -27,15 +27,23 @@ export default function PieChart() {
       { labels: [], values: [] }
     );
 
-    const remaining =
-      data
-        .slice(4)
-        .map(([key, value]) => value.percent)
-        .reduce((a, b) => a + b, 0) * 100;
+    let cleanedChartData = values;
+    let cleanedChartLabels = labels;
+
+    if (data.length > 4) {
+      const remaining =
+        data
+          .slice(4)
+          .map(([key, value]) => value.percent)
+          .reduce((a, b) => a + b, 0) * 100;
+
+      cleanedChartData = [...values, remaining];
+      cleanedChartLabels = [...labels, "Other"];
+    }
 
     return {
-      cleanedChartData: [...values, remaining],
-      cleanedChartLabels: [...labels, "Other"],
+      cleanedChartData,
+      cleanedChartLabels,
     };
   }, [isDataLoaded, filteredSales]);
 
