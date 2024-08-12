@@ -38,7 +38,7 @@ export function SummaryStats() {
           <div className="flex flex-row justify-center h-[25vh]">
             <PieChartSales />
           </div>
-          <div className="max-h-[50vh]">
+          <div>
             <table className="table table-sm">
               <thead className="sticky">
                 <tr>
