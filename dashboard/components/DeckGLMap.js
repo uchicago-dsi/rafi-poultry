@@ -1,17 +1,11 @@
 "use client";
 import React from "react";
 
-import DeckGL from "@deck.gl/react";
-import { ScatterplotLayer } from "deck.gl";
-import { IconLayer, GeoJsonLayer } from "@deck.gl/layers";
-import {
-  Map,
-  ScaleControl,
-  NavigationControl,
-  FullscreenControl,
-} from "react-map-gl";
 import { tooltipState } from "@/lib/state";
 import { useMapData } from "@/lib/useMapData";
+import { GeoJsonLayer, IconLayer } from "@deck.gl/layers";
+import { ScatterplotLayer } from "deck.gl";
+import Map, { FullscreenControl, ScaleControl } from "react-map-gl";
 
 // TODO: Is it ok load this client side? Seems like maybe it is for Mapbox?
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -35,13 +29,15 @@ const markerPalette = {
 const colorPalette = Object.assign({}, plantColorPalette, markerPalette);
 
 export function DeckGLMap() {
+  const mapRef = React.useRef(null);
+
   const {
     isDataLoaded,
     stateMapSettings,
     filteredBarns,
     filteredIsochrones,
     allPlants,
-  } = useMapData();
+  } = useMapData(mapRef);
 
   // Don't render the component until the data is loaded
   if (!isDataLoaded) {
@@ -158,6 +154,7 @@ export function DeckGLMap() {
         initialViewState={clonedMapSettings.mapZoom}
         mapStyle="mapbox://styles/mapbox/satellite-v9"
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
+        ref={mapRef}
       >
         <DeckGLOverlay layers={displayLayers} interleaved={true} />
         <ScaleControl unit="imperial" position="top-right" />
@@ -168,18 +165,18 @@ export function DeckGLMap() {
       <div id="legend" className="mb-5 mr-1">
         {Object.entries(plantColorPalette).map(([key, color]) => (
           <div key={key} className="flex items-center pl-2">
-          <div
-          className="swatch"
-          style={{
-            background: `rgb(${color.slice(0, 3).join(",")},${
-              color[3] / 255
-              })`,
+            <div
+              className="swatch"
+              style={{
+                background: `rgb(${color.slice(0, 3).join(",")},${
+                  color[3] / 255
+                })`,
               }}
-              ></div>
-              <div className="label">{key}</div>
-              </div>
-              ))}
-              </div>
+            ></div>
+            <div className="label">{key}</div>
+          </div>
+        ))}
+      </div>
     </>
     // </DeckGL>
   );
@@ -187,7 +184,7 @@ export function DeckGLMap() {
   return deck;
 }
 
-import { MapboxOverlay, MapboxOverlayProps } from "@deck.gl/mapbox/typed";
+import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 import { useControl } from "react-map-gl";
 
 export function DeckGLOverlay(props) {
