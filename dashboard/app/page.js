@@ -41,9 +41,11 @@ export default function Home() {
 
   return (
     <div>
-      <div className="block lg:hidden p-3">
-        Please use a device that is at least 1024 pixels wide to view the
-        poultry dashboard.
+      <div className="lg:hidden h-[100vh] flex items-center align-center  justify-center">
+        <h3>
+          Please use a device that is at least 1024 pixels wide to view the
+          poultry dashboard.
+        </h3>
       </div>
       <div className="hidden lg:block" id="report-widget">
         <main className="flex w-full h-[100vh] relative bg-white">
