@@ -78,7 +78,6 @@ export function DeckGLMap() {
       marker: { x: 0, y: 0, width: 128, height: 128, mask: true },
     },
 
-    // TODO: Make farms less chaotic
     getIcon: (d) => "marker",
     getPosition: (d) => d.geometry.coordinates,
     getSize: (d) => 10,
@@ -103,7 +102,6 @@ export function DeckGLMap() {
     getTooltip: (d) => `Address: ${d.properties["Address"]}`,
 
     pickable: true,
-    // TODO: tooltip should probably be split out for performance eventually
     onHover: ({ x, y, object }) => {
       tooltipState.x = x;
       tooltipState.y = y;
@@ -116,7 +114,6 @@ export function DeckGLMap() {
     // TODO: we should always display all plants — need to update
     data: allPlants.features,
     pickable: true,
-    // stroked: true,
     filled: true, // will be filled with empty
     radiusScale: 6,
     radiusMinPixels: 15, // should be about the same size as the marker
@@ -142,23 +139,17 @@ export function DeckGLMap() {
   const clonedMapSettings = deepClone(stateMapSettings);
 
   const deck = (
-    // <DeckGL
-    //   initialViewState={clonedMapSettings.mapZoom}
-    //   controller={true}
-    //   layers={displayLayers}
-    //   pickingRadius={50}
-
-    // >
     <>
       <Map
         initialViewState={clonedMapSettings.mapZoom}
         mapStyle="mapbox://styles/mapbox/satellite-v9"
+        // TODO: the isochrones don't show up here?
+        // mapStyle="mapbox://styles/toddnief/clzribj7o00hq01pc7u8bdxuc"
         mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
         ref={mapRef}
       >
         <DeckGLOverlay layers={displayLayers} interleaved={true} />
         <ScaleControl unit="imperial" position="top-right" />
-        {/* TODO: This doesn't work since it's "under" the deck component */}
         <FullscreenControl position="top-right" containerId="report-widget" />
       </Map>
 
@@ -178,7 +169,6 @@ export function DeckGLMap() {
         ))}
       </div>
     </>
-    // </DeckGL>
   );
 
   return deck;
