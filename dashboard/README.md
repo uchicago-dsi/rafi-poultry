@@ -52,6 +52,7 @@ Install packages:
 ```bash
 npm install
 ```
+
 #### Set up Environment Variables for Local Deployment
 The dashboard needs Mapbox credentials and service account credentials for Google Cloud.
 
