@@ -61,7 +61,6 @@ MATCHED_FARMS_FPATH = CLEAN_DIR / "matched_farms.csv"
 UNMATCHED_FARMS_FPATH = CLEAN_DIR / "unmatched_farms.csv"
 CLEANED_MATCHED_PLANTS_FPATH = CLEAN_DIR / "cleaned_matched_plants.csv"
 
-
 # geojsons
 ALL_STATES_GEOJSON_FPATH = CLEAN_DIR / "all_states_with_parent_corp_by_corp.geojson"
 COUNTERGLOW_GEOJSON_FPATH = CLEAN_DIR / "counterglow_geojson.geojson"
