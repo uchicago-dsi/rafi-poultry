@@ -1,42 +1,91 @@
-# RAFI-USA: Concentration in the Meat-Packing Industry
+# RAFI Poultry
+This project, in partnership with [RAFI-USA](https://rafiusa.org/), shows concentration in the poultry packaging industry.
 
-## Context
+The dashboard is displayed on [RAFI's site here](https://www.rafiusa.org/programs/challenging-corporate-power/poultry-barons-map/). Visit the site for more detail on the project and the background — this README will focus on the technical details of the project.
 
-This project is in partnership between the Data Science Institude of University of Chicago and the nonprofit organization RAFI-USA. This repository contains scripts and notebooks for performing cleaning, data analysis, and visualization of various datasets for processing plants, farms, and businesses across the US.
+## Pipeline
+The data pipeline for this project does the following:
+- Joins records from [FSIS inspections](https://www.fsis.usda.gov/inspection/establishments/meat-poultry-and-egg-product-inspection-directory) with historical business data provided by NETS.
+- Calculates 60 mile road distances from each plant in the FSIS records meeting our filtering criteria.
+- Creates GeoJSONs for areas with access to one, two, or three plus poultry integrators.
+- Filters poultry barns identified by a [computer vision model trained by Microsoft](https://github.com/microsoft/poultry-cafos) to reduce the number of false positives.
 
-## Directories
+### Docker
+The pipeline runs in Docker. If you use VS Code, this is set up to run in a [dev container](https://code.visualstudio.com/docs/devcontainers/containers), so build the container the way you normally would. Otherwise, just build the Docker image from the ```Dockerfile``` in the root of the directory.
 
-- Notebooks
-  - Contains Jupyter Notebooks for EDA, visualization, and short analysis.
-- Pipeline
-  - Contains Python scripts to clean, merge, and produce new data that will be served by the dashboard based on datasets.
-  - Utils
-    - A Python package with modules containing analysis and visualization functions that can be imported for use in Jupyter notebooks or Python scripts.
+### Data Files
+Download the following files into the appropriate locations:
+- Example FSIS data is located in the DSI Google Drive (permission required to access): [MPI Directory by Establishment Name](https://drive.google.com/file/d/1A9CQqe-iXdFPXQ19WCKdtMNvZy7ypkym/view?usp=sharing) | [Establishment Demographic Data](https://drive.google.com/file/d/1FFtM-F0FSUgJfe39HgIXJtdRwctkG-q5/view?usp=sharing)
+    - Save both files to ```data/raw/```
+    - You can also download new data from the [FSIS Inspection site](https://www.fsis.usda.gov/inspection/establishments/meat-poultry-and-egg-product-inspection-directory). Just [update the filepaths config file](#using-different-files)
+- NETS data is located in the [DSI Google Drive](https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link) (permission required to access). Download this to ```data/raw/``` and save in a directory called ```nets```
+- Download the raw barns predictions for the entire USA from the [DSI Google Drive](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) (permission required to access) and save to ```data/raw/```
+- Barn filtering shapefiles: Download the files listed in ```pipeline/rafi/config_geo_filters.yaml``` to ```data/shapefiles/```
 
-## Development Dependencies
+### Using Different Files
+If you are using different files (particularly for the FSIS data), just update the filenames in ```pipeline/rafi/config_filepaths.yaml```. Make sure the files are in the expected folder.
 
-- Docker
-- Make
+### API Keys
+The pipeline uses [Mapbox](https://www.mapbox.com/) to calculate driving distances from the plants and expects a Mapbox API key located in a ```.env``` file saved to the root of the directory:
 
-## Setup
+```
+MAPBOX_API=yOuRmApBoXaPiKey
+```
 
-(1) Install [Docker](https://docker-curriculum.com/) if you have not already done so. Windows users
-will have to set up and configure Windows Subsystem for Linux ([WSL2](https://docs.microsoft.com/en-us/windows/wsl/install))
-beforehand.
+### Running the Pipeline
+After all of the files and API keys are in place, run the pipeline:
 
-(2) Install `make` for MacOS or Linux. For example, users with Ubuntu would run `sudo apt update` followed by `sudo apt install make`. Confirm correct installation by running the command `make --version`.
+```
+python pipeline/pipelinve_v2.py
+```
 
-(3) Ensure that Docker is running. Then navigate to the root of the project and run the command `make build` to create a new Docker image.
+Cleaned data files will be output in a run folder in ```data/clean/```. To update the files displayed on the dashboard, follow the instuctions in [Updating the Dashboard Data](#updating-the-dashboard-data)
 
-(4) Make File Commands/Instructions:
+## Dashboard
+This is a [Next.js](https://nextjs.org/) project.
 
-- `make build-pipeline` will build the Docker image for the pipeline scripts
-- `make run-pipeline-bash` will run the Docker container from the pipeline image with interactive terminal
-- `make run-pipeline args="..."` will run the Docker container from the pipeline image using an argument to specify which dataset to use (see ReadMe in pipeline for further explanation)
-  - Inside the args statement (replacing the ...), add the flag:
-    - `--nets` which will run the pipeline with the NETS dataset
-    - `--infogroup` which will run the pipeline with the Infogroup dataset
-    - Note that the main method to use is --nets (In other words, NETS is the preferred dataset)
-      - For example, the full line would be `make run-pipeline args="--nets"`
-- `make build-notebooks` will build the Docker image for the notebooks to be run in Jupyter lab
-- `run-notebooks` will run the Docker container from the notebooks image
+### Running the Dashboard
+To run the dashboard locally (do **not** use the dev container!):
+
+Install packages:
+```bash
+npm install
+```
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Deplying the Dashboard
+The dashboard is deployed via Vercel and is hosted on RAFI's site in an iframe.
+
+Any update to the ```main``` branch of this repo will update the production deployment of the dashboard.
+
+### Updating the Dashboard Data
+If you rerun the pipeline, you need to update data files in both Google Cloud Storage and the files packaged with the Vercel deployment from GitHub.
+
+#### Google Cloud Storage
+The dashboard pulls data from Google Cloud Storage via an API. Upload the following files to the root of the ```rafi-poultry``` storage bucket in the ```rafi-usa``` project in the DSI account:
+- ```barns.geojson.gz```
+- ```plants.geojson```
+
+#### Packaged Files
+The dashboard loads the isochrones files showing captured areas from ```dashboard/public/data/v2/isochrones.geojson.gz```
+
+### Dashboard Structure
+
+#### Data
+The dashboard loads data in ```lib/data.js```. This loads the packaged data and the Google Cloud Storage data via API calls.
+
+Data is managed in ```lib/state.js``` and ```lib/useMapData.js```
+
+Both the NETS data and farmer locations are sensitive, so those data files are processed behind api routes located in ```api/```.
+
+#### Components
+The dashboard consists primarily of a map component and a summary stats component.
+
+The map logic lives in ```components/DeckGLMap.js``` and ```components/ControlPanel.js``` and the summary stats logic lives in ```components/SummaryStats.js``` and the sub-components.
