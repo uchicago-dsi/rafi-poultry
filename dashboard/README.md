@@ -45,13 +45,25 @@ Cleaned data files will be output in a run folder in ```data/clean/```. To updat
 This is a [Next.js](https://nextjs.org/) project.
 
 ### Running the Dashboard
-To run the dashboard locally (do **not** use the dev container!):
+To run the dashboard locally, do **not** use the dev container!
 
+#### Install Packages
 Install packages:
 ```bash
 npm install
 ```
 
+#### Set up Environment Variables for Local Deployment
+The dashboard needs Mapbox credentials and service account credentials for Google Cloud.
+
+It expects a ```.env.local``` file in ```dashboard/``` with a Mapbox API key and a [base64-encoded Google service account JSON](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-base64-encode-and-decode-from-command-line/) (with permissions to access Cloud Storage buckets):
+
+```
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=yOuRmApBoXaPiKey
+GOOGLE_APPLICATION_CREDENTIALS_BASE64=<base64-encoded-service-account.json>
+```
+
+#### Running the Server
 Run the development server:
 
 ```bash
