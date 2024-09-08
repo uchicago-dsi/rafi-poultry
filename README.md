@@ -21,6 +21,8 @@ Download the following files into the appropriate locations:
 - NETS data is located in the [DSI Google Drive](https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link) (permission required to access). Download this to ```data/raw/``` and save in a directory called ```nets```
 - Download the raw barns predictions for the entire USA from the [DSI Google Drive](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) (permission required to access) and save to ```data/raw/```
 - Barn filtering shapefiles: Download the files listed in ```pipeline/rafi/config_geo_filters.yaml``` to ```data/shapefiles/```
+    - Download the [municipalities geoparquet](https://drive.google.com/file/d/1ndGuzmbttaTvZ9i7UGVLImluHWkwZbBY/view?usp=sharing) file to ```data/shapefiles/```
+    - Download the [USA shapefile](https://drive.google.com/file/d/1gw_ICPBAFezo20N7GdYDalWHRkc6M_An/view?usp=sharing) to ```data/raw/```
 
 ### Using Different Files
 If you are using different files (particularly for the FSIS data), just update the filenames in ```pipeline/rafi/config_filepaths.yaml```. Make sure the files are in the expected folder.
@@ -41,17 +43,32 @@ python pipeline/pipelinve_v2.py
 
 Cleaned data files will be output in a run folder in ```data/clean/```. To update the files displayed on the dashboard, follow the instuctions in [Updating the Dashboard Data](#updating-the-dashboard-data)
 
+### Pipeline V1
+There is old code in the ```pipeline/pipeline_v1/``` directory. This includes a previous version of the pipeline that used Infogroup business data (rather than NETS data). This is saved for reference in case we want to use Infogroup again in a future version of the pipeline.
+
 ## Dashboard
 This is a [Next.js](https://nextjs.org/) project.
 
 ### Running the Dashboard
-To run the dashboard locally (do **not** use the dev container!):
+To run the dashboard locally, do **not** use the dev container!
 
+#### Install Packages
 Install packages:
 ```bash
 npm install
 ```
 
+#### Set up Environment Variables for Local Deployment
+The dashboard needs Mapbox credentials and service account credentials for Google Cloud.
+
+It expects a ```.env.local``` file in ```dashboard/``` with a Mapbox API key and a [base64-encoded Google service account JSON](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-base64-encode-and-decode-from-command-line/) (with permissions to access Cloud Storage buckets):
+
+```
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=yOuRmApBoXaPiKey
+GOOGLE_APPLICATION_CREDENTIALS_BASE64=<base64-encoded-service-account.json>
+```
+
+#### Running the Server
 Run the development server:
 
 ```bash
