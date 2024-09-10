@@ -87,7 +87,7 @@ if __name__ == "__main__":
     )
 
     df_fsis = pd.read_csv(FSIS_PATH, dtype={"duns_number": str})
-    df_fsis_demo = pd.read_csv(FSIS_DEMO_PATH)
+    df_fsis_demo = pd.read_csv(FSIS_DEMO_PATH, low_memory=False)
     df_fsis = clean_fsis(df_fsis, df_fsis_demo)
 
     gdf_fsis = gpd.GeoDataFrame(
