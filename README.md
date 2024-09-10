@@ -15,9 +15,9 @@ The pipeline runs in Docker. If you use VS Code, this is set up to run in a [dev
 
 If you are using the dev container, make sure that you change the ```PLATFORM``` variable in the ```devcontainer.json``` for your chip architecture:
 ```
-        "args": {
-            "PLATFORM": "linux/arm64/v8" // Change this to "linux/amd64" on WSL and "linux/arm64/v8" on M1
-        }
+"args": {
+    "PLATFORM": "linux/arm64/v8" // Change this to "linux/amd64" on WSL and "linux/arm64/v8" on M1
+}
 ```
 
 ### Data Files
