@@ -13,6 +13,13 @@ The data pipeline for this project does the following:
 ### Docker
 The pipeline runs in Docker. If you use VS Code, this is set up to run in a [dev container](https://code.visualstudio.com/docs/devcontainers/containers), so build the container the way you normally would. Otherwise, just build the Docker image from the ```Dockerfile``` in the root of the directory.
 
+If you are using the dev container, make sure that you change the ```PLATFORM``` variable in the ```devcontainer.json``` for your chip architecture:
+```
+        "args": {
+            "PLATFORM": "linux/arm64/v8" // Change this to "linux/amd64" on WSL and "linux/arm64/v8" on M1
+        }
+```
+
 ### Data Files
 Download the following files into the appropriate locations:
 - Example FSIS data is located in the DSI Google Drive (permission required to access): [MPI Directory by Establishment Name](https://drive.google.com/file/d/1A9CQqe-iXdFPXQ19WCKdtMNvZy7ypkym/view?usp=sharing) | [Establishment Demographic Data](https://drive.google.com/file/d/1FFtM-F0FSUgJfe39HgIXJtdRwctkG-q5/view?usp=sharing)
