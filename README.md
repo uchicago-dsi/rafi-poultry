@@ -21,12 +21,12 @@ If you are using the dev container, make sure that you change the ```PLATFORM```
 ```
 
 ### Data Files
-Download the following files into the appropriate locations:
-- Example FSIS data is located in the DSI Google Drive (permission required to access): [MPI Directory by Establishment Name](https://drive.google.com/file/d/1A9CQqe-iXdFPXQ19WCKdtMNvZy7ypkym/view?usp=sharing) | [Establishment Demographic Data](https://drive.google.com/file/d/1FFtM-F0FSUgJfe39HgIXJtdRwctkG-q5/view?usp=sharing)
+Download the following files into the appropriate locations. **Note that permission is required to access the DSI Google Drive.**
+- Example FSIS data is located in the DSI Google Drive: [MPI Directory by Establishment Name](https://drive.google.com/file/d/1A9CQqe-iXdFPXQ19WCKdtMNvZy7ypkym/view?usp=sharing) | [Establishment Demographic Data](https://drive.google.com/file/d/1FFtM-F0FSUgJfe39HgIXJtdRwctkG-q5/view?usp=sharing)
     - Save both files to ```data/raw/```
     - You can also download new data from the [FSIS Inspection site](https://www.fsis.usda.gov/inspection/establishments/meat-poultry-and-egg-product-inspection-directory). Just [update the filepaths config file](#using-different-files)
-- NETS data is located in the [DSI Google Drive](https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link) (permission required to access). Download this to ```data/raw/``` and save in a directory called ```nets```
-- Download the raw barns predictions for the entire USA from the [DSI Google Drive](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) (permission required to access) and save to ```data/raw/```
+- [NETS data]((https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link)) is located in the DSI Google Drive. Download this to ```data/raw/``` and save in a directory called ```nets```
+- Download the [raw barns predictions for the entire USA](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) from the DSI Google Drive and save to ```data/raw/```
 - Barn filtering shapefiles: Download the [zip of all of the shapefiles](https://drive.google.com/file/d/1GSRM05ABDRXLUqmLqU_f-kI5yP8pSoqu/view?usp=sharing) from Google Drive and extract to ```data/shapefiles```. The sources for these shapefiles are listed in ```pipeline/rafi/config_geo_filters.yaml```.
 
 ### Using Different Files
