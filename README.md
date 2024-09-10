@@ -27,7 +27,7 @@ Download the following files into the appropriate locations:
     - You can also download new data from the [FSIS Inspection site](https://www.fsis.usda.gov/inspection/establishments/meat-poultry-and-egg-product-inspection-directory). Just [update the filepaths config file](#using-different-files)
 - NETS data is located in the [DSI Google Drive](https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link) (permission required to access). Download this to ```data/raw/``` and save in a directory called ```nets```
 - Download the raw barns predictions for the entire USA from the [DSI Google Drive](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) (permission required to access) and save to ```data/raw/```
-- Barn filtering shapefiles: Download the files listed in ```pipeline/rafi/config_geo_filters.yaml``` to ```data/shapefiles/```
+- Barn filtering shapefiles: Download the [zip of all of the shapefiles](https://drive.google.com/file/d/1GSRM05ABDRXLUqmLqU_f-kI5yP8pSoqu/view?usp=sharing) from Google Drive and extract to ```data/shapefiles```. The sources for these shapefiles are listed in ```pipeline/rafi/config_geo_filters.yaml```.
 
 ### Using Different Files
 If you are using different files (particularly for the FSIS data), just update the filenames in ```pipeline/rafi/config_filepaths.yaml```. Make sure the files are in the expected folder.
@@ -47,6 +47,8 @@ python pipeline/pipelinve_v2.py
 ```
 
 Cleaned data files will be output in a run folder in ```data/clean/```. To update the files displayed on the dashboard, follow the instuctions in [Updating the Dashboard Data](#updating-the-dashboard-data)
+
+Note: You can also run each step of the pipline independently. Just make sure that the input files are available as expected in  ```__main__``` for each script.
 
 ## Dashboard
 This is a [Next.js](https://nextjs.org/) project.
