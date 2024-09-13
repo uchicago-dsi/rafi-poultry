@@ -50,17 +50,32 @@ Cleaned data files will be output in a run folder in ```data/clean/```. To updat
 
 Note: You can also run each step of the pipline independently. Just make sure that the input files are available as expected in  ```__main__``` for each script.
 
+### Pipeline V1
+There is old code in the ```pipeline/pipeline_v1/``` directory. This includes a previous version of the pipeline that used Infogroup business data (rather than NETS data). This is saved for reference in case we want to use Infogroup again in a future version of the pipeline.
+
 ## Dashboard
 This is a [Next.js](https://nextjs.org/) project.
 
 ### Running the Dashboard
-To run the dashboard locally (do **not** use the dev container!):
+To run the dashboard locally, do **not** use the dev container!
 
+#### Install Packages
 Install packages:
 ```bash
 npm install
 ```
 
+#### Set up Environment Variables for Local Deployment
+The dashboard needs Mapbox credentials and service account credentials for Google Cloud.
+
+It expects a ```.env.local``` file in ```dashboard/``` with a Mapbox API key and a [base64-encoded Google service account JSON](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-base64-encode-and-decode-from-command-line/) (with permissions to access Cloud Storage buckets):
+
+```
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=yOuRmApBoXaPiKey
+GOOGLE_APPLICATION_CREDENTIALS_BASE64=<base64-encoded-service-account.json>
+```
+
+#### Running the Server
 Run the development server:
 
 ```bash
