@@ -5,7 +5,7 @@
         "context": "..",
         // Note: This is used to use the correct base image. Update for different architectures.
         "args": {
-            "PLATFORM": "linux/arm64/v8"
+            "PLATFORM": "linux/arm64/v8" // Change this to "linux/amd64" on WSL and "linux/arm64/v8" on M1
         }
     },
     // Set *default* container specific settings.json values on container create.

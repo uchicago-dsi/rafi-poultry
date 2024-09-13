@@ -1,0 +1,189 @@
+,EstNumber,EstID,Parent Corporation,Establishment Name,State,Size,Animals Processed,"Processed
+Volume
+Category","Slaughter
+Volume
+Category",Full Address,latitude,longitude,Sales Volume (Location)
+71,P1317 + V1317,4495,Cargill,Wayne Farms LLC,Alabama,Large,Chicken,5.0,5.0,"700 McDonald Avenue, Albertville, AL 35950",34.2607264,-86.203222,438268.0
+72,P7485 + V7485,4518,Cargill,Wayne Farms LLC,Alabama,Large,Chicken,5.0,5.0,"1020 County Road 114, Jack, AL 36346",31.5006282,-85.9034382,576660.0
+73,P912,4493,Cargill,"Wayne Farms, LLC",Alabama,Large,Chicken,5.0,5.0,"444 Baskin Street  South, Union Springs, AL 36089",32.1391657,-85.721704,271713.0
+74,P7342 + V7342,4516,Cargill,Wayne Farms LLC,Alabama,Large,Chicken,5.0,5.0,"808 Ross Clark Circle NE, Dothan, AL 36303",31.2257543,-85.3620677,
+75,P1235,4509,Cargill,Wayne Farms LLC,Alabama,Large,Chicken,5.0,5.0,"254 Ipsco Road, Decatur, AL 35601",34.6076012,-87.04259549999999,
+76,P17500,4526,JBS,Pilgrim's Pride Corporation,Alabama,Large,Chicken,5.0,5.0,"2045 Highway 244, Russellville, AL 35654",34.5078726,-87.7286431,150.0
+77,P192,4501,JBS,Pilgrim's Pride Corporation,Alabama,Large,Chicken,5.0,5.0,"3500 Lake Guntersville Park Drive, Guntersville, AL 35976",34.3465877,-86.2821926,249109.0
+78,P6638,4514,JBS,Pilgrim's Pride Corporation,Alabama,Large,Chicken,5.0,5.0,"4693 County Road 636, Enterprise, AL 36330",31.2555161,-85.9595721,471813.0
+79,P6666,4515,Koch Foods,"Koch Foods of Gadsden, LLC",Alabama,Large,Chicken,5.0,5.0,"501 Paden Road, Gadsden, AL 35903",33.970439,-85.9724391,
+80,P548,4506,Koch Foods,"JCG  Foods of Alabama, LLC",Alabama,Large,Chicken,5.0,5.0,"764 George Cagle Drive, Collinsville, AL 35961",34.2944769,-85.8814033,144992.0
+81,P6529,4595,Koch Foods,"Koch Foods of  Montgomery, AL",Alabama,Large,Chicken,5.0,5.0,"3500 West Blvd., Montgomery, AL 36108",32.3284278,-86.3547844,
+82,P1307,4567,Mar-Jac,Mar-Jac Poultry-AL,Alabama,Large,Chicken,5.0,5.0,"3301 3rd Avenue, Jasper, AL 35501",33.8180823,-87.2760356,83015.0
+83,P6504,4496,Peco Foods,"Peco Foods, Inc.",Alabama,Large,Chicken,5.0,5.0,"3701 Reese Phifer Avenue, Tuscaloosa, AL 35401",33.1778663,-87.56144660000001,
+84,M20322 + P20322,4783,Tyson,"Keystone Foods, LLC.",Alabama,Large,Chicken,5.0,5.0,"57 Melvin Clark Road, Baker Hill, AL 36027",31.8063853,-85.31985,14829.0
+85,P559,4491,Tyson,"Tyson Foods, Inc.",Alabama,Large,Chicken,5.0,5.0,"6600 Hwy. 431 South, Albertville, AL 35950",34.2512489,-86.2361744,16436.0
+86,M17250 + P6 + V6,4485,Tyson,"Tyson Foods, Inc.",Alabama,Large,Chicken,5.0,5.0,"67240 Main Street, Blountsville, AL 35031",34.0520968,-86.57541859999999,96468.0
+87,P165S + V165S,3850,Bachoco,"OK Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"3921 Reed Lane, Fort Smith, AR 72904",35.424274,-94.3852974,16680.0
+88,P1009,3858,Cargill,Wayne Farms LLC,Arkansas,Large,Chicken,5.0,5.0,"2301 East 8th Street, Danville, AR 72833",35.081411,-93.41853,2732.0
+90,P46091,126027,George's,"Ozark Mountain Poultry, Inc.",Arkansas,Large,Chicken,5.0,5.0,"1810 St. Louis Street, Batesville, AR 72501",35.7652697,-91.641319,
+91,P208 + V208,3851,George's,"George's Processing, Inc.",Arkansas,Large,Chicken,5.0,5.0,"1306 North Kansas St, Springdale, AR 72764",36.198322,-94.1398959,0.0
+92,P705,3856,JBS,Pilgrim's Pride Corporation,Arkansas,Large,Chicken,5.0,5.0,"401 South 3rd Street, DeQueen, AR 71832",34.0336675,-94.3401007,225824.0
+93,P45483,127044,Peco Foods,"Peco Foods, Inc.",Arkansas,Large,Chicken,4.0,5.0,"4114 Highway 67 South, Pocahontas, AR 72455",36.2137042,-90.9583373,
+94,P468,3852,Peco Foods,"Peco Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"625 South Allen, Batesville, AR 72501",35.7645792,-91.6484427,675250.0
+95,P1949,6164265,Simmons Foods,"Simmons Prepared Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"9802 S. Hwy 59, Gentry, AR 72734",36.1795582,-94.6412028,
+98,P72,3846,Tyson,"Tyson Foods, Inc",Arkansas,Large,Chicken,5.0,5.0,"1291 N Hwy. 7, Dardanelle, AR 72834",35.216772,-93.1602106,504317.0
+99,P7101,3881,Tyson,"Tyson Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"301 East Cherry Street, Clarksville, AR 72830",35.473009,-93.457503,
+100,M112 + P112,3847,Tyson,"Tyson Foods, Inc",Arkansas,Large,Chicken,5.0,5.0,"601 Tyson Drive, Green Forest, AR 72638",36.3309124,-93.4293292,1619035.0
+101,P7156 + V7156,3883,Tyson,"Tyson Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"275 County Road 278, Hope, AR 71801",33.7400849,-93.616054,223444.0
+102,M13456 + P13456 + V13456,3901,Tyson,"Tyson Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"5505 Jefferson Parkway, Pine Bluff, AR 71602",34.2642476,-92.0757124,256978.0
+103,M5842 + P5842 + V5842,3873,Tyson,"Tyson Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"600 N. Berry Street, Springdale, AR 72762",36.1905228,-94.1254707,
+104,M7100 + P7100 + V7100,3880,Tyson,"Tyson Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"100 East Cassady, Nashville, AR 71852",33.9273002,-93.8473993,1292472.0
+105,P768 + V768,3841,Tyson,"Tyson Foods, Inc.",Arkansas,Large,Chicken,5.0,5.0,"442 Plant Street, Waldron, AR 72958",34.9042542,-94.1019632,
+106,P7632,5333,Foster Farms,Zorro Leasing LLC,California,Large,Chicken,5.0,5.0,"900 W. Belgravia, Fresno, CA 93706",36.7164767,-119.8229319,
+108,P6137A,5309,Foster Farms,Foster Farms,California,Large,Chicken,5.0,5.0,"2960 Cherry St., Fresno, CA 93706",36.6937303,-119.7839271,1117644.0
+109,M6137 + P6137,5308,Foster Farms,Foster Farms,California,Large,Chicken,5.0,5.0,"843 Davis St., Livingston, CA 95334",37.3917386,-120.7267325,134871.0
+111,P935,2260,Harim Group,Allen Harim LLC,Delaware,Large,Chicken,5.0,5.0,"18752 Harbeson Road, Harbeson, DE 19951",38.720742,-75.2872434,
+112,M667 + P667,2249,Mountaire,Mountaire Farms Inc.,Delaware,Large,Chicken,5.0,5.0,"55 Hosier St., Selbyville, DE 19975",38.4607194,-75.2277601,0.0
+113,P3,2214,Mountaire,"Mountaire Farms of Delaware, Inc.",Delaware,Large,Chicken,5.0,5.0,"29005 John J Williams Highway, Millsboro, DE 19966",38.5977287,-75.2593339,46698.0
+114,P1318,2267,Perdue,"Perdue Foods, LLC",Delaware,Large,Chicken,5.0,5.0,"255 N. Rehoboth Blvd., Milford, DE 19963",38.9222447,-75.42268969999999,
+115,P2178,2278,Perdue,PERDUE FOODS LLC,Delaware,Large,Chicken,5.0,5.0,"20621 Savannah Road, Georgetown, DE 19947",38.6980472,-75.3820922,17315.0
+116,P2632,60,JBS,Pilgrim's Pride Corporation,Florida,Large,Chicken,5.0,5.0,"19740 US Hwy 90 West, Live Oak, FL 32064",30.3709814,-83.159205,233110.0
+117,P32182,9808,Cargill,"Sanderson Farms, Inc.",Georgia,Large,Chicken,5.0,5.0,"700 Hwy 133 South, Moultrie, GA 31788",31.1587054,-83.7453125,231341.0
+118,P170,8,Cargill,Wayne Farms,Georgia,Large,Chicken,5.0,5.0,"977 Wayne Poultry Road, Pendergrass, GA 30567",34.17695399999999,-83.6715558,31982.0
+119,P1257,44,Fieldale Farms Corporation,Fieldale Farms Corporation,Georgia,Large,Chicken,4.0,5.0,"5163 Thompson Bridge Road, Murrayville, GA 30564",34.4112361,-83.9004677,381515.0
+120,P1250,41,Fieldale Farms Corporation,Fieldale Farms Corporation,Georgia,Large,Chicken,5.0,5.0,"2115 Industrial Blvd., Cornelia, GA 30531",34.5073932,-83.5383342,159866.0
+121,P1480,53,Independent,"Tip Top Poultry, Inc.",Georgia,Large,Chicken,4.0,5.0,"327 Wallace Rd., Marietta, GA 30065",33.9590699,-84.51451469999999,270348.0
+122,P910,39,Independent,"Harrison Poultry, Inc.",Georgia,Large,Chicken,5.0,5.0,"107 Star Street, Bethlehem, GA 30620",33.9297941,-83.7057986,125052.0
+123,P6505,72,Independent,"Norman W. Fries, Inc.",Georgia,Large,Chicken,5.0,5.0,"8816 Highway 301 North, Claxton, GA 30417",32.1806711,-81.88802690000001,45453.0
+124,P177,9,JBS,Pilgrim's Pride Corporation,Georgia,Large,Chicken,5.0,5.0,"949 Industrial Blvd., Gainesville, GA 30503",34.2831469,-83.8272486,112211.0
+125,P476,29,JBS,Pilgrim's Pride Corporation,Georgia,Large,Chicken,5.0,5.0,"616 Kingsbridge Road, Carrollton, GA 30117",33.5965864,-85.0889205,7815.0
+126,P1284,48,JBS,Pilgrim's Pride Corporation,Georgia,Large,Chicken,5.0,5.0,"654 Univeter Road, Canton, GA 30115",34.1951089,-84.502063,127648.0
+127,P40,3,JBS,Pilgrim's Pride Corporation,Georgia,Large,Chicken,5.0,5.0,"125 Industrial Blvd., Ellijay, GA 30540",34.6851917,-84.4922005,159866.0
+128,P1272,45,JBS,Pilgrim's Pride Corporation,Georgia,Large,Chicken,5.0,5.0,"113 McNeil Drive, Douglas, GA 31533",31.5271469,-82.84701489999999,149707.0
+129,P646,32,Koch Foods,"JCG Foods of Georgia, LLC",Georgia,Large,Chicken,5.0,5.0,"14075 GA Hwy 116 East, Pine Mt Valley, GA 31823",32.7974716,-84.8156607,382848.0
+130,P32,2,Mar-Jac,"Mar-Jac Poultry, Inc.",Georgia,Large,Chicken,5.0,5.0,"1020 Aviation Blvd, Gainesville, GA 30501",34.2796071,-83.8290719,0.0
+131,P21234,7855,Perdue,Perdue Foods LLC,Georgia,Large,Chicken,5.0,5.0,"250 Ga Hwy 247 Spur, Perry, GA 31069",32.443208,-83.628483,448325.0
+132,P2686,63,Tyson,"Keystone Foods, LLC",Georgia,Large,Chicken,5.0,5.0,"7220 US Highway 19 North, Camilla, GA 31730",31.2795225,-84.1822013,4496.0
+133,P18873,245,Tyson,"Tyson Foods, Inc.",Georgia,Large,Chicken,5.0,5.0,"1151 E. Pine Street, Vienna, GA 31092",32.0961952,-83.7687373,190673.0
+134,P243,15,Tyson,"Tyson Foods, Inc.",Georgia,Large,Chicken,5.0,5.0,"340 W. Maple, Cumming, GA 30040",34.2055162,-84.1426892,221540.0
+140,P17340,2111,JBS,Pilgrim's Pride Corporation,Kentucky,Large,Chicken,5.0,5.0,"2653 State Route 1241, Hickory, KY 42051",36.8305535,-88.6533767,
+141,P19112,2160,Perdue,Perdue Foods LLC,Kentucky,Large,Chicken,5.0,5.0,"489 Cromwell Road, Cromwell, KY 42333",37.3479455,-86.79394169999999,
+142,P20245,2197,Tyson,"Keystone Foods, LLC",Kentucky,Large,Chicken,5.0,5.0,"2294 KY Highway 90 West, Albany, KY 42602",36.75875389999999,-85.17952629999999,
+143,P19514,2173,Tyson,"Tyson Foods, Inc.",Kentucky,Large,Chicken,5.0,5.0,"14660  U S Highway 41 South, Robards, KY 42452",37.6559523,-87.5184314,
+144,P7264 + V7264,3890,Cargill,"Sanderson Farms, Inc.",Louisiana,Large,Chicken,5.0,5.0,"13111 Hwy 190 West, Hammond, LA 70401",30.505053,-90.508328,300684.0
+145,P33900 + V33900,13257,Foster Farms,Foster Farms,Louisiana,Large,Chicken,5.0,5.0,"6648 HWY 15 North, Farmerville, LA 71241",32.8335179,-92.4320785,972698.0
+146,P19865 + V19865,4093,House of Raeford,House of Raeford Farms of LA,Louisiana,Large,Chicken,5.0,5.0,"3867 2nd St., Hwy 80 West, Arcadia, LA 71001",32.5515487,-92.9243858,277632.0
+147,P5787,3870,JBS,Pilgrim's Pride Corporation,Louisiana,Large,Chicken,5.0,5.0,"7088 Hwy 1 Bypass, Natchitoches, LA 71457",31.7253908,-93.1081185,223470.0
+148,P7927,2351,Amick,"AMICK FARMS, LLC",Maryland,Large,Chicken,5.0,5.0,"274 NEALSON STREET, HURLOCK, MD 21643",38.63564119999999,-75.8581159,
+149,P764,2250,Perdue,"Perdue Foods, LLC",Maryland,Large,Chicken,5.0,5.0,"521 Willow St., Salisbury, MD 21801",38.3661104,-75.60656100000001,123060.0
+153,M322A + P322,2961,JBS,Pilgrim's Pride Corporation,Minnesota,Large,Chicken,5.0,5.0,"851 Sauk River Road, Cold Spring, MN 56320",45.4607801,-94.4055917,606094.0
+154,P13369 + V13369,3752,George's,"George's Processing, Inc.",Missouri,Large,Chicken,5.0,5.0,"9066 State Hwy W, Cassville, MO 65625",36.7454393,-93.9202005,10159.0
+155,P727 + V727,3543,Simmons Foods,"Simmons Prepared Foods, Inc.",Missouri,Large,Chicken,5.0,5.0,"10700 South State Hwy 43, South West City, MO 64863",36.5424638,-94.6002146,15466.0
+157,M13556 + P13556,3770,Tyson,Tyson Foods Inc,Missouri,Large,Chicken,5.0,5.0,"19571 Whitfield Road, Sedalia, MO 65301",38.7502656,-93.3228382,
+158,M7089 + P7089,3680,Tyson,Tyson Foods Inc,Missouri,Large,Chicken,5.0,5.0,"1001 Stoddard, Dexter, MO 63841",36.7934666,-89.94466279999999,
+159,P1315,3570,Tyson,"Tyson Foods, Inc.",Missouri,Large,Chicken,5.0,5.0,"800 County Road, Monett, MO 65708",36.9182379,-93.9131148,302215.0
+160,P1362,3571,Tyson,"Tyson Foods, Inc.",Missouri,Large,Chicken,5.0,5.0,"One Tyson Avenue, Noel, MO 64854",36.5535346,-94.4907397,637081.0
+161,P519,4505,Amick,Amick Farms LLC,Mississippi,Large,Chicken,5.0,5.0,"525 N Mississippi Ave, Laurel, MS 39440",31.6997601,-89.1185464,
+162,P247,4554,Cargill,"Sanderson Farms, Inc. (Procesing Div)",Mississippi,Large,Chicken,5.0,5.0,"28163 Highway 28 East, Hazlehurst, MS 39083",31.8761732,-90.3802598,16993.0
+163,P18557,4530,Cargill,"Sanderson Farms, Inc.",Mississippi,Large,Chicken,5.0,5.0,"4039 River Ridge Road, Summit, MS 39666",31.275147,-90.3746883,264403.0
+164,P320,4540,Cargill,"Sanderson Farms, Inc.",Mississippi,Large,Chicken,5.0,5.0,"2535 Sanderson Drive, Laurel, MS 39440",31.6670026,-89.1607027,255197.0
+165,P522,4490,Cargill,"Sanderson Farms, Inc. (Processing Div)",Mississippi,Large,Chicken,5.0,5.0,"1111 North Fir Ave, Collins, MS 39428",31.6523412,-89.5698747,138776.0
+166,P308,4487,Koch Foods,Koch Foods of Mississippi,Mississippi,Large,Chicken,5.0,5.0,"162 Magnolia Street, Morton, MS 39117",32.3553102,-89.6553168,
+167,P517,4489,Mar-Jac,Mar-Jac Poultry-MS,Mississippi,Large,Chicken,5.0,5.0,"1301 James Street, Hattiesburg, MS 39401",31.3065648,-89.27745329999999,171179.0
+168,P6510,4512,Peco Foods,"Peco Foods, Inc",Mississippi,Large,Chicken,5.0,5.0,"95 Commerce Drive, Bay Springs, MS 39422",32.0138515,-89.2844846,
+169,P6616 + V6616,4513,Peco Foods,"Peco Foods, Inc.",Mississippi,Large,Chicken,5.0,5.0,"15292 Highway 21 South, Sebastopol, MS 39359",32.5500856,-89.3577631,
+170,P890,4562,Peco Foods,"Peco Foods, Inc.",Mississippi,Large,Chicken,5.0,4.0,"1039 West Fulton St, Canton, MS 39046",32.6098691,-90.0523173,
+171,P164,4538,Tyson,Tyson Foods Inc,Mississippi,Large,Chicken,5.0,5.0,"1225 Jack Lee Drive, Forest, MS 39074",32.3592047,-89.4946306,583855.0
+172,P758,4507,Tyson,"Tyson Foods, Inc",Mississippi,Large,Chicken,5.0,5.0,"3865 Highway 35 North, Carthage, MS 39051",32.8262785,-89.5353145,
+173,P445,562,Cargill,"Wayne Farms, LLC",North Carolina,Large,Chicken,5.0,5.0,"802 E. Atkins Street, Dobson, NC 27017",36.3907541,-80.7123242,8812.0
+174,P45910,6162776,Cargill,"SANDERSON FARMS, INC",North Carolina,Large,Chicken,5.0,5.0,"2076 NC HIGHWAY 20, St Pauls, NC 28384",34.7985467,-78.9414476,
+175,P40183,13729,Cargill,"Sanderson Farms, Inc.",North Carolina,Large,Chicken,5.0,5.0,"2081 Sanderson Way, Kinston, NC 28504",35.257017,-77.669338,31815.0
+176,P19128,750,Case Farms,"Case Farms of North Carolina, Inc.",North Carolina,Large,Chicken,5.0,5.0,"330 Pecan Road, Dudley, NC 28333",35.3242615,-77.9989527,0.0
+177,P419,577,Case Farms,"Case Farms Processing, Inc.",North Carolina,Large,Chicken,5.0,5.0,"121 Rand Street, Morganton, NC 28655",35.736225,-81.6838842,0.0
+178,P510,578,House of Raeford,House Of Raeford Farms,North Carolina,Large,Chicken,5.0,5.0,"3333 Highway 117 South, Rose Hill, NC 28458",34.81703,-78.07019,846359.0
+179,M737 + P737,581,House of Raeford,House of Raeford - Wallace Div,North Carolina,Large,Chicken,5.0,5.0,"253 Butterball Road, Teachey, NC 28464",34.756028,-78.05177859999999,126954.0
+180,P1201,586,JBS,Pilgrim's Pride Corporation,North Carolina,Large,Chicken,5.0,5.0,"484 Zimmerman Road, Sanford, NC 27330",35.5607976,-79.23492639999999,173877.0
+181,P843,566,JBS,Pilgrim's Pride Corporation,North Carolina,Large,Chicken,5.0,5.0,"5901 W. Marshville Blvd, Marshville, NC 28103",34.9852961,-80.3910799,729.0
+182,M7470 + P7470,664,Mountaire,Mountaire Farms Inc. - NC Division,North Carolina,Large,Chicken,5.0,5.0,"17269 NC Highway 71 North, Lumber Bridge, NC 28357",34.868689,-79.10583849999999,16072.0
+183,M1234 + P1234,6163896,Mountaire,Mountaire Farms Inc.,North Carolina,Large,Chicken,5.0,5.0,"1101 East Third Street, Siler City, NC 27344",35.731888,-79.449868,
+184,P9197,696,Perdue,"Perdue Foods, LLC.",North Carolina,Large,Chicken,5.0,5.0,"3539 Governor's Road, Lewiston Woodville, NC 27849",36.1229347,-77.1766291,
+185,P1243,589,Perdue,"Perdue Foods, LLC.",North Carolina,Large,Chicken,5.0,5.0,"416 S. Long Drive, Rockingham, NC 28379",34.9347473,-79.7531309,13586.0
+187,M7478 + P1,567,Tyson,"Tyson Foods, Inc.",North Carolina,Large,Chicken,5.0,5.0,"704 Factory Street, Wilkesboro, NC 28697",36.142912,-81.162071,
+188,P622,579,Tyson,Tyson Foods,North Carolina,Large,Chicken,5.0,5.0,"2023 Hasty Street, Monroe, NC 28110",34.9815191,-80.4941741,
+189,P48304,6163885,Costco,Lincoln Premium Poultry,Nebraska,Large,Chicken,5.0,5.0,"1325 E. Cloverly Road, Fremont, NE 68025",41.41789989999999,-96.4818084,
+191,P165H,3833,Bachoco,"OK Foods, Inc.",Oklahoma,Large,Chicken,5.0,5.0,"200 Industrial Road, Heavener, OK 74937",34.909403,-94.6004135,
+192,P7085 + V7085,3879,Tyson,"Tyson Foods, Inc",Oklahoma,Large,Chicken,5.0,5.0,"Highway 259 South, Broken Bow, OK 74728",34.1064458,-94.7393694,308534.0
+193,M1015 + P1015,6413,Aterian Investment Partners,"Table Trust Brands, LLC",Pennsylvania,Large,Chicken,5.0,5.0,"247 Empire Drive, Mifflintown, PA 17059",40.5586429,-77.3961834,
+195,P1304,6421,"Sechler Family Foods, Inc.",Farmers Pride Inc.,Pennsylvania,Large,Chicken,5.0,5.0,"154 W. Main Street, Fredericksburg, PA 17026",40.4456581,-76.4353392,1706577.0
+196,P1304B,6166200,"Sechler Family Foods, Inc.",Farmers Pride Inc. dba: Bell & Evans,Pennsylvania,Large,Chicken,5.0,5.0,"520 Chestnut Hill Road, Fredericksburg, PA 17026",40.4432373,-76.4095811,94810.0
+197,M9977 + P1325,6847,Tyson,Tyson Foods Inc.,Pennsylvania,Large,Chicken,5.0,5.0,"403 S. Custer Avenue, New Holland, PA 17557",40.0939678,-76.08585099999999,1093994.0
+198,P7987,672,Amick,"Amick Farms, LLC",South Carolina,Large,Chicken,5.0,5.0,"2079 Batesburg Hwy., Batesburg, SC 29006",33.9549472,-81.6363449,
+199,P1309,592,House of Raeford,House of Raeford Farms Inc.,South Carolina,Large,Chicken,5.0,5.0,"1354 Rutherford Rd., Greenville, SC 29609",34.8935106,-82.36667330000002,121175.0
+200,P687,564,Independent,House of Raeford,South Carolina,Large,Chicken,5.0,5.0,"410 Sunset Boulevard, West Columbia, SC 29169",33.9965765,-81.0578896,68090.0
+201,M17980 + P17980,727,JBS,Pilgrim's Pride Corporation,South Carolina,Large,Chicken,5.0,5.0,"2050 Highway 15 South, Sumter, SC 29150",33.8634025,-80.366039,3077110.0
+203,P18285,734,Perdue,Perdue Foods LLC,South Carolina,Large,Chicken,5.0,5.0,"2047 Highway 9 West, Dillon, SC 29536",34.4624944,-79.38674429999999,
+205,P19152 + V19152,4755,Independent,Koch Foods LLC,Tennessee,Large,Chicken,5.0,,"1620  Progress Parkway, Morristown, TN 37813",36.1395556,-83.2967875,21193.0
+206,M47579 + P47579,6165818,Tyson,Tyson Foods Inc.,Tennessee,Large,Chicken,4.0,4.0,"550 Tyson Boulevard, Humboldt, TN 38343",35.8535951,-88.9245747,
+207,P6651,4499,Tyson,Tyson Foods Inc.,Tennessee,Large,Chicken,5.0,5.0,"901 W. Jackson Street, Shelbyville, TN 37160",35.4782308,-86.47501199999999,620387.0
+208,M19636 + P19636,4534,Tyson,Tyson Foods Inc,Tennessee,Large,Chicken,5.0,5.0,"2800 E. Tyson Dr., Union City, TN 38261",36.4201542,-89.0101579,402953.0
+209,P34308,12461,Cargill,"Sanderson Farms, Inc.",Texas,Large,Chicken,5.0,5.0,"301 Aviation Parkway, Waco, TX 76705",31.6247131,-97.0530876,275901.0
+210,P51179 + V51179,127006,Cargill,"Sanderson Farms, Inc.",Texas,Large,Chicken,5.0,5.0,"320 Sanderson Farms Pkwy, Palestine, TX 75803",31.7275245,-95.6992202,859489.0
+211,P19688 + V19688,4420,Cargill,"Sanderson Farms, Inc.",Texas,Large,Chicken,5.0,5.0,"2000 Shiloh Avenue, Bryan, TX 77803",30.6489123,-96.4163465,
+212,P46374,6164030,Cargill,"Sanderson Farms, Inc. Tyler Processing Division",Texas,Large,Chicken,5.0,5.0,"13523 FM 2015, Tyler, TX 75708",32.4603658,-95.2329904,
+213,P206 + V206,4141,JBS,Pilgrim's Pride Corporation,Texas,Large,Chicken,5.0,5.0,"928 Martin Luther King Jr. Blvd., Nacogdoches, TX 75961",31.5908661,-94.6485807,559085.0
+214,P218,4142,JBS,Pilgrim's Pride Corporation,Texas,Large,Chicken,5.0,5.0,"1710 W. Frank Avenue, Lufkin, TX 75904",31.3344341,-94.7544365,581183.0
+215,P584,4148,JBS,Pilgrim's Pride Corporation,Texas,Large,Chicken,5.0,5.0,"1107 Monticello Road, Mount Pleasant, TX 75456",33.2021077,-94.8691351,
+216,P7044,4236,Tyson,"Tyson Foods, Inc.",Texas,Large,Chicken,5.0,5.0,"1484 NE Loop, Carthage, TX 75633",32.1728771,-94.3260127,284752.0
+217,P325,4128,Tyson,"Tyson Foods, Inc.",Texas,Large,Chicken,5.0,5.0,"1019 Shelbyville Street, Center, TX 75935",31.7943583,-94.168214,423627.0
+218,P1137,4159,Tyson,"Tyson Foods, Inc.",Texas,Large,Chicken,5.0,5.0,"1200 West Kingsbury Street, Seguin, TX 78155",29.581001,-97.9838174,160560.0
+220,P1249,2264,George's,"George's Chicken, LLC",Virginia,Large,Chicken,5.0,5.0,"19992 Senedo Rd., Edinburg, VA 22824",38.877409,-78.61068929999999,284128.0
+221,P2186,2279,George's,"GEORGE'S FOODS, LLC",Virginia,Large,Chicken,5.0,5.0,"501 NORTH LIBERTY STREET, HARRISONBURG, VA 22802",38.4558221,-78.8688731,19328.0
+222,M56 + P56,2216,JBS,Pilgrim's Pride Corporation,Virginia,Large,Chicken,5.0,5.0,"330 CO-OP DRIVE, TIMBERVILLE, VA 22853",38.6317681,-78.78454330000001,83696.0
+223,P7903,2349,Perdue,"Perdue Foods, LLC",Virginia,Large,Chicken,5.0,5.0,"22520 Lankford Hiwy., Accomac, VA 23301",37.734161,-75.6567206,
+224,P806,2251,Tyson,"Tyson Foods, Inc.",Virginia,Large,Chicken,5.0,5.0,"PO Box 8, Temperanceville, VA 23442",37.8929027,-75.5471486,
+225,P146,2236,Tyson,"Tyson Foods, Inc,",Virginia,Large,Chicken,5.0,5.0,"13264 Mountain Road, Glen Allen, VA 23059",37.6991984,-77.5511944,516989.0
+226,P6164A,6036,Foster Farms,Foster Farms,Washington,Large,Chicken,5.0,5.0,"1700 South 13th Avenue, Kelso, WA 98626",46.1256104,-122.8979997,208874.0
+228,M810 + P810,1906,JBS,Pilgrim's Pride Corporation,West Virginia,Large,Chicken,5.0,5.0,"129 Potomac Avenue, Moorefield, WV 26836",39.0597322,-78.9698756,
+335,P341,4541,Independent,Golden Rod Broilers,Alabama,Small,Chicken,4.0,5.0,"2352 County Road 719, Cullman, AL 35055",34.1532529,-86.7689255,69283.0
+336,P1254 + V1254,4510,Koch Foods,"Koch Foods of Ashland, LLC",Alabama,Small,Chicken,5.0,5.0,"515 Tyson Rd, Ashland, AL 36251",33.2846031,-85.8196182,
+337,P47057,6164987,Independent,"Cornerstone Processing, LLC",Arkansas,Small,Chicken,3.0,3.0,"2201 West 2nd Avenue, Pine Bluff, AR 71601",34.229124,-92.026228,
+338,P27 + V27,3937,Tyson,"Tyson Foods, Inc.",Arkansas,Small,Chicken,5.0,5.0,"8564 Highway 71 South, Grannis, AR 71944",34.2406545,-94.3355622,
+339,P481,3853,Tyson,"Tyson Foods, Inc.",Arkansas,Small,Chicken,4.0,5.0,"671 Randall Wobbe Ln, Springdale, AR 72764",36.2022991,-94.1227617,
+341,M4181 + P4181,5687,Independent,"Mao Foods, Inc.",California,Small,Chicken,4.0,4.0,"1839 E 42nd Street, Los Angeles, CA 90058",34.0062516,-118.2403275,
+342,P8107 + V8107,5343,Independent,Squab Producers Of California,California,Small,Chicken,4.0,4.0,"409 Primo Way, Modesto, CA 95358",37.6067821,-120.9891109,48445.0
+343,P9897,5413,Independent,New Stockton Poultry,California,Small,Chicken,3.0,4.0,"302 S San Joaquin St., Stockton, CA 95203",37.9500445,-121.2860317,11867.0
+344,M33902 + P33902,12656,Independent,Wing Lee Farms,California,Small,Chicken,4.0,4.0,"13625 Yorba Ave., Chino, CA 91710",34.0059192,-117.7015238,6416.0
+346,P2882,5204,Perdue,Perdue Foods LLC,California,Small,Chicken,4.0,5.0,"2700 Lakeville Highway, Petaluma, CA 94955",38.2327343,-122.6019551,
+347,P6519B,6162090,Independent,"Coastal Processing, LLC",Georgia,Small,Chicken,5.0,5.0,"1670 FORSTMANN Rd., Louisville, GA 30434",33.0066704,-82.4566584,
+349,P855,38,Pilgrim's Pride,Pilgrim's Pride Corporation,Georgia,Small,Chicken,4.0,5.0,"898 Barber Street, Athens, GA 30601",33.9726126,-83.3872854,
+352,P39,2477,Independent,Pine Manor Inc.,Indiana,Small,Chicken,5.0,5.0,"9622 West County Road 350 North, Orland, IN 46776",41.7306059,-85.17163760000001,
+353,P1241,2526,Tyson,"Tyson Foods, Inc.",Indiana,Small,Chicken,5.0,5.0,"545 Valley Road, Corydon, IN 47112",38.2068989,-86.11617319999999,117607.0
+354,P46897,6162343,Independent,"IHSAN FARMS, IIC",Maryland,Small,Chicken,4.0,4.0,"30931 PARK DRIVE, PRINCESS ANNE, MD 21853",38.196199,-75.680283,
+355,P39915 + V39915,13936,Independent,"LOCUST POINT FARMS, LLC",Maryland,Small,Chicken,4.0,4.0,"430 LOCUST POINT ROAD, ELKTON, MD 21921",39.5584528,-75.8277703,
+358,M248B + P215,2939,Independent,Butterfield Foods Company,Minnesota,Small,Chicken,4.0,5.0,"225 Hubbard Avenue, Butterfield, MN 56120",43.958349,-94.7942031,
+362,P17766,4729,Independent,"Southern Hens, Inc",Mississippi,Small,Chicken,5.0,5.0,"329 Moselle-Seminary Road, Moselle, MS 39459",31.5278768,-89.3035813,314089.0
+365,P20251,3518,Independent,"Tecumseh Poultry, LLC",Nebraska,Small,Chicken,4.0,5.0,"333 South Third Street, Tecumseh, NE 68450",40.3649382,-96.1962927,
+366,P794,847,Independent,"B&B Poultry Co., Inc.",New Jersey,Small,Chicken,4.0,5.0,"110  Almond Road, Norma, NJ 8347",39.4990027,-75.08465819999999,45017.0
+376,P44826,123397,Case Farms,"Case Farms Processing, Inc",Ohio,Small,Chicken,5.0,5.0,"1925 30th St. NE, Canton, OH 44705",40.8323667,-81.34905359999999,0.0
+377,P15724,2091,Case Farms,"Case Farms, Processing",Ohio,Small,Chicken,4.0,5.0,"1818 County Road 160, Winesburg, OH 44690",40.6138472,-81.6845687,0.0
+378,P20604,2208,Independent,"Gerber Poultry, Inc.",Ohio,Small,Chicken,5.0,5.0,"5889 Kidron Rd., Kidron, OH 44636",40.7275546,-81.7469102,61029.0
+385,P533,6390,Independent,FreeBird Chicken,Pennsylvania,Small,Chicken,4.0,5.0,"220 North Center Street, Fredericksburg, PA 17026",40.4480683,-76.42992629999999,94810.0
+388,P7374,133,Independent,"To-Ricos, Ltd.",,Small,Chicken,5.0,5.0,"Road 14 Km. 48.0 Asomante, Aibonito, PR 705",18.1170659,-66.2933549,
+389,P47016,6164918,Independent,"The Best Dressed Chicken, Inc.",South Carolina,Small,Chicken,5.0,5.0,"262 Speigner Road, Ward, SC 29166",33.915734,-81.7201698,
+390,P211,7996,Independent,"Palmetto Pigeon Plant, Inc.",South Carolina,Small,Chicken,2.0,4.0,"333 Broad Street, Sumter, SC 29150",33.9351826,-80.3548591,61749.0
+391,P509,4544,Koch Foods,Koch Foods LLC,Tennessee,Small,Chicken,5.0,5.0,"123 South Fairmont Ave, Morristown, TN 37815",36.2063042,-83.30594459999999,
+392,P7487,4644,Koch Foods,"Koch Foods, LLC",Tennessee,Small,Chicken,5.0,5.0,"1826 Cappella Street, Chattanooga, TN 37408",35.032331,-85.305246,62722.0
+393,P1353,4568,Pilgrim's Pride,Pilgrim's Pride Corporation,Tennessee,Small,Chicken,5.0,5.0,"1591 Broad Street, Chattanooga, TN 37408",35.0366332,-85.3124504,
+394,P34438,12606,Independent,Ga Dong Nai,Texas,Small,Chicken,3.0,4.0,"14329 Lund Carlson Road, #23, Coupland, TX 78615",30.4170786,-97.4459344,
+395,P1294 + V1294,4161,Independent,Holmes Foods Inc.,Texas,Small,Chicken,5.0,5.0,"101 South Liberty Avenue, Nixon, TX 78140",29.2656625,-97.7684325,
+396,P7091,4243,Pilgrim's Pride,Pilgrim's Pride Corporation,Texas,Small,Chicken,5.0,5.0,"1000 Pilgrim Street, Mount Pleasant, TX 75455",33.149119,-94.9799177,
+399,P4602A,2314,Independent,"NEW MARKET POULTRY, LLC",Virginia,Small,Chicken,5.0,4.0,"145 EAST OLD CROSS ROAD, NEW MARKET, VA 22844",38.6470379,-78.670278,33149.0
+400,P46826,126518,Farmer Focus,SHENANDOAH VALLEY ORGANIC,Virginia,Small,Chicken,4.0,5.0,"862 N. Liberty Street, Harrisonburg, VA 22802",38.4601499,-78.8657801,19328.0
+402,P6058,6025,Perdue,Perdue Foods LLC,Washington,Small,Chicken,4.0,5.0,"1000 Jason Lane, Mount Vernon, WA 98273",48.4337004,-122.331201,
+404,P529 + V529,6972,Pilgrim's Pride,Pilgrim's Pride Corporation,Wisconsin,Small,Chicken,5.0,5.0,"209 North Third Street, Arcadia, WI 54612",44.2591995,-91.5093636,
+593,M22084 + P22084,8765,Independent,Wisdom Natural Poultry,Colorado,Very Small,Chicken,1.0,2.0,"44686 CR 4, Haxtun, CO 80731",40.451782,-102.725277,
+595,P47824,6166271,Independent,Regenerative Agriculture Alliance,Iowa,Very Small,Chicken,2.0,2.0,"415 Industrial Drive, Stacyville, IA 50476",43.4389912,-92.7822974,
+604,P22065,9249,Independent,RUMBLEWAY FARM,Maryland,Very Small,Chicken,1.0,1.0,"592 MCCAULEY ROAD, CONOWINGO, MD 21918",39.667186,-76.123193,
+606,P32143,9820,Independent,Otto's Poultry Inc.,Michigan,Very Small,Chicken,3.0,4.0,"5622 Whitneyville Road, Middleville, MI 49333",42.7344225,-85.4610458,
+607,M34145 + P34145,12513,Independent,"Kadejan, Inc.",Minnesota,Very Small,Chicken,3.0,4.0,"500 12th St. NE, Glenwood, MN 56334",45.6502392,-95.3900419,
+610,P45912,6162782,Independent,Midwest Poultry Processing LLC,Missouri,Very Small,Chicken,2.0,4.0,"47422 State Hwy V, Rutledge, MO 63563",40.27293110000001,-92.025286,1631.0
+611,M47472 + P47472,6165638,Independent,"Pure Pasture Packing, LLC",Missouri,Very Small,Chicken,2.0,3.0,"29612 Pony Path Road, Sedalia, MO 65301",38.6879379,-93.1407372,
+612,M46730 + P46730,6164667,Independent,"NGF Processing, LLC",Mississippi,Very Small,Chicken,1.0,2.0,"367-A  Mckenzie Rd, Petal, MS 39465",31.2376837,-89.10561949999999,
+617,M744 + P744,846,Independent,Vineland Poultry LLC,New Jersey,Very Small,Chicken,4.0,4.0,"1100 South Mill Road, Vineland, NJ 8360",39.4719626,-75.0635787,19330.0
+629,P45661,127487,Independent,DH Farms,Texas,Very Small,Chicken,2.0,3.0,"5619 FM 1624, Lexington, TX 78947",30.4190974,-97.0116515,

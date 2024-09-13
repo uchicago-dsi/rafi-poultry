@@ -13,16 +13,21 @@ The data pipeline for this project does the following:
 ### Docker
 The pipeline runs in Docker. If you use VS Code, this is set up to run in a [dev container](https://code.visualstudio.com/docs/devcontainers/containers), so build the container the way you normally would. Otherwise, just build the Docker image from the ```Dockerfile``` in the root of the directory.
 
+If you are using the dev container, make sure that you change the ```PLATFORM``` variable in the ```devcontainer.json``` for your chip architecture:
+```
+"args": {
+    "PLATFORM": "linux/arm64/v8" // Change this to "linux/amd64" on WSL and "linux/arm64/v8" on M1
+}
+```
+
 ### Data Files
-Download the following files into the appropriate locations:
-- Example FSIS data is located in the DSI Google Drive (permission required to access): [MPI Directory by Establishment Name](https://drive.google.com/file/d/1A9CQqe-iXdFPXQ19WCKdtMNvZy7ypkym/view?usp=sharing) | [Establishment Demographic Data](https://drive.google.com/file/d/1FFtM-F0FSUgJfe39HgIXJtdRwctkG-q5/view?usp=sharing)
+Download the following files into the appropriate locations. **Note that permission is required to access the DSI Google Drive.**
+- Example FSIS data is located in the DSI Google Drive: [MPI Directory by Establishment Name](https://drive.google.com/file/d/1A9CQqe-iXdFPXQ19WCKdtMNvZy7ypkym/view?usp=sharing) | [Establishment Demographic Data](https://drive.google.com/file/d/1FFtM-F0FSUgJfe39HgIXJtdRwctkG-q5/view?usp=sharing)
     - Save both files to ```data/raw/```
     - You can also download new data from the [FSIS Inspection site](https://www.fsis.usda.gov/inspection/establishments/meat-poultry-and-egg-product-inspection-directory). Just [update the filepaths config file](#using-different-files)
-- NETS data is located in the [DSI Google Drive](https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link) (permission required to access). Download this to ```data/raw/``` and save in a directory called ```nets```
-- Download the raw barns predictions for the entire USA from the [DSI Google Drive](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) (permission required to access) and save to ```data/raw/```
-- Barn filtering shapefiles: Download the files listed in ```pipeline/rafi/config_geo_filters.yaml``` to ```data/shapefiles/```
-    - Download the [municipalities geoparquet](https://drive.google.com/file/d/1ndGuzmbttaTvZ9i7UGVLImluHWkwZbBY/view?usp=sharing) file to ```data/shapefiles/```
-    - Download the [USA shapefile](https://drive.google.com/file/d/1gw_ICPBAFezo20N7GdYDalWHRkc6M_An/view?usp=sharing) to ```data/raw/```
+- [NETS data]((https://drive.google.com/drive/folders/1ayKn9SdtrIAO-q8AU9ScmuBK8Qv9ZlbS?usp=drive_link)) is located in the DSI Google Drive. Download this to ```data/raw/``` and save in a directory called ```nets```
+- Download the [raw barns predictions for the entire USA](https://drive.google.com/file/d/1F-xhb9MxgJ5HKuEZho_luzDhqPtxOLY2/view?usp=sharing) from the DSI Google Drive and save to ```data/raw/```
+- Barn filtering shapefiles: Download the [zip of all of the shapefiles](https://drive.google.com/file/d/1GSRM05ABDRXLUqmLqU_f-kI5yP8pSoqu/view?usp=sharing) from Google Drive and extract to ```data/shapefiles```. The sources for these shapefiles are listed in ```pipeline/rafi/config_geo_filters.yaml```.
 
 ### Using Different Files
 If you are using different files (particularly for the FSIS data), just update the filenames in ```pipeline/rafi/config_filepaths.yaml```. Make sure the files are in the expected folder.
@@ -42,6 +47,8 @@ python pipeline/pipelinve_v2.py
 ```
 
 Cleaned data files will be output in a run folder in ```data/clean/```. To update the files displayed on the dashboard, follow the instuctions in [Updating the Dashboard Data](#updating-the-dashboard-data)
+
+Note: You can also run each step of the pipline independently. Just make sure that the input files are available as expected in  ```__main__``` for each script.
 
 ### Pipeline V1
 There is old code in the ```pipeline/pipeline_v1/``` directory. This includes a previous version of the pipeline that used Infogroup business data (rather than NETS data). This is saved for reference in case we want to use Infogroup again in a future version of the pipeline.
