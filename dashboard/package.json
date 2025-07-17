@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "dependencies": {
     "@deck.gl/layers": "^8.9.19",
     "@deck.gl/react": "^8.9.19",
