@@ -29,7 +29,7 @@
     "jsonstream": "^1.0.3",
     "mapbox-gl": "^2.15.0",
     "msgpackr": "^1.10.1",
-    "next": "^13.4.7",
+    "next": "14.2.35",
     "pako": "^2.1.0",
     "papaparse": "^5.4.1",
     "punycode": "^2.3.1",
